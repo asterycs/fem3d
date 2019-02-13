@@ -1,0 +1,7 @@
+build
+build-emscripten
+public
+cmake-build-*
+release
+.*
+*.ttg
