@@ -15,7 +15,6 @@ find_package(Magnum REQUIRED
 find_package(MagnumExtras REQUIRED
     Ui)
 
-
 corrade_add_resource(fem3d_RESOURCES resources.conf)
 
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
