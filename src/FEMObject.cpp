@@ -79,6 +79,7 @@ std::vector<UnsignedInt> FEMObject::getTetrahedronIndices() const
 
 void FEMObject::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) {
 
+    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
     GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
     GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,GL::Renderer::BlendFunction::OneMinusSourceAlpha);

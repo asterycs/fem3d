@@ -41,8 +41,6 @@ App::App(const Arguments& arguments):
     MAGNUM_ASSERT_GL_VERSION_SUPPORTED(GL::Version::GL330);
 #endif
 
-    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
-
     _color.setStorage(GL::RenderbufferFormat::RGBA8, GL::defaultFramebuffer.viewport().size());
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, GL::defaultFramebuffer.viewport().size());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, GL::defaultFramebuffer.viewport().size());
@@ -80,6 +78,11 @@ App::App(const Arguments& arguments):
             .setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, 4.0f/3.0f, 0.001f, 100.0f))
             .setViewport(GL::defaultFramebuffer.viewport().size());
 
+    // set up ui
+    Ui::StyleConfiguration style = Ui::defaultStyleConfiguration();
+    _ui.emplace(Math::clamp({640.0f, 480.0f}, {1024.0f, 576.0f}, Vector2(windowSize()/dpiScaling())), windowSize(), framebufferSize(), style, "»");
+    _baseUiPlane.emplace(*_ui);
+    Interconnect::connect(_baseUiPlane->solveButton, &Ui::Button::tapped, &App::solveButtonCallback);
 }
 
 void App::viewportEvent(ViewportEvent& event) {
@@ -101,6 +104,9 @@ void App::drawEvent() {
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{0});
     GL::AbstractFramebuffer::blit(_framebuffer, GL::defaultFramebuffer,
                                   {{}, _framebuffer.viewport().size()}, GL::FramebufferBlit::Color);
+
+    drawUi();
+
     swapBuffers();
 }
 
@@ -120,7 +126,15 @@ void App::mouseScrollEvent(MouseScrollEvent& event) {
 
 
 void App::mousePressEvent(MouseEvent& event) {
-    if(event.button() != MouseEvent::Button::Left) return;
+    if (_ui->handlePressEvent(event.position()))
+    {
+        event.setAccepted();
+        redraw();
+        return;
+    }
+
+    if(event.button() != MouseEvent::Button::Left)
+        return;
 
     _previousPosition = event.position();
     _mousePressPosition = _previousPosition;
@@ -151,12 +165,21 @@ void App::mousePressEvent(MouseEvent& event) {
 }
 
 void App::mouseMoveEvent(MouseMoveEvent& event) {
-    if(!(event.buttons() & MouseMoveEvent::Button::Left)) return;
+    if (_ui->handleMoveEvent(event.position()))
+    {
+        event.setAccepted();
+        redraw();
+        return;
+    }
+
+    if(!(event.buttons() & MouseMoveEvent::Button::Left))
+        return;
 
     const Vector2i currentPosition = event.position();
     const Vector2i posDiff = currentPosition - _previousPosition;
 
-    if(posDiff.length() < 0.001f) return;
+    if(posDiff.length() < 0.001f)
+        return;
 
     _cameraTrackballAngles[0] -= static_cast<Float>(posDiff[0]) * 0.01f;
     _cameraTrackballAngles[1] -= static_cast<Float>(posDiff[1]) * 0.01f;
@@ -170,8 +193,43 @@ void App::mouseMoveEvent(MouseMoveEvent& event) {
 }
 
 void App::mouseReleaseEvent(MouseEvent& event) {
-    if(event.button() != MouseEvent::Button::Left) return;
+    if (_ui->handleReleaseEvent(event.position()))
+    {
+        event.setAccepted();
+        redraw();
+        return;
+    }
+
+    if(event.button() != MouseEvent::Button::Left)
+        return;
 
     event.setAccepted();
     redraw();
+}
+
+void App::textInputEvent(TextInputEvent &event)
+{
+   if(isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleTextInput(event))
+       redraw();
+
+}
+
+void App::keyPressEvent(KeyEvent& event) {
+    if(isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleKeyPress(event))
+        redraw();
+}
+
+void App::drawUi()
+{
+    GL::Renderer::enable(GL::Renderer::Feature::Blending);
+    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::One,
+                                   GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
+    GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
+    _ui->draw();
+}
+
+void App::solveButtonCallback()
+{
+    Debug{} << "I do nothing!";
 }
