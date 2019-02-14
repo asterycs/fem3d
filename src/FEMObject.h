@@ -9,6 +9,8 @@
 
 #include <Magnum/GL/Mesh.h>
 
+#include <set>
+
 #include "Shaders.h"
 #include "Typedefs.h"
 
@@ -17,22 +19,18 @@ using namespace Magnum;
 class FEMObject: public Object3D, SceneGraph::Drawable3D {
 public:
     explicit FEMObject(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables);
-    void setSelected(const bool selected);
-    void setSelectedVertex(const Int vertexId);
-    bool isSelected() const;
+    void togglePinnedVertec(const Int vertexId);
 
     std::vector<UnsignedInt> getTetrahedronIndices() const;
     void setTetrahedronColors(const std::vector<Vector3>& colors);
 
-
 private:
     void draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) override;
 
-    Int _highlightedVertexId;
-    bool _selected;
+    std::set<Int> _pinnedVertexIds;
     PhongIdShader& _phongShader;
     VertexShader& _vertexShader;
-    //Magnum::Shaders::MeshVisualizer& _wireframeShader;
+
     Color3 _color;
     GL::Buffer _triangleBuffer, _indexBuffer, _colorBuffer;
     GL::Mesh _triangles;

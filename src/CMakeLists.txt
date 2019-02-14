@@ -11,6 +11,9 @@ find_package(Magnum REQUIRED
     Trade
     Sdl2Application
     Primitives)
+    
+find_package(MagnumExtras REQUIRED
+    Ui)
 
 
 corrade_add_resource(fem3d_RESOURCES resources.conf)
@@ -19,6 +22,7 @@ set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 
 # For Clion
 include_directories(${MAGNUM_INCLUDE_DIR})
+include_directories(${MAGNUMEXTRAS_INCLUDE_DIR})
 include_directories(${CORRADE_INCLUDE_DIR})
 
 file(GLOB fem3d_SRC *.cpp)
@@ -32,7 +36,8 @@ target_link_libraries(fem3d PRIVATE
     Magnum::SceneGraph
     Magnum::Shaders
     Magnum::Trade
-    Magnum::Primitives)
+    Magnum::Primitives
+    MagnumExtras::Ui)
 
 if(CORRADE_TARGET_EMSCRIPTEN)
     install(TARGETS fem3d DESTINATION ${MAGNUM_DEPLOY_PREFIX})

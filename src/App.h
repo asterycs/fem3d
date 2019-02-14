@@ -11,6 +11,8 @@
 #include <Magnum/GL/Renderbuffer.h>
 #include <Magnum/GL/AbstractShaderProgram.h>
 
+#include <memory>
+
 #include "FEMObject.h"
 #include "Typedefs.h"
 
@@ -29,16 +31,14 @@ private:
     void mouseScrollEvent(MouseScrollEvent& event) override;
 
     Scene3D _scene;
-    Object3D* _cameraObject;
-    SceneGraph::Camera3D* _camera;
+    std::unique_ptr<Object3D> _cameraObject;
+    std::unique_ptr<SceneGraph::Camera3D> _camera;
     SceneGraph::DrawableGroup3D _drawables;
 
     PhongIdShader _phongShader;
     VertexShader _vertexSelectionShader;
-    //Magnum::Shaders::MeshVisualizer _wireframeShader{Shaders::MeshVisualizer::Flag::Wireframe};
 
-    enum { ObjectCount = 1 };
-    FEMObject* _objects[ObjectCount];
+    std::unique_ptr<FEMObject> _object;
 
     GL::Framebuffer _framebuffer;
     GL::Renderbuffer _color, _vertexId, _depth;

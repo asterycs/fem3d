@@ -55,15 +55,6 @@ App::App(const Arguments& arguments):
                          {VertexShader::ObjectIdOutput, GL::Framebuffer::ColorAttachment{1}}});
     CORRADE_INTERNAL_ASSERT(_framebuffer.checkStatus(GL::FramebufferTarget::Draw) == GL::Framebuffer::Status::Complete);
 
-    GL::Renderer::enable(GL::Renderer::Feature::Blending);
-    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
-    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,GL::Renderer::BlendFunction::OneMinusSourceAlpha);
-    GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
-
-    //_wireframeShader
-    //        .setColor(0x00000000_rgbaf)
-    //        .setWireframeColor(0xffffff_rgbf);
-
     Utility::Resource rs("fem3d-data");
 
     const auto str = rs.get("cube.ttg");
@@ -79,15 +70,16 @@ App::App(const Arguments& arguments):
     computeAABB(vertices, origin, extent);
     MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
 
-    _objects[0] = new FEMObject{_phongShader, _vertexSelectionShader, vertices, triangleIndices, uv, uvIndices, tetrahedronIndices, _scene, _drawables};
+    _object = std::make_unique<FEMObject>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, uv, uvIndices, tetrahedronIndices, _scene, _drawables);
 
     /* Configure camera */
-    _cameraObject = new Object3D{&_scene};
+    _cameraObject = std::make_unique<Object3D>(&_scene);
     _cameraObject->translate(Vector3::zAxis(8.0f));
-    _camera = new SceneGraph::Camera3D{*_cameraObject};
+    _camera = std::make_unique<SceneGraph::Camera3D>(*_cameraObject);
     _camera->setAspectRatioPolicy(SceneGraph::AspectRatioPolicy::Extend)
             .setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, 4.0f/3.0f, 0.001f, 100.0f))
             .setViewport(GL::defaultFramebuffer.viewport().size());
+
 }
 
 void App::viewportEvent(ViewportEvent& event) {
@@ -109,7 +101,6 @@ void App::drawEvent() {
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{0});
     GL::AbstractFramebuffer::blit(_framebuffer, GL::defaultFramebuffer,
                                   {{}, _framebuffer.viewport().size()}, GL::FramebufferBlit::Color);
-
     swapBuffers();
 }
 
@@ -140,22 +131,13 @@ void App::mousePressEvent(MouseEvent& event) {
             Range2Di::fromSize({event.position().x(), _framebuffer.viewport().sizeY() - event.position().y() - 1}, {1, 1}),
             {PixelFormat::R32I});
 
-    for(auto* o: _objects) o->setSelected(false);
     Int selectedVertexId = data.data<Int>()[0];
-
-    if (selectedVertexId != -1)
-    {
-        _objects[0]->setSelected(true);
-        _objects[0]->setSelectedVertex(selectedVertexId);
-    } else
-    {
-        _objects[0]->setSelected(false);
-    }
+    _object->togglePinnedVertec(selectedVertexId);
 
     Debug{} << "selected vertex: " << selectedVertexId;
 
 /*    {
-        std::vector<Vector3> newColors{_objects[0]->getTetrahedronIndices().size() / 4, Vector3{0.f, 0.f, 1.f}};
+        std::vector<Vector3> newColors{_object->getTetrahedronIndices().size() / 4, Vector3{0.f, 0.f, 1.f}};
 
         std::random_device rd;
         std::mt19937 rng(rd());
@@ -163,7 +145,7 @@ void App::mousePressEvent(MouseEvent& event) {
 
         const auto r = uni(rng);
         newColors[r] = {1.f, 0.f, 0.f};
-        _objects[0]->setTetrahedronColors(newColors);
+        _object->setTetrahedronColors(newColors);
     }*/
     redraw();
 }
@@ -176,14 +158,11 @@ void App::mouseMoveEvent(MouseMoveEvent& event) {
 
     if(posDiff.length() < 0.001f) return;
 
-    if (!_objects[0]->isSelected())
-    {
-        _cameraTrackballAngles[0] -= static_cast<Float>(posDiff[0]) * 0.01f;
-        _cameraTrackballAngles[1] -= static_cast<Float>(posDiff[1]) * 0.01f;
+    _cameraTrackballAngles[0] -= static_cast<Float>(posDiff[0]) * 0.01f;
+    _cameraTrackballAngles[1] -= static_cast<Float>(posDiff[1]) * 0.01f;
 
-        _cameraObject->rotate(Math::Rad(-posDiff[1] * 0.005f), _camera->cameraMatrix().inverted().right().normalized());
-        _cameraObject->rotate(Math::Rad(-posDiff[0] * 0.005f), Vector3(0.f, 1.f, 0.f));
-    }
+    _cameraObject->rotate(Math::Rad(-posDiff[1] * 0.005f), _camera->cameraMatrix().inverted().right().normalized());
+    _cameraObject->rotate(Math::Rad(-posDiff[0] * 0.005f), Vector3(0.f, 1.f, 0.f));
     _previousPosition = currentPosition;
 
     event.setAccepted();
@@ -193,7 +172,6 @@ void App::mouseMoveEvent(MouseMoveEvent& event) {
 void App::mouseReleaseEvent(MouseEvent& event) {
     if(event.button() != MouseEvent::Button::Left) return;
 
-    _objects[0]->setSelected(false);
     event.setAccepted();
     redraw();
 }
