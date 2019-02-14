@@ -32,6 +32,9 @@ Mesh generation is out of the scope for this project. Two MATLAB scripts are inc
 
 GLSL shaders are written in separate "\*.vert" and "\*.frag" files and are included using the same mechanism as the mesh files. There are also a number of html files in src that can be used for the WASM build.
 
+Programming remarks:
+- Use Magnums numeric types (Int, Float, UnsignedInt) instead of pods (float, int) to preserve GL compability
+
 TODO:
 - The mesh file also needs to include information about the boundary nodes
   - meshToPet works properly for matlab <= R2016a, in R2016b and newer its kind of broken (_no properties for e_).  

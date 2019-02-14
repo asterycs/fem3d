@@ -15,7 +15,7 @@
 
 using namespace Math::Literals;
 
-FEMObject::FEMObject(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables): Object3D{&parent}, SceneGraph::Drawable3D{*this, &drawables},  _highlightedVertexId{-1}, _selected{false}, _phongShader(phongShader), _vertexShader(vertexShader), _color{0xffffff_rgbf}, _triangleBuffer{GL::Buffer::TargetHint::Array}, _indexBuffer{GL::Buffer::TargetHint::ElementArray},_colorBuffer{GL::Buffer::TargetHint::Array}, _tetrahedronIndices{tetrahedronIndices}
+FEMObject::FEMObject(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables): Object3D{&parent}, SceneGraph::Drawable3D{*this, &drawables}, _phongShader(phongShader), _vertexShader(vertexShader), _color{0xffffff_rgbf}, _triangleBuffer{GL::Buffer::TargetHint::Array}, _indexBuffer{GL::Buffer::TargetHint::ElementArray},_colorBuffer{GL::Buffer::TargetHint::Array}, _tetrahedronIndices{tetrahedronIndices}
 {
     /*_cubeVertices{GL::Buffer::TargetHint::Array}, _cubeIndices{GL::Buffer::TargetHint::ElementArray},
             _sphereVertices{GL::Buffer::TargetHint::Array}, _sphereIndices{GL::Buffer::TargetHint::ElementArray},
@@ -52,7 +52,7 @@ FEMObject::FEMObject(PhongIdShader& phongShader, VertexShader& vertexShader, std
     normals = expand(normals, normalIndices);
     uv = expand(uv, uvIndices);
 
-    std::vector<Vector3> colors(triangleIndices.size(),Vector3{0.25f, 0.25f, 1.f});
+    std::vector<Vector3> colors(triangleIndices.size(),Vector3{0.f, 0.f, 1.f});
 
     _triangleBuffer.setData(MeshTools::interleave(vertices, normals, uv), GL::BufferUsage::StaticDraw);
     _colorBuffer.setData(colors, GL::BufferUsage::StaticDraw);
@@ -77,12 +77,13 @@ std::vector<UnsignedInt> FEMObject::getTetrahedronIndices() const
     return _tetrahedronIndices;
 }
 
-bool FEMObject::isSelected() const
-{
-    return _selected;
-}
-
 void FEMObject::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) {
+
+    GL::Renderer::enable(GL::Renderer::Feature::Blending);
+    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
+    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+    GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
+
     _phongShader.setTransformationMatrix(transformationMatrix)
         .setNormalMatrix(transformationMatrix.rotationScaling())
         .setProjectionMatrix(camera.projectionMatrix())
@@ -96,7 +97,7 @@ void FEMObject::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& 
 
     for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i)
     {
-        if (_highlightedVertexId == Int(i) && _selected)
+        if (_pinnedVertexIds.find(static_cast<Int>(i)) != _pinnedVertexIds.end())
             _vertexShader.setColor({1.f, 0.f, 0.f});
         else
             _vertexShader.setColor({1.f, 1.f, 1.f});
@@ -106,19 +107,14 @@ void FEMObject::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& 
         _vertexMarkerMesh[i].draw(_vertexShader);
     }
 
-    //_wireframeShader
-    //       .setViewportSize(Vector2{GL::defaultFramebuffer.viewport().size()})
-    //       .setTransformationProjectionMatrix(camera.projectionMatrix()*transformationMatrix*Matrix4::translation(transformationMatrix.inverted().backward()*0.01f));
-
-    //_mesh.draw(_wireframeShader);
 }
 
-void FEMObject::setSelected(const bool selected)
+void FEMObject::togglePinnedVertec(const Int vertexId)
 {
-    _selected = selected;
-}
+    const auto pos = _pinnedVertexIds.find(vertexId);
+    if (pos != _pinnedVertexIds.end())
+        _pinnedVertexIds.erase(pos);
+    else
+        _pinnedVertexIds.insert(vertexId);
 
-void FEMObject::setSelectedVertex(const Int vertexId)
-{
-    _highlightedVertexId = vertexId;
 }
