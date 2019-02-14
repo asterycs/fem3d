@@ -21,6 +21,9 @@ public:
     explicit FEMObject(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables);
     void togglePinnedVertec(const Int vertexId);
 
+    // Something like this
+    // void applyForce(
+
     std::vector<UnsignedInt> getTetrahedronIndices() const;
     void setTetrahedronColors(const std::vector<Vector3>& colors);
 
