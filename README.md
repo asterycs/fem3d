@@ -34,4 +34,6 @@ GLSL shaders are written in separate "\*.vert" and "\*.frag" files and are inclu
 
 TODO:
 - The mesh file also needs to include information about the boundary nodes
+  - meshToPet works properly for matlab <= R2016a, in R2016b and newer its kind of broken (_no properties for e_).  
+  - The [documentation](https://www.mathworks.com/help/pde/ug/pde.femesh.meshtopet.html) for meshToPet states its a legacy workflow and might not work
 - The actual solver
