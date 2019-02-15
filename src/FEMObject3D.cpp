@@ -1,4 +1,4 @@
-#include "FEMObject.h"
+#include "FEMObject3D.h"
 
 #include <Magnum/GL/Renderer.h>
 #include <Magnum/MeshTools/GenerateFlatNormals.h>
@@ -15,15 +15,13 @@
 
 using namespace Math::Literals;
 
-FEMObject::FEMObject(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables): Object3D{&parent}, SceneGraph::Drawable3D{*this, &drawables}, _phongShader(phongShader), _vertexShader(vertexShader), _color{0xffffff_rgbf}, _triangleBuffer{GL::Buffer::TargetHint::Array}, _indexBuffer{GL::Buffer::TargetHint::ElementArray},_colorBuffer{GL::Buffer::TargetHint::Array}, _tetrahedronIndices{tetrahedronIndices}
+FEMObject3D::FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables): Object3D{&parent}, SceneGraph::Drawable3D{*this, &drawables}, _phongShader(phongShader), _vertexShader(vertexShader), _color{0xffffff_rgbf}, _triangleBuffer{GL::Buffer::TargetHint::Array}, _indexBuffer{GL::Buffer::TargetHint::ElementArray},_colorBuffer{GL::Buffer::TargetHint::Array}, _tetrahedronIndices{tetrahedronIndices}
 {
-    /*_cubeVertices{GL::Buffer::TargetHint::Array}, _cubeIndices{GL::Buffer::TargetHint::ElementArray},
-            _sphereVertices{GL::Buffer::TargetHint::Array}, _sphereIndices{GL::Buffer::TargetHint::ElementArray},
-            _planeVertices{GL::Buffer::TargetHint::Array}, _framebuffer{GL::defaultFramebuffer.viewport()}
-*/
     _vertexMarkerVertexBuffer.resize(vertices.size());
     _vertexMarkerIndexBuffer.resize(vertices.size());
     _vertexMarkerMesh.resize(vertices.size());
+    _meshVertices = vertices;
+
     for (UnsignedInt i = 0; i < vertices.size(); ++i)
     {
         const Vector3 center = vertices[i];
@@ -57,13 +55,14 @@ FEMObject::FEMObject(PhongIdShader& phongShader, VertexShader& vertexShader, std
     _triangleBuffer.setData(MeshTools::interleave(vertices, normals, uv), GL::BufferUsage::StaticDraw);
     _colorBuffer.setData(colors, GL::BufferUsage::StaticDraw);
 
+    // Using a vertex buffer would be beneficial but that makes updating colors later much more difficult
     _triangles.setCount(triangleIndices.size())
             .setPrimitive(GL::MeshPrimitive::Triangles)
             .addVertexBuffer(_triangleBuffer, 0, PhongIdShader::Position{}, PhongIdShader::Normal{}, PhongIdShader::UV{})
             .addVertexBuffer(_colorBuffer, 0, PhongIdShader::VertexColor{});
 }
 
-void FEMObject::setTetrahedronColors(const std::vector<Vector3> &colors)
+void FEMObject3D::setTetrahedronColors(const std::vector<Vector3> &colors)
 {
     std::vector<UnsignedInt> triangleColorIndices;
     extractTriangleIndices(_tetrahedronIndices, triangleColorIndices);
@@ -72,12 +71,12 @@ void FEMObject::setTetrahedronColors(const std::vector<Vector3> &colors)
     _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
 }
 
-std::vector<UnsignedInt> FEMObject::getTetrahedronIndices() const
+std::vector<UnsignedInt> FEMObject3D::getTetrahedronIndices() const
 {
     return _tetrahedronIndices;
 }
 
-void FEMObject::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) {
+void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) {
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
@@ -110,7 +109,7 @@ void FEMObject::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& 
 
 }
 
-void FEMObject::togglePinnedVertec(const Int vertexId)
+void FEMObject3D::togglePinnedVertex(const Int vertexId)
 {
     const auto pos = _pinnedVertexIds.find(vertexId);
     if (pos != _pinnedVertexIds.end())

@@ -68,7 +68,7 @@ App::App(const Arguments& arguments):
     computeAABB(vertices, origin, extent);
     MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
 
-    _object = std::make_unique<FEMObject>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, uv, uvIndices, tetrahedronIndices, _scene, _drawables);
+    _object = std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, uv, uvIndices, tetrahedronIndices, _scene, _drawables);
 
     /* Configure camera */
     _cameraObject = std::make_unique<Object3D>(&_scene);
@@ -146,9 +146,9 @@ void App::mousePressEvent(MouseEvent& event) {
             {PixelFormat::R32I});
 
     Int selectedVertexId = data.data<Int>()[0];
-    _object->togglePinnedVertec(selectedVertexId);
+    _object->togglePinnedVertex(selectedVertexId);
 
-    Debug{} << "selected vertex: " << selectedVertexId;
+    Debug{} << "Toggled vertex number " << selectedVertexId;
 
 /*    {
         std::vector<Vector3> newColors{_object->getTetrahedronIndices().size() / 4, Vector3{0.f, 0.f, 1.f}};
