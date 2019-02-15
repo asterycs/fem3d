@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "FEMObject.h"
+#include "FEMObject3D.h"
 #include "Typedefs.h"
 #include "UI.h"
 
@@ -52,7 +52,7 @@ private:
     PhongIdShader _phongShader;
     VertexShader _vertexSelectionShader;
 
-    std::unique_ptr<FEMObject> _object;
+    std::unique_ptr<FEMObject3D> _object;
 
     GL::Framebuffer _framebuffer;
     GL::Renderbuffer _color, _vertexId, _depth;
