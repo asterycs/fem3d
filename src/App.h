@@ -25,24 +25,29 @@
 
 using namespace Magnum;
 
-class App: public Platform::Application, public Interconnect::Receiver {
+class App : public Platform::Application, public Interconnect::Receiver
+{
 public:
-    explicit App(const Arguments& arguments);
+    explicit App(const Arguments &arguments);
 
 private:
-    void viewportEvent(ViewportEvent& event) override;
+    void viewportEvent(ViewportEvent &event) override;
     void drawEvent() override;
-    void mousePressEvent(MouseEvent& event) override;
-    void mouseMoveEvent(MouseMoveEvent& event) override;
-    void mouseReleaseEvent(MouseEvent& event) override;
-    void mouseScrollEvent(MouseScrollEvent& event) override;
+    void mousePressEvent(MouseEvent &event) override;
+    void mouseMoveEvent(MouseMoveEvent &event) override;
+    void mouseReleaseEvent(MouseEvent &event) override;
+    void mouseScrollEvent(MouseScrollEvent &event) override;
 
+    void toggleVertexMarkersButtonCallback();
     void solveButtonCallback();
 
+    void initUi();
     void drawUi();
 
-    void keyPressEvent(KeyEvent& event) override;
-    void textInputEvent(TextInputEvent& event) override;
+    void readMeshFile(const std::string& fname);
+
+    void keyPressEvent(KeyEvent &event) override;
+    void textInputEvent(TextInputEvent &event) override;
 
     Scene3D _scene;
     std::unique_ptr<Object3D> _cameraObject;
@@ -57,12 +62,10 @@ private:
     GL::Framebuffer _framebuffer;
     GL::Renderbuffer _color, _vertexId, _depth;
 
-    Vector2i _mousePressPosition;
-    Vector2i _previousPosition;
     Vector2 _cameraTrackballAngles;
 
-    Containers::Optional<Ui::UserInterface> _ui;
-    Containers::Optional<UiPlane> _baseUiPlane;
+    std::unique_ptr<Ui::UserInterface> _ui;
+    std::unique_ptr<UiPlane> _baseUiPlane;
 };
 
 #endif

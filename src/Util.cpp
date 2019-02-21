@@ -2,10 +2,14 @@
 
 #include <sstream>
 
-bool parseTtg(const std::string& input, std::vector<Vector3>& outVertices, std::vector<Vector2>& outUv, std::vector<UnsignedInt>& outTriangleIndices, std::vector<UnsignedInt>& outUvIndices, std::vector<UnsignedInt>& outTetrahedronIndices)
+bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<Vector2> &outUv,
+              std::vector<UnsignedInt> &outTriangleIndices, std::vector<UnsignedInt> &outUvIndices,
+              std::vector<UnsignedInt> &outTetrahedronIndices)
 {
     std::vector<Vector3> vertices;
-    std::vector<Vector2> uv{ {0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}};
+    std::vector<Vector2> uv{{0.0f, 0.0f},
+                            {1.0f, 0.0f},
+                            {0.0f, 1.0f}};
     std::vector<UnsignedInt> triangleIndices;
     std::vector<UnsignedInt> uvIndices;
     std::vector<UnsignedInt> tetrahedronIndices;
@@ -86,7 +90,8 @@ bool parseTtg(const std::string& input, std::vector<Vector3>& outVertices, std::
     return true;
 }
 
-bool extractTriangleIndices(const std::vector<UnsignedInt>& tetrahedronIndices, std::vector<UnsignedInt>& triangleIndices)
+bool
+extractTriangleIndices(const std::vector<UnsignedInt> &tetrahedronIndices, std::vector<UnsignedInt> &triangleIndices)
 {
     if (tetrahedronIndices.size() % 4 != 0)
     {
@@ -94,12 +99,12 @@ bool extractTriangleIndices(const std::vector<UnsignedInt>& tetrahedronIndices, 
         return false;
     }
 
-    for (UnsignedInt i = 0; i < tetrahedronIndices.size(); i+=4)
+    for (UnsignedInt i = 0; i < tetrahedronIndices.size(); i += 4)
     {
         const UnsignedInt i0 = tetrahedronIndices[i];
-        const UnsignedInt i1 = tetrahedronIndices[i+1];
-        const UnsignedInt i2 = tetrahedronIndices[i+2];
-        const UnsignedInt i3 = tetrahedronIndices[i+3];
+        const UnsignedInt i1 = tetrahedronIndices[i + 1];
+        const UnsignedInt i2 = tetrahedronIndices[i + 2];
+        const UnsignedInt i3 = tetrahedronIndices[i + 3];
 
         triangleIndices.push_back(i0);
         triangleIndices.push_back(i1);
@@ -121,18 +126,23 @@ bool extractTriangleIndices(const std::vector<UnsignedInt>& tetrahedronIndices, 
     return true;
 }
 
-void computeAABB(const std::vector<Vector3>& vertices, Vector3& origin, Vector3& extent)
+void computeAABB(const std::vector<Vector3> &vertices, Vector3 &origin, Vector3 &extent)
 {
     Vector3 min{std::numeric_limits<Float>::max()};
     Vector3 max{std::numeric_limits<Float>::min()};
 
     for (const auto v : vertices)
     {
-        min = Math::min(v,min);
-        max = Math::max(v,max);
+        min = Math::min(v, min);
+        max = Math::max(v, max);
     }
 
     const Vector3 diff = max - min;
-    origin = min + 0.5*diff;
-    extent = 0.5*diff;
+    origin = min + 0.5 * diff;
+    extent = 0.5 * diff;
+}
+
+Eigen::Vector3f toEigen(const Vector3 &v)
+{
+    return Eigen::Vector3f(v[0], v[1], v[2]);
 }

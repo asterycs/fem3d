@@ -15,6 +15,7 @@ using namespace Magnum::Math::Literals;
 struct UiPlane: Ui::Plane {
     explicit UiPlane(Ui::UserInterface& ui);
 
+    Ui::Button toggleVertexMarkersButton;
     Ui::Button solveButton;
 };
 

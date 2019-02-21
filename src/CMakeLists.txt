@@ -38,6 +38,9 @@ find_package(Magnum REQUIRED
     Trade
     Sdl2Application
     Primitives)
+
+find_package(MagnumPlugins REQUIRED
+        StbTrueTypeFont)
     
 find_package(MagnumExtras REQUIRED
     Ui)
@@ -65,7 +68,8 @@ target_link_libraries(fem3d PRIVATE
     Magnum::Shaders
     Magnum::Trade
     Magnum::Primitives
-    MagnumExtras::Ui)
+    MagnumExtras::Ui
+    MagnumPlugins::StbTrueTypeFont)
 
 if(CORRADE_TARGET_EMSCRIPTEN)
     install(TARGETS fem3d DESTINATION ${MAGNUM_DEPLOY_PREFIX})
