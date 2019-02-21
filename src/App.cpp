@@ -31,11 +31,11 @@
 
 using namespace Math::Literals;
 
-App::App(const Arguments& arguments):
+App::App(const Arguments &arguments) :
         Platform::Application{arguments, Configuration{}
                 .setTitle("Finite element")
                 .setWindowFlags(Configuration::WindowFlag::Resizable)},
-         _framebuffer{GL::defaultFramebuffer.viewport()}
+        _framebuffer{GL::defaultFramebuffer.viewport()}
 {
 #ifndef MAGNUM_TARGET_GLES
     MAGNUM_ASSERT_GL_VERSION_SUPPORTED(GL::Version::GL330);
@@ -47,15 +47,45 @@ App::App(const Arguments& arguments):
     _framebuffer.attachRenderbuffer(GL::Framebuffer::ColorAttachment{0}, _color)
             .attachRenderbuffer(GL::Framebuffer::ColorAttachment{1}, _vertexId)
             .attachRenderbuffer(GL::Framebuffer::BufferAttachment::Depth, _depth)
-            .mapForDraw({{PhongIdShader::ColorOutput, GL::Framebuffer::ColorAttachment{0}},
-                         {VertexShader::ColorOutput, GL::Framebuffer::ColorAttachment{0}},
+            .mapForDraw({{PhongIdShader::ColorOutput,    GL::Framebuffer::ColorAttachment{0}},
+                         {VertexShader::ColorOutput,     GL::Framebuffer::ColorAttachment{0}},
                          {PhongIdShader::ObjectIdOutput, GL::Framebuffer::ColorAttachment{1}},
-                         {VertexShader::ObjectIdOutput, GL::Framebuffer::ColorAttachment{1}}});
+                         {VertexShader::ObjectIdOutput,  GL::Framebuffer::ColorAttachment{1}}});
     CORRADE_INTERNAL_ASSERT(_framebuffer.checkStatus(GL::FramebufferTarget::Draw) == GL::Framebuffer::Status::Complete);
 
+    /* Configure camera */
+    _cameraObject = std::make_unique<Object3D>(&_scene);
+    _cameraObject->translate(Vector3::zAxis(8.0f));
+    _camera = std::make_unique<SceneGraph::Camera3D>(*_cameraObject);
+    _camera->setAspectRatioPolicy(SceneGraph::AspectRatioPolicy::NotPreserved)
+            .setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{GL::defaultFramebuffer.viewport().size()}.aspectRatio(), 0.001f, 100.0f))
+            .setViewport(GL::defaultFramebuffer.viewport().size());
+
+    initUi();
+
+    readMeshFile("cube.ttg");
+}
+
+void App::initUi()
+{
+    Ui::StyleConfiguration style = Ui::defaultStyleConfiguration();
+
+    _baseUiPlane.reset();
+    _ui.reset();
+
+    _ui = std::make_unique<Ui::UserInterface>(Vector2(GL::defaultFramebuffer.viewport().size()), windowSize(), framebufferSize(), style, "»");
+    _baseUiPlane = std::make_unique<UiPlane>(*_ui);
+
+    Interconnect::connect(_baseUiPlane->toggleVertexMarkersButton, &Ui::Button::tapped, *this,
+                          &App::toggleVertexMarkersButtonCallback);
+    Interconnect::connect(_baseUiPlane->solveButton, &Ui::Button::tapped, *this, &App::solveButtonCallback);
+}
+
+void App::readMeshFile(const std::string& fname)
+{
     Utility::Resource rs("fem3d-data");
 
-    const auto str = rs.get("cube.ttg");
+    const auto str = rs.get(fname);
     std::vector<Vector3> vertices;
     std::vector<Vector2> uv;
     std::vector<UnsignedInt> triangleIndices;
@@ -68,41 +98,41 @@ App::App(const Arguments& arguments):
         computeAABB(vertices, origin, extent);
         MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
 
-        _object = std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, uv, uvIndices, tetrahedronIndices, _scene, _drawables);
-    }else
+        _object = std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, uv,
+                                                uvIndices, tetrahedronIndices, _scene, _drawables);
+    } else
     {
         Error{} << "Could not parse mesh file";
     }
-
-    /* Configure camera */
-    _cameraObject = std::make_unique<Object3D>(&_scene);
-    _cameraObject->translate(Vector3::zAxis(8.0f));
-    _camera = std::make_unique<SceneGraph::Camera3D>(*_cameraObject);
-    _camera->setAspectRatioPolicy(SceneGraph::AspectRatioPolicy::Extend)
-            .setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, 4.0f/3.0f, 0.001f, 100.0f))
-            .setViewport(GL::defaultFramebuffer.viewport().size());
-
-    // set up ui
-    Ui::StyleConfiguration style = Ui::defaultStyleConfiguration();
-    _ui.emplace(Math::clamp({640.0f, 480.0f}, {1024.0f, 576.0f}, Vector2(windowSize()/dpiScaling())), windowSize(), framebufferSize(), style, "»");
-    _baseUiPlane.emplace(*_ui);
-    Interconnect::connect(_baseUiPlane->solveButton, &Ui::Button::tapped, *this, &App::solveButtonCallback);
 }
 
-void App::viewportEvent(ViewportEvent& event) {
+void App::viewportEvent(ViewportEvent &event)
+{
     GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
+
+    _framebuffer.setViewport({{}, event.framebufferSize()});
+    _color.setStorage(GL::RenderbufferFormat::RGBA8, event.framebufferSize());
+    _vertexId.setStorage(GL::RenderbufferFormat::R32I, event.framebufferSize());
+    _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, event.framebufferSize());
+
+    _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{event.framebufferSize()}.aspectRatio(), 0.001f, 100.0f))
+            .setViewport(event.framebufferSize());
+
+    initUi();
+    redraw();
 }
 
-void App::drawEvent() {
-    _framebuffer
-            .clearColor(0, Color3{0.0f})
+void App::drawEvent()
+{
+    _framebuffer.clearColor(0, Color3{0.0f})
             .clearColor(1, Vector4i{-1})
             .clearDepth(1.0f)
             .bind();
     _camera->draw(_drawables);
 
-    GL::defaultFramebuffer.clear(GL::FramebufferClear::Color|GL::FramebufferClear::Depth)
+    GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth)
             .bind();
+
 
     // Blit color to main fb
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{0});
@@ -115,21 +145,23 @@ void App::drawEvent() {
 }
 
 
-void App::mouseScrollEvent(MouseScrollEvent& event) {
-    if(!event.offset().y()) return;
+void App::mouseScrollEvent(MouseScrollEvent &event)
+{
+    if (!event.offset().y()) return;
 
     // Distance to origin
     const Float distance = _cameraObject->transformation().translation().z();
 
     // Move 15% of the distance back or forward
-    _cameraObject->translate(-_camera->cameraMatrix().inverted().backward()*(
-            distance*(1.0f - (event.offset().y() > 0 ? 1/0.85f : 0.85f))));
+    _cameraObject->translate(-_camera->cameraMatrix().inverted().backward() * (
+            distance * (1.0f - (event.offset().y() > 0 ? 1 / 0.85f : 0.85f))));
 
     redraw();
 }
 
 
-void App::mousePressEvent(MouseEvent& event) {
+void App::mousePressEvent(MouseEvent &event)
+{
     if (_ui->handlePressEvent(event.position()))
     {
         event.setAccepted();
@@ -137,16 +169,16 @@ void App::mousePressEvent(MouseEvent& event) {
         return;
     }
 
-    if(event.button() != MouseEvent::Button::Left)
+    if (event.button() != MouseEvent::Button::Left)
         return;
 
-    _previousPosition = event.position();
-    _mousePressPosition = _previousPosition;
+
     event.setAccepted();
 
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{1});
     Image2D data = _framebuffer.read(
-            Range2Di::fromSize({event.position().x(), _framebuffer.viewport().sizeY() - event.position().y() - 1}, {1, 1}),
+            Range2Di::fromSize({event.position().x(), _framebuffer.viewport().sizeY() - event.position().y() - 1},
+                               {1, 1}),
             {PixelFormat::R32I});
 
     Int selectedVertexId = data.data<Int>()[0];
@@ -157,7 +189,7 @@ void App::mousePressEvent(MouseEvent& event) {
         Debug{} << "Toggled vertex number " << selectedVertexId;
     }
 
-/*    {
+    /*{
         std::vector<Vector3> newColors{_object->getTetrahedronIndices().size() / 4, Vector3{0.f, 0.f, 1.f}};
 
         std::random_device rd;
@@ -171,7 +203,8 @@ void App::mousePressEvent(MouseEvent& event) {
     redraw();
 }
 
-void App::mouseMoveEvent(MouseMoveEvent& event) {
+void App::mouseMoveEvent(MouseMoveEvent &event)
+{
     if (_ui->handleMoveEvent(event.position()))
     {
         event.setAccepted();
@@ -179,27 +212,23 @@ void App::mouseMoveEvent(MouseMoveEvent& event) {
         return;
     }
 
-    if(!(event.buttons() & MouseMoveEvent::Button::Left))
+    if (!(event.buttons() & MouseMoveEvent::Button::Left))
         return;
 
-    const Vector2i currentPosition = event.position();
-    const Vector2i posDiff = currentPosition - _previousPosition;
-
-    if(posDiff.length() < 1)
-        return;
+    const Vector2i posDiff = event.relativePosition();
 
     _cameraTrackballAngles[0] -= static_cast<Float>(posDiff[0]) * 0.01f;
     _cameraTrackballAngles[1] -= static_cast<Float>(posDiff[1]) * 0.01f;
 
     _cameraObject->rotate(Math::Rad(-posDiff[1] * 0.005f), _camera->cameraMatrix().inverted().right().normalized());
     _cameraObject->rotate(Math::Rad(-posDiff[0] * 0.005f), Vector3(0.f, 1.f, 0.f));
-    _previousPosition = currentPosition;
 
     event.setAccepted();
     redraw();
 }
 
-void App::mouseReleaseEvent(MouseEvent& event) {
+void App::mouseReleaseEvent(MouseEvent &event)
+{
     if (_ui->handleReleaseEvent(event.position()))
     {
         event.setAccepted();
@@ -207,7 +236,7 @@ void App::mouseReleaseEvent(MouseEvent& event) {
         return;
     }
 
-    if(event.button() != MouseEvent::Button::Left)
+    if (event.button() != MouseEvent::Button::Left)
         return;
 
     event.setAccepted();
@@ -216,13 +245,14 @@ void App::mouseReleaseEvent(MouseEvent& event) {
 
 void App::textInputEvent(TextInputEvent &event)
 {
-   if(isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleTextInput(event))
-       redraw();
+    if (isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleTextInput(event))
+        redraw();
 
 }
 
-void App::keyPressEvent(KeyEvent& event) {
-    if(isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleKeyPress(event))
+void App::keyPressEvent(KeyEvent &event)
+{
+    if (isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleKeyPress(event))
         redraw();
 }
 
@@ -236,7 +266,13 @@ void App::drawUi()
     _ui->draw();
 }
 
-void App::solveButtonCallback()
+void App::toggleVertexMarkersButtonCallback()
 {
     _object->toggleVertexMarkers();
+}
+
+void App::solveButtonCallback()
+{
+    _object->solve();
+    Debug{} << "I do nothing!";
 }

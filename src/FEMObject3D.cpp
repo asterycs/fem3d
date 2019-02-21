@@ -15,7 +15,22 @@
 
 using namespace Math::Literals;
 
-FEMObject3D::FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables): Object3D{&parent}, SceneGraph::Drawable3D{*this, &drawables}, _drawVertexMarkers{true}, _phongShader(phongShader), _vertexShader(vertexShader), _triangleBuffer{GL::Buffer::TargetHint::Array}, _indexBuffer{GL::Buffer::TargetHint::ElementArray},_colorBuffer{GL::Buffer::TargetHint::Array}, _tetrahedronIndices{tetrahedronIndices}
+FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
+                         VertexShader &vertexShader,
+                         std::vector<Vector3> vertices,
+                         std::vector<UnsignedInt> triangleIndices,
+                         std::vector<Vector2> uv,
+                         std::vector<UnsignedInt> uvIndices,
+                         std::vector<UnsignedInt> tetrahedronIndices,
+                         Object3D &parent,
+                         SceneGraph::DrawableGroup3D &drawables) : Object3D{&parent},
+                                                                   SceneGraph::Drawable3D{*this, &drawables},
+                                                                   _drawVertexMarkers{true}, _phongShader(phongShader),
+                                                                   _vertexShader(vertexShader),
+                                                                   _triangleBuffer{GL::Buffer::TargetHint::Array},
+                                                                   _indexBuffer{GL::Buffer::TargetHint::ElementArray},
+                                                                   _colorBuffer{GL::Buffer::TargetHint::Array},
+                                                                   _tetrahedronIndices{tetrahedronIndices}
 {
     _vertexMarkerVertexBuffer.resize(vertices.size());
     _vertexMarkerIndexBuffer.resize(vertices.size());
@@ -26,14 +41,17 @@ FEMObject3D::FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader,
     {
         const Vector3 center = vertices[i];
         Trade::MeshData3D data = Primitives::uvSphereSolid(16, 32);
-        MeshTools::transformPointsInPlace(Matrix4::translation(center)*Matrix4::scaling({0.03f, 0.03f, 0.03f}), data.positions(0));
+        MeshTools::transformPointsInPlace(Matrix4::translation(center) * Matrix4::scaling({0.03f, 0.03f, 0.03f}),
+                                          data.positions(0));
         MeshTools::transformVectorsInPlace(Matrix4::translation(center), data.normals(0));
 
         _vertexMarkerVertexBuffer[i].setTargetHint(GL::Buffer::TargetHint::Array);
-        _vertexMarkerVertexBuffer[i].setData(MeshTools::interleave(data.positions(0), data.normals(0)), GL::BufferUsage::StaticDraw);
+        _vertexMarkerVertexBuffer[i].setData(MeshTools::interleave(data.positions(0), data.normals(0)),
+                                             GL::BufferUsage::StaticDraw);
 
         _vertexMarkerIndexBuffer[i].setTargetHint(GL::Buffer::TargetHint::ElementArray);
-        _vertexMarkerIndexBuffer[i].setData(MeshTools::compressIndicesAs<UnsignedShort>(data.indices()), GL::BufferUsage::StaticDraw);
+        _vertexMarkerIndexBuffer[i].setData(MeshTools::compressIndicesAs<UnsignedShort>(data.indices()),
+                                            GL::BufferUsage::StaticDraw);
 
         _vertexMarkerMesh[i].setCount(data.indices().size())
                 .setPrimitive(data.primitive())
@@ -50,7 +68,7 @@ FEMObject3D::FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader,
     normals = expand(normals, normalIndices);
     uv = expand(uv, uvIndices);
 
-    std::vector<Vector3> colors(triangleIndices.size(),Vector3{0.f, 0.f, 1.f});
+    std::vector<Vector3> colors(triangleIndices.size(), Vector3{0.f, 0.f, 1.f});
 
     _triangleBuffer.setData(MeshTools::interleave(vertices, normals, uv), GL::BufferUsage::StaticDraw);
     _colorBuffer.setData(colors, GL::BufferUsage::StaticDraw);
@@ -58,7 +76,8 @@ FEMObject3D::FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader,
     // Using a vertex buffer would be beneficial but that makes updating colors later much more difficult
     _triangles.setCount(triangleIndices.size())
             .setPrimitive(GL::MeshPrimitive::Triangles)
-            .addVertexBuffer(_triangleBuffer, 0, PhongIdShader::Position{}, PhongIdShader::Normal{}, PhongIdShader::UV{})
+            .addVertexBuffer(_triangleBuffer, 0, PhongIdShader::Position{}, PhongIdShader::Normal{},
+                             PhongIdShader::UV{})
             .addVertexBuffer(_colorBuffer, 0, PhongIdShader::VertexColor{});
 }
 
@@ -76,7 +95,7 @@ std::vector<UnsignedInt> FEMObject3D::getTetrahedronIndices() const
     return _tetrahedronIndices;
 }
 
-void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera)
+void FEMObject3D::draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera)
 {
 
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
@@ -101,7 +120,8 @@ void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     if (_drawVertexMarkers)
     {
-        for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i) {
+        for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i)
+        {
             if (_pinnedVertexIds.find(static_cast<Int>(i)) != _pinnedVertexIds.end())
                 _vertexShader.setColor({1.f, 0.f, 0.f});
             else

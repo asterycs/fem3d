@@ -17,9 +17,18 @@
 
 using namespace Magnum;
 
-class FEMObject3D: public Object3D, SceneGraph::Drawable3D {
+class FEMObject3D : public Object3D, SceneGraph::Drawable3D
+{
 public:
-    explicit FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables);
+    explicit FEMObject3D(PhongIdShader &phongShader,
+                         VertexShader &vertexShader,
+                         std::vector<Vector3> vertices,
+                         std::vector<UnsignedInt> triangleIndices,
+                         std::vector<Vector2> uv,
+                         std::vector<UnsignedInt> uvIndices,
+                         std::vector<UnsignedInt> tetrahedronIndices,
+                         Object3D &parent,
+                         SceneGraph::DrawableGroup3D &drawables);
     void togglePinnedVertex(const UnsignedInt vertexId);
 
     void toggleVertexMarkers();
@@ -28,16 +37,16 @@ public:
     void solve();
 
     std::vector<UnsignedInt> getTetrahedronIndices() const;
-    void setTetrahedronColors(const std::vector<Vector3>& colors);
+    void setTetrahedronColors(const std::vector<Vector3> &colors);
 
 private:
-    void draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) override;
+    void draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera) override;
 
     bool _drawVertexMarkers;
     std::set<UnsignedInt> _pinnedVertexIds;
 
-    PhongIdShader& _phongShader;
-    VertexShader& _vertexShader;
+    PhongIdShader &_phongShader;
+    VertexShader &_vertexShader;
 
     GL::Buffer _triangleBuffer, _indexBuffer, _colorBuffer;
     GL::Mesh _triangles;
