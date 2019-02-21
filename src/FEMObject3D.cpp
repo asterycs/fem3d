@@ -15,7 +15,7 @@
 
 using namespace Math::Literals;
 
-FEMObject3D::FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables): Object3D{&parent}, SceneGraph::Drawable3D{*this, &drawables}, _phongShader(phongShader), _vertexShader(vertexShader), _color{0xffffff_rgbf}, _triangleBuffer{GL::Buffer::TargetHint::Array}, _indexBuffer{GL::Buffer::TargetHint::ElementArray},_colorBuffer{GL::Buffer::TargetHint::Array}, _tetrahedronIndices{tetrahedronIndices}
+FEMObject3D::FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables): Object3D{&parent}, SceneGraph::Drawable3D{*this, &drawables}, _drawVertexMarkers{true}, _phongShader(phongShader), _vertexShader(vertexShader), _triangleBuffer{GL::Buffer::TargetHint::Array}, _indexBuffer{GL::Buffer::TargetHint::ElementArray},_colorBuffer{GL::Buffer::TargetHint::Array}, _tetrahedronIndices{tetrahedronIndices}
 {
     _vertexMarkerVertexBuffer.resize(vertices.size());
     _vertexMarkerIndexBuffer.resize(vertices.size());
@@ -26,7 +26,7 @@ FEMObject3D::FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader,
     {
         const Vector3 center = vertices[i];
         Trade::MeshData3D data = Primitives::uvSphereSolid(16, 32);
-        MeshTools::transformPointsInPlace(Matrix4::translation(center)*Matrix4::scaling({0.05f, 0.05f, 0.05f}), data.positions(0));
+        MeshTools::transformPointsInPlace(Matrix4::translation(center)*Matrix4::scaling({0.03f, 0.03f, 0.03f}), data.positions(0));
         MeshTools::transformVectorsInPlace(Matrix4::translation(center), data.normals(0));
 
         _vertexMarkerVertexBuffer[i].setTargetHint(GL::Buffer::TargetHint::Array);
@@ -76,40 +76,46 @@ std::vector<UnsignedInt> FEMObject3D::getTetrahedronIndices() const
     return _tetrahedronIndices;
 }
 
-void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) {
+void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera)
+{
 
-    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
+    GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
     GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
-    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,
+                                   GL::Renderer::BlendFunction::OneMinusSourceAlpha);
     GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
 
     _phongShader.setTransformationMatrix(transformationMatrix)
-        .setNormalMatrix(transformationMatrix.rotationScaling())
-        .setProjectionMatrix(camera.projectionMatrix())
-        .setAmbientColor(Color3{})
-        .setLightPosition({13.0f, 2.0f, 5.0f}); // Relative to camera
+            .setNormalMatrix(transformationMatrix.rotationScaling())
+            .setProjectionMatrix(camera.projectionMatrix())
+            .setAmbientColor(Color3{})
+            .setLightPosition({13.0f, 2.0f, 5.0f}); // Relative to camera
 
     _triangles.draw(_phongShader);
 
-    _vertexShader.setTransformationMatrix(transformationMatrix*Matrix4::translation(transformationMatrix.inverted().backward()*0.01f))
-        .setProjectionMatrix(camera.projectionMatrix());
+    _vertexShader.setTransformationMatrix(
+                    transformationMatrix * Matrix4::translation(transformationMatrix.inverted().backward() * 0.01f))
+            .setProjectionMatrix(camera.projectionMatrix());
 
-    for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i)
+    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
+    if (_drawVertexMarkers)
     {
-        if (_pinnedVertexIds.find(static_cast<Int>(i)) != _pinnedVertexIds.end())
-            _vertexShader.setColor({1.f, 0.f, 0.f});
-        else
-            _vertexShader.setColor({1.f, 1.f, 1.f});
+        for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i) {
+            if (_pinnedVertexIds.find(static_cast<Int>(i)) != _pinnedVertexIds.end())
+                _vertexShader.setColor({1.f, 0.f, 0.f});
+            else
+                _vertexShader.setColor({1.f, 1.f, 1.f});
 
-        _vertexShader.setObjectId(i);
+            _vertexShader.setObjectId(i);
 
-        _vertexMarkerMesh[i].draw(_vertexShader);
+            _vertexMarkerMesh[i].draw(_vertexShader);
+        }
     }
 
 }
 
-void FEMObject3D::togglePinnedVertex(const Int vertexId)
+void FEMObject3D::togglePinnedVertex(const UnsignedInt vertexId)
 {
     const auto pos = _pinnedVertexIds.find(vertexId);
     if (pos != _pinnedVertexIds.end())
@@ -117,4 +123,22 @@ void FEMObject3D::togglePinnedVertex(const Int vertexId)
     else
         _pinnedVertexIds.insert(vertexId);
 
+}
+
+void FEMObject3D::toggleVertexMarkers()
+{
+    _drawVertexMarkers = !_drawVertexMarkers;
+}
+
+bool FEMObject3D::drawsVertexMarkers() const
+{
+    return _drawVertexMarkers;
+}
+
+void FEMObject3D::solve()
+{
+    FEMTask3D task(_meshVertices, _tetrahedronIndices, _pinnedVertexIds);
+    //std::vector<Float> tetrahedronColors = task.solve();
+
+    //this->setTetrahedronColors(tetrahedronColors);
 }

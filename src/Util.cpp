@@ -31,20 +31,35 @@ bool parseTtg(const std::string& input, std::vector<Vector3>& outVertices, std::
     stream >> tetrahedronCount;
     Debug{} << "Reading ttg with " << vertexCount << " vertices" << "and " << tetrahedronCount << " tetrahedrons";
 
+    // Read vertex coordinates
     for (UnsignedInt i = 0; i < vertexCount; ++i)
     {
-        Float v0, v1, v2;
-        stream >> v0 >> v1 >> v2;
+        Float vi[3];
 
-        const Vector3 v{v0, v1, v2};
+        for (UnsignedInt j = 0; j < 3; ++j)
+        {
+            stream >> vi[j];
 
+            if (!stream.good())
+                return false;
+        }
+
+        const Vector3 v{vi[0], vi[1], vi[2]};
         vertices.push_back(v);
     }
 
+    // Read tetrahedron indices
     for (UnsignedInt i = 0; i < tetrahedronCount; ++i)
     {
-        UnsignedInt t0, t1, t2, t3;
-        stream >> t0 >> t1 >> t2 >> t3;
+        UnsignedInt ti[4];
+
+        for (UnsignedInt j = 0; j < 4; ++j)
+        {
+            stream >> ti[j];
+
+            if (!stream.good())
+                return false;
+        }
 
         for (UnsignedInt j = 0; j < 4; ++j)
         {
@@ -53,10 +68,10 @@ bool parseTtg(const std::string& input, std::vector<Vector3>& outVertices, std::
             uvIndices.push_back(2);
         }
 
-        tetrahedronIndices.push_back(t0);
-        tetrahedronIndices.push_back(t1);
-        tetrahedronIndices.push_back(t2);
-        tetrahedronIndices.push_back(t3);
+        tetrahedronIndices.push_back(ti[0]);
+        tetrahedronIndices.push_back(ti[1]);
+        tetrahedronIndices.push_back(ti[2]);
+        tetrahedronIndices.push_back(ti[3]);
     }
 
 
@@ -75,7 +90,7 @@ bool extractTriangleIndices(const std::vector<UnsignedInt>& tetrahedronIndices, 
 {
     if (tetrahedronIndices.size() % 4 != 0)
     {
-        Debug{} << "Wrong number of tetrahedron indices";
+        Error{} << "Wrong number of tetrahedron indices";
         return false;
     }
 
