@@ -13,22 +13,19 @@
 
 #include "Shaders.h"
 #include "Typedefs.h"
+#include "FEMTask3D.h"
 
 using namespace Magnum;
 
 class FEMObject3D: public Object3D, SceneGraph::Drawable3D {
 public:
     explicit FEMObject3D(PhongIdShader& phongShader, VertexShader& vertexShader, std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices, std::vector<Vector2> uv, std::vector<UnsignedInt> uvIndices, std::vector<UnsignedInt> tetrahedronIndices, Object3D& parent, SceneGraph::DrawableGroup3D& drawables);
-    void togglePinnedVertex(const Int vertexId);
+    void togglePinnedVertex(const UnsignedInt vertexId);
 
-    // Something like this
-    // void applyLoad(..)
-    // void solve()
-    // {
-    //   FEMTask3D task{ vertices, tetrahedronIds, pinnedIds, load };
-    //   std::vector<Vector3> tetrahedronColors = task.solve();
-    //   this->setTetrahedronColors(tetrahedronColors);
-    // }
+    void toggleVertexMarkers();
+    bool drawsVertexMarkers() const;
+
+    void solve();
 
     std::vector<UnsignedInt> getTetrahedronIndices() const;
     void setTetrahedronColors(const std::vector<Vector3>& colors);
@@ -36,11 +33,12 @@ public:
 private:
     void draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) override;
 
-    std::set<Int> _pinnedVertexIds;
+    bool _drawVertexMarkers;
+    std::set<UnsignedInt> _pinnedVertexIds;
+
     PhongIdShader& _phongShader;
     VertexShader& _vertexShader;
 
-    Color3 _color;
     GL::Buffer _triangleBuffer, _indexBuffer, _colorBuffer;
     GL::Mesh _triangles;
 

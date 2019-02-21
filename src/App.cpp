@@ -62,13 +62,17 @@ App::App(const Arguments& arguments):
     std::vector<UnsignedInt> uvIndices;
     std::vector<UnsignedInt> tetrahedronIndices;
 
-    parseTtg(str, vertices, uv, triangleIndices, uvIndices, tetrahedronIndices);
+    if (parseTtg(str, vertices, uv, triangleIndices, uvIndices, tetrahedronIndices))
+    {
+        Vector3 origin, extent;
+        computeAABB(vertices, origin, extent);
+        MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
 
-    Vector3 origin,extent;
-    computeAABB(vertices, origin, extent);
-    MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
-
-    _object = std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, uv, uvIndices, tetrahedronIndices, _scene, _drawables);
+        _object = std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, uv, uvIndices, tetrahedronIndices, _scene, _drawables);
+    }else
+    {
+        Error{} << "Could not parse mesh file";
+    }
 
     /* Configure camera */
     _cameraObject = std::make_unique<Object3D>(&_scene);
@@ -82,7 +86,7 @@ App::App(const Arguments& arguments):
     Ui::StyleConfiguration style = Ui::defaultStyleConfiguration();
     _ui.emplace(Math::clamp({640.0f, 480.0f}, {1024.0f, 576.0f}, Vector2(windowSize()/dpiScaling())), windowSize(), framebufferSize(), style, "»");
     _baseUiPlane.emplace(*_ui);
-    Interconnect::connect(_baseUiPlane->solveButton, &Ui::Button::tapped, &App::solveButtonCallback);
+    Interconnect::connect(_baseUiPlane->solveButton, &Ui::Button::tapped, *this, &App::solveButtonCallback);
 }
 
 void App::viewportEvent(ViewportEvent& event) {
@@ -146,9 +150,12 @@ void App::mousePressEvent(MouseEvent& event) {
             {PixelFormat::R32I});
 
     Int selectedVertexId = data.data<Int>()[0];
-    _object->togglePinnedVertex(selectedVertexId);
 
-    Debug{} << "Toggled vertex number " << selectedVertexId;
+    if (selectedVertexId >= 0)
+    {
+        _object->togglePinnedVertex(static_cast<UnsignedInt>(selectedVertexId));
+        Debug{} << "Toggled vertex number " << selectedVertexId;
+    }
 
 /*    {
         std::vector<Vector3> newColors{_object->getTetrahedronIndices().size() / 4, Vector3{0.f, 0.f, 1.f}};
@@ -178,7 +185,7 @@ void App::mouseMoveEvent(MouseMoveEvent& event) {
     const Vector2i currentPosition = event.position();
     const Vector2i posDiff = currentPosition - _previousPosition;
 
-    if(posDiff.length() < 0.001f)
+    if(posDiff.length() < 1)
         return;
 
     _cameraTrackballAngles[0] -= static_cast<Float>(posDiff[0]) * 0.01f;
@@ -231,5 +238,5 @@ void App::drawUi()
 
 void App::solveButtonCallback()
 {
-    Debug{} << "I do nothing!";
+    _object->toggleVertexMarkers();
 }

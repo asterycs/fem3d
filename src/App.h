@@ -37,7 +37,7 @@ private:
     void mouseReleaseEvent(MouseEvent& event) override;
     void mouseScrollEvent(MouseScrollEvent& event) override;
 
-    static void solveButtonCallback();
+    void solveButtonCallback();
 
     void drawUi();
 
