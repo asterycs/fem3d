@@ -87,19 +87,27 @@ void App::readMeshFile(const std::string& fname)
 
     const auto str = rs.get(fname);
     std::vector<Vector3> vertices;
-    std::vector<Vector2> uv;
-    std::vector<UnsignedInt> triangleIndices;
-    std::vector<UnsignedInt> uvIndices;
-    std::vector<UnsignedInt> tetrahedronIndices;
+    std::vector<UnsignedInt> meshElementIndices;
+    UnsignedInt dim;
 
-    if (parseTtg(str, vertices, uv, triangleIndices, uvIndices, tetrahedronIndices))
+    if (parseTtg(str, vertices, meshElementIndices, dim) && dim == 3)
     {
         Vector3 origin, extent;
         computeAABB(vertices, origin, extent);
         MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
 
+        std::vector<Vector2> uv;
+        std::vector<UnsignedInt> triangleIndices;
+        std::vector<UnsignedInt> uvIndices;
+
+        // Expand tetrahedrons to triangles for visualization
+        extractTriangleIndices(meshElementIndices, triangleIndices);
+
+        // Create uv data. Not used atm.
+        createUVIndices(triangleIndices, uv, uvIndices);
+
         _object = std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, uv,
-                                                uvIndices, tetrahedronIndices, _scene, _drawables);
+                                                uvIndices, meshElementIndices, _scene, _drawables);
     } else
     {
         Error{} << "Could not parse mesh file";

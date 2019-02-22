@@ -2,45 +2,46 @@
 
 #include <sstream>
 
-bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<Vector2> &outUv,
-              std::vector<UnsignedInt> &outTriangleIndices, std::vector<UnsignedInt> &outUvIndices,
-              std::vector<UnsignedInt> &outTetrahedronIndices)
+bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<UnsignedInt> &outMeshElementIndices, UnsignedInt& outDim)
 {
     std::vector<Vector3> vertices;
-    std::vector<Vector2> uv{{0.0f, 0.0f},
-                            {1.0f, 0.0f},
-                            {0.0f, 1.0f}};
-    std::vector<UnsignedInt> triangleIndices;
-    std::vector<UnsignedInt> uvIndices;
-    std::vector<UnsignedInt> tetrahedronIndices;
+    std::vector<UnsignedInt> meshElementIndices;
 
     std::stringstream stream(input);
 
+    UnsignedInt dim;
     UnsignedInt vertexCount;
-    UnsignedInt tetrahedronCount;
+    UnsignedInt meshElementCount;
 
-    // First line should have vertex count
+    // First line should have dimension
     std::string c;
+    stream >> c;
+    if (c != std::string{'d'})
+        return false;
+
+    stream >> dim;
+
+    // Second line should have vertex count
     stream >> c;
     if (c != std::string{'v'})
         return false;
 
     stream >> vertexCount;
 
-    // Then the tetrahedrons
+    // Then the elements
     stream >> c;
     if (c != std::string{'t'})
         return false;
 
-    stream >> tetrahedronCount;
-    Debug{} << "Reading ttg with " << vertexCount << " vertices" << "and " << tetrahedronCount << " tetrahedrons";
+    stream >> meshElementCount;
+    Debug{} << "Reading ttg with " << vertexCount << " vertices" << "and " << meshElementCount << " elements";
 
     // Read vertex coordinates
     for (UnsignedInt i = 0; i < vertexCount; ++i)
     {
-        Float vi[3];
+        Float vi[] {0.f, 0.f, 0.f};
 
-        for (UnsignedInt j = 0; j < 3; ++j)
+        for (UnsignedInt j = 0; j < dim; ++j)
         {
             stream >> vi[j];
 
@@ -52,12 +53,12 @@ bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::
         vertices.push_back(v);
     }
 
-    // Read tetrahedron indices
-    for (UnsignedInt i = 0; i < tetrahedronCount; ++i)
+    // Read mesh element indices
+    for (UnsignedInt i = 0; i < meshElementCount; ++i)
     {
         UnsignedInt ti[4];
 
-        for (UnsignedInt j = 0; j < 4; ++j)
+        for (UnsignedInt j = 0; j < dim+1; ++j)
         {
             stream >> ti[j];
 
@@ -65,33 +66,45 @@ bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::
                 return false;
         }
 
-        for (UnsignedInt j = 0; j < 4; ++j)
+        for (UnsignedInt j = 0; j < dim+1; ++j)
         {
-            uvIndices.push_back(0);
-            uvIndices.push_back(1);
-            uvIndices.push_back(2);
+            meshElementIndices.push_back(ti[j]);
         }
-
-        tetrahedronIndices.push_back(ti[0]);
-        tetrahedronIndices.push_back(ti[1]);
-        tetrahedronIndices.push_back(ti[2]);
-        tetrahedronIndices.push_back(ti[3]);
     }
 
 
-    extractTriangleIndices(tetrahedronIndices, triangleIndices);
-
     outVertices = vertices;
-    outUv = uv;
-    outTriangleIndices = triangleIndices;
-    outUvIndices = uvIndices;
-    outTetrahedronIndices = tetrahedronIndices;
+    outMeshElementIndices = meshElementIndices;
+    outDim = dim;
 
     return true;
 }
 
-bool
-extractTriangleIndices(const std::vector<UnsignedInt> &tetrahedronIndices, std::vector<UnsignedInt> &triangleIndices)
+bool createUVIndices(const std::vector<UnsignedInt>& triangleIndices, std::vector<Vector2>& outUv, std::vector<UnsignedInt>& outUvIndices)
+{
+    std::vector<Vector2> uv{{0.0f, 0.0f},
+                            {1.0f, 0.0f},
+                            {0.0f, 1.0f}};
+
+    std::vector<UnsignedInt> uvIndices;
+
+    for (UnsignedInt i = 0; i < triangleIndices.size(); i += 3)
+    {
+        for (UnsignedInt j = 0; j < 3; ++j)
+        {
+            uvIndices.push_back(j);
+        }
+    }
+
+
+    outUv = uv;
+    outUvIndices = uvIndices;
+
+    return true;
+}
+
+bool extractTriangleIndices(const std::vector<UnsignedInt> &tetrahedronIndices,
+                            std::vector<UnsignedInt> &triangleIndices)
 {
     if (tetrahedronIndices.size() % 4 != 0)
     {

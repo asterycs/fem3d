@@ -8,6 +8,7 @@ assert(size(ts,1) == 4)
 vertices = size(vs,2);
 tetras = size(ts,2);
 
+fprintf(fid, ['d ' num2str(3) '\n']);
 fprintf(fid, ['v ' num2str(vertices) '\n']);
 fprintf(fid, ['t ' num2str(tetras) '\n']);
 
