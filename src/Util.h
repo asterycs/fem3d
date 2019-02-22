@@ -11,15 +11,10 @@
 
 using namespace Magnum;
 
-bool parseTtg(const std::string &input,
-              std::vector<Vector3> &outVertices,
-              std::vector<Vector2> &outUv,
-              std::vector<UnsignedInt> &outTriangleIndices,
-              std::vector<UnsignedInt> &outUvIndices,
-              std::vector<UnsignedInt> &outTetrahedronIndices);
+bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<UnsignedInt> &outMeshElementIndices, UnsignedInt& outDim);
 void computeAABB(const std::vector<Vector3> &vertices, Vector3 &origin, Vector3 &extent);
-bool extractTriangleIndices(const std::vector<UnsignedInt> &tetrahedronIndices,
-                            std::vector<UnsignedInt> &triangleIndices);
+bool createUVIndices(const std::vector<UnsignedInt>& triangleIndices, std::vector<Vector2>& outUv, std::vector<UnsignedInt>& outUvIndices);
+bool extractTriangleIndices(const std::vector<UnsignedInt> &tetrahedronIndices, std::vector<UnsignedInt> &triangleIndices);
 
 template<typename T>
 std::vector<T> repeat(const std::vector<T> &values, const UnsignedInt times)
