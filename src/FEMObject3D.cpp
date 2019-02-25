@@ -83,16 +83,24 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
 
 void FEMObject3D::setTetrahedronColors(const std::vector<Vector3> &colors)
 {
-    std::vector<UnsignedInt> triangleColorIndices;
-    extractTriangleIndices(_tetrahedronIndices, triangleColorIndices);
-
     std::vector<Vector3> expandedColor = repeat(colors, 12);
     _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
 }
 
-std::vector<UnsignedInt> FEMObject3D::getTetrahedronIndices() const
+void FEMObject3D::setVertexColors(const std::vector<Vector3> &colors)
+{
+    std::vector<Vector3> expandedColor = expand(colors, _triangleIndices);
+    _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
+}
+
+const std::vector<UnsignedInt>& FEMObject3D::getTetrahedronIndices() const
 {
     return _tetrahedronIndices;
+}
+
+const std::vector<Vector3>& FEMObject3D::getVertices() const
+{
+    return _meshVertices;
 }
 
 void FEMObject3D::draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera)
@@ -158,7 +166,15 @@ bool FEMObject3D::drawsVertexMarkers() const
 void FEMObject3D::solve()
 {
     FEMTask3D task(_meshVertices, _tetrahedronIndices, _pinnedVertexIds);
-    //std::vector<Float> tetrahedronColors = task.solve();
+    std::vector<Float> vertexValues = task.solve();
 
-    //this->setTetrahedronColors(tetrahedronColors);
+    std::vector<Vector3> vertexColors;
+    vertexColors.reserve(vertexValues.size());
+
+    const Float maxValue = *std::max_element(vertexValues.begin(), vertexValues.end());
+
+    for (auto v : vertexValues)
+        vertexColors.push_back(Vector3(v/maxValue, 0.f, 0.f));
+
+    this->setVertexColors(vertexColors);
 }

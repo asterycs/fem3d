@@ -197,17 +197,6 @@ void App::mousePressEvent(MouseEvent &event)
         Debug{} << "Toggled vertex number " << selectedVertexId;
     }
 
-    /*{
-        std::vector<Vector3> newColors{_object->getTetrahedronIndices().size() / 4, Vector3{0.f, 0.f, 1.f}};
-
-        std::random_device rd;
-        std::mt19937 rng(rd());
-        std::uniform_int_distribution<UnsignedInt> uni(0, newColors.size() - 1);
-
-        const auto r = uni(rng);
-        newColors[r] = {1.f, 0.f, 0.f};
-        _object->setTetrahedronColors(newColors);
-    }*/
     redraw();
 }
 
@@ -282,5 +271,4 @@ void App::toggleVertexMarkersButtonCallback()
 void App::solveButtonCallback()
 {
     _object->solve();
-    Debug{} << "I do nothing!";
 }

@@ -36,8 +36,10 @@ public:
 
     void solve();
 
-    std::vector<UnsignedInt> getTetrahedronIndices() const;
+    const std::vector<UnsignedInt>& getTetrahedronIndices() const;
+    const std::vector<Vector3>& getVertices() const;
     void setTetrahedronColors(const std::vector<Vector3> &colors);
+    void setVertexColors(const std::vector<Vector3> &colors);
 
 private:
     void draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera) override;
