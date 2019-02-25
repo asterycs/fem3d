@@ -14,7 +14,7 @@ ExternalProject_Add(eigen
     BUILD_COMMAND ""
     INSTALL_COMMAND
         ${CMAKE_COMMAND} -E copy_directory
-        <DOWNLOAD_DIR>/eigen
+        <SOURCE_DIR>
         ${EIGEN_INCLUDE_DIR}
 )
 
