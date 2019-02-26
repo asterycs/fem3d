@@ -45,6 +45,12 @@ find_package(MagnumPlugins REQUIRED
 find_package(MagnumExtras REQUIRED
     Ui)
 
+find_package(OpenMP)
+if(OPENMP_FOUND)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 corrade_add_resource(fem3d_RESOURCES resources.conf)
 
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)

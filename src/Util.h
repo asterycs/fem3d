@@ -16,6 +16,9 @@ void computeAABB(const std::vector<Vector3> &vertices, Vector3 &origin, Vector3 
 bool createUVIndices(const std::vector<UnsignedInt>& triangleIndices, std::vector<Vector2>& outUv, std::vector<UnsignedInt>& outUvIndices);
 bool extractTriangleIndices(const std::vector<UnsignedInt> &tetrahedronIndices, std::vector<UnsignedInt> &triangleIndices);
 
+Vector3 valToColor(const Float val);
+std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals);
+
 template<typename T>
 std::vector<T> repeat(const std::vector<T> &values, const UnsignedInt times)
 {

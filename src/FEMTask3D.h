@@ -23,6 +23,8 @@ public:
 private:
     void initialize();
 
+    bool _isFeasible;
+
     std::vector<Vector3> _vertices;
     std::vector<UnsignedInt> _tetrahedronIndices;
     std::set<UnsignedInt> _pinnedVertexIds;
