@@ -2,6 +2,8 @@
 
 This project is an effort to demonstrate the capabilities of the finite element method in 3D. The project is written mainly in C++ and OpenGL trough Magnum.
 
+![](screenshot.png)
+
 To build the project you need Magnum installed on your system. Magnum is split into a number of separate modules. Pre-built packages can be found for Arch but I've found building from source to be a more flexible approach here. Magnum also supports WebGL as the rendering backend and WASM via Emscripten.  
 TODO:
 Instructions for building the WASM version
