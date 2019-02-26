@@ -24,7 +24,7 @@ void main() {
         fragmentColor.rgb += vec3(1.0)*specularity;
     }
 
-    fragmentColor.a = 0.2;
+    fragmentColor.a = 0.4;
     objectId = -1;
     //float closestEdge = min(uvFrag.x, min(uvFrag.y, 1.f - uvFrag.x - uvFrag.y));
 }

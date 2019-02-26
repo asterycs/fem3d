@@ -11,7 +11,7 @@ Eigen::Vector4f phi(const Eigen::Vector3f& x)
     return Eigen::Vector4f(1.f-x(0)-x(1)-x(2), x(0), x(1), x(2));
 }
 
-FEMTask3D::FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<UnsignedInt>& tetrahedronIds, const std::set<UnsignedInt>& pinnedVertexIds): _vertices{vertices}, _tetrahedronIndices{tetrahedronIds}, _pinnedVertexIds{pinnedVertexIds}
+FEMTask3D::FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<UnsignedInt>& tetrahedronIds, const std::set<UnsignedInt>& pinnedVertexIds): _isFeasible{true}, _vertices{vertices}, _tetrahedronIndices{tetrahedronIds}, _pinnedVertexIds{pinnedVertexIds}
 {
 
 }
@@ -92,6 +92,11 @@ void FEMTask3D::initialize()
         }
     }
 
+    if (_pinnedVertexIds.size() == 0)
+    {
+        _isFeasible = false;
+    }
+
     for (auto pinnedVertexId : _pinnedVertexIds)
     {
         A.prune([=](UnsignedInt i, UnsignedInt j, Float){ return i != pinnedVertexId && j != pinnedVertexId;});
@@ -107,6 +112,12 @@ void FEMTask3D::initialize()
 std::vector<Float> FEMTask3D::solve()
 {
     initialize();
+
+    if (!_isFeasible)
+    {
+        Debug{} << "Problem is infeasible, doing nothing";
+        return std::vector<Float>();
+    }
 
     Eigen::SimplicialLLT<Eigen::SparseMatrix<Float>> solver;
     solver.compute(_A);

@@ -105,7 +105,6 @@ const std::vector<Vector3>& FEMObject3D::getVertices() const
 
 void FEMObject3D::draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera)
 {
-
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
     GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
@@ -168,13 +167,9 @@ void FEMObject3D::solve()
     FEMTask3D task(_meshVertices, _tetrahedronIndices, _pinnedVertexIds);
     std::vector<Float> vertexValues = task.solve();
 
-    std::vector<Vector3> vertexColors;
-    vertexColors.reserve(vertexValues.size());
-
-    const Float maxValue = *std::max_element(vertexValues.begin(), vertexValues.end());
-
-    for (auto v : vertexValues)
-        vertexColors.push_back(Vector3(v/maxValue, 0.f, 0.f));
-
-    this->setVertexColors(vertexColors);
+    if (vertexValues.size() > 0)
+    {
+        std::vector<Vector3> vertexColors = valuesToHeatGradient(vertexValues);
+        this->setVertexColors(vertexColors);
+    }
 }

@@ -159,3 +159,29 @@ Eigen::Vector3f toEigen(const Vector3 &v)
 {
     return Eigen::Vector3f(v[0], v[1], v[2]);
 }
+
+Vector3 valToColor(const Float val)
+{
+    if (val <= 0.5f)
+        return Vector3(1.f, 1.f, 0.f) * val * 2.0f + Vector3(0.f, 0.f, 1.f) * (0.5f - val) * 2.0f;
+    else
+        return Vector3(1.f, 0.f, 0.f) * (val - 0.5f) * 2.0f + Vector3(1.f, 1.f, 0.f) * (1.0f - val) * 2.0f;
+}
+
+std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals)
+{
+    std::vector<Vector3> colors;
+    colors.reserve(vals.size());
+
+    if (vals.size() == 0)
+        return colors;
+
+    const Float maxValInv = 1.f/ *std::max_element(vals.begin(), vals.end());
+
+    for (Float val : vals)
+    {
+        colors.push_back(valToColor(val * maxValInv));
+    }
+
+    return colors;
+}
