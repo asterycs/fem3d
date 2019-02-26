@@ -2,12 +2,23 @@
 
 BUILD_EMSCRIPTEN=false
 
-REPOSITORY_PREFIX="/home/YOURUSER/DIR"
+if (( $# == 2 )); then
+    BUILD_EMSCRIPTEN=true
+    EMSCRIPTEN_PREFIX=$2
+    echo "Emscripten prefix: " $EMSCRIPTEN_PREFIX
+fi
+
+if (( $# < 1 )); then
+    echo "Usage: ./build.sh <path_to_repositories>"
+fi
+
+REPOSITORY_PREFIX=$1
+echo "Repository prefix: " $REPOSITORY_PREFIX
+
 CORRADE_PREFIX=${REPOSITORY_PREFIX}"/corrade"
 MAGNUM_PREFIX=${REPOSITORY_PREFIX}"/magnum"
 MAGNUM_EXTRAS_PREFIX=${REPOSITORY_PREFIX}"/magnum-extras"
 MAGNUM_PLUGINS_PREFIX=${REPOSITORY_PREFIX}"/magnum-plugins"
-EMSCRIPTEN_PREFIX=${REPOSITORY_PREFIX}"/emsdk/emscripten/1.38.25/system"
 
 SDL2_BUILD_PREFIX="build"
 EMSCRIPTEN_BUILD_PREFIX="build-emscripten"
@@ -15,7 +26,6 @@ EMSCRIPTEN_BUILD_PREFIX="build-emscripten"
 echo CORRADE_PREFIX: $CORRADE_PREFIX
 echo MAGNUM_PREFIX: $MAGNUM_PREFIX
 echo MAGNUM_EXTRAS_PREFIX: $MAGNUM_EXTRAS_PREFIX
-echo EMSCRIPTEN_PREFIX: $EMSCRIPTEN_PREFIX
 
 
 # Corrade
