@@ -41,6 +41,12 @@ App::App(const Arguments &arguments) :
     MAGNUM_ASSERT_GL_VERSION_SUPPORTED(GL::Version::GL330);
 #endif
 
+    // Note about multisampling:
+    // Multisampled storage can be set with
+    // renderbuffer.setStorageMultisample(8, GL::RenderbufferFormat::RGBA8, GL::defaultFramebuffer.viewport().size());
+    // However, OpenGL requires all attached renderbuffers to have the same number of samples.
+    // Thus the object picking would need to be done in a separate render pass with single sample renderbuffer.
+
     _color.setStorage(GL::RenderbufferFormat::RGBA8, GL::defaultFramebuffer.viewport().size());
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, GL::defaultFramebuffer.viewport().size());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, GL::defaultFramebuffer.viewport().size());
@@ -140,7 +146,6 @@ void App::drawEvent()
 
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth)
             .bind();
-
 
     // Blit color to main fb
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{0});
@@ -260,7 +265,11 @@ void App::drawUi()
                                    GL::Renderer::BlendFunction::OneMinusSourceAlpha);
     GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
+
     _ui->draw();
+
+    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
+    GL::Renderer::disable(GL::Renderer::Feature::Blending);
 }
 
 void App::toggleVertexMarkersButtonCallback()
