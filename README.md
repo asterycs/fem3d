@@ -34,7 +34,7 @@ Mesh generation is out of the scope for this project. Two MATLAB scripts are inc
 
 The MATLAB script can be run in batchmode with
 ```
-matlab -nodesktop -nosplash -nodisplay -r "generateMesh;exit"
+matlab -nodesktop -nosplash -nodisplay -r "createMesh();exit"
 ```
 
 
