@@ -50,13 +50,28 @@ App::App(const Arguments &arguments) :
     _color.setStorage(GL::RenderbufferFormat::RGBA8, GL::defaultFramebuffer.viewport().size());
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, GL::defaultFramebuffer.viewport().size());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, GL::defaultFramebuffer.viewport().size());
-    _framebuffer.attachRenderbuffer(GL::Framebuffer::ColorAttachment{0}, _color)
-            .attachRenderbuffer(GL::Framebuffer::ColorAttachment{1}, _vertexId)
+
+    _blendAccumulation.setMagnificationFilter(GL::SamplerFilter::Nearest)
+            .setMinificationFilter(GL::SamplerFilter::Nearest)
+            .setStorage(GL::TextureFormat::RGBA16F, GL::defaultFramebuffer.viewport().size())
+            .setSubImage(GL::defaultFramebuffer.viewport().size(), ImageView2D{PixelFormat::RGBA16F, GL::defaultFramebuffer.viewport().size(), nullptr});
+
+    _blendRevealage.setMagnificationFilter(GL::SamplerFilter::Nearest)
+            .setMinificationFilter(GL::SamplerFilter::Nearest)
+            .setStorage(GL::TextureFormat::R8UI, GL::defaultFramebuffer.viewport().size())
+            .setSubImage(GL::defaultFramebuffer.viewport().size(), ImageView2D{PixelFormat::R8UI, GL::defaultFramebuffer.viewport().size(), nullptr});
+
+
+    _framebuffer.attachRenderbuffer(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}, _color)
+            .attachRenderbuffer(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput}, _vertexId)
+            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorBlendOutput}, _blendAccumulation)
+            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorWeightOutput}, _blendRevealage)
             .attachRenderbuffer(GL::Framebuffer::BufferAttachment::Depth, _depth)
-            .mapForDraw({{PhongIdShader::ColorOutput,    GL::Framebuffer::ColorAttachment{0}},
-                         {VertexShader::ColorOutput,     GL::Framebuffer::ColorAttachment{0}},
-                         {PhongIdShader::ObjectIdOutput, GL::Framebuffer::ColorAttachment{1}},
-                         {VertexShader::ObjectIdOutput,  GL::Framebuffer::ColorAttachment{1}}});
+            .mapForDraw({{PhongIdShader::ColorOutput,    GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}},
+                         {PhongIdShader::ObjectIdOutput, GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput}},
+                         {PhongIdShader::ColorBlendOutput, GL::Framebuffer::ColorAttachment{_phongShader.ColorBlendOutput}},
+                         {PhongIdShader::ColorWeightOutput, GL::Framebuffer::ColorAttachment{_phongShader.ColorWeightOutput}}});
+
     CORRADE_INTERNAL_ASSERT(_framebuffer.checkStatus(GL::FramebufferTarget::Draw) == GL::Framebuffer::Status::Complete);
 
     /* Configure camera */
@@ -138,19 +153,33 @@ void App::viewportEvent(ViewportEvent &event)
 
 void App::drawEvent()
 {
-    _framebuffer.clearColor(0, Color3{0.0f})
-            .clearColor(1, Vector4i{-1})
+    _framebuffer.clearColor(_phongShader.ColorOutput, Color3{0.0f})
+            .clearColor(_phongShader.ObjectIdOutput, Vector4i{-1})
+            .clearColor(_phongShader.ColorBlendOutput, Vector4(0.0f))
+            .clearColor(_phongShader.ColorWeightOutput, Vector4(1.0f))
             .clearDepth(1.0f)
             .bind();
+
     _camera->draw(_drawables);
 
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth)
             .bind();
 
-    // Blit color to main fb
-    _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{0});
-    GL::AbstractFramebuffer::blit(_framebuffer, GL::defaultFramebuffer,
-                                  {{}, _framebuffer.viewport().size()}, GL::FramebufferBlit::Color);
+    GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
+
+    GL::Mesh triangles;
+    triangles.setCount(3).setPrimitive(GL::MeshPrimitive::Triangles);
+
+    _compositionShader.setTex0(_blendAccumulation);
+    _compositionShader.setTex1(_blendRevealage);
+    triangles.draw(_compositionShader);
+
+    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
+
+    // Blit vertex markers to main fb
+    //_framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput});
+    //GL::AbstractFramebuffer::blit(_framebuffer, GL::defaultFramebuffer,
+    //                              {{}, _framebuffer.viewport().size()}, GL::FramebufferBlit::Color);
 
     drawUi();
 
@@ -188,11 +217,10 @@ void App::mousePressEvent(MouseEvent &event)
 
     event.setAccepted();
 
-    _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{1});
+    _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput});
     Image2D data = _framebuffer.read(
             Range2Di::fromSize({event.position().x(), _framebuffer.viewport().sizeY() - event.position().y() - 1},
-                               {1, 1}),
-            {PixelFormat::R32I});
+                               {1, 1}), {PixelFormat::R32I});
 
     Int selectedVertexId = data.data<Int>()[0];
 
