@@ -51,21 +51,19 @@ App::App(const Arguments &arguments) :
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, GL::defaultFramebuffer.viewport().size());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, GL::defaultFramebuffer.viewport().size());
 
-    _blendAccumulation.setMagnificationFilter(GL::SamplerFilter::Nearest)
+    // Used for Weight blended order-independent transparency: http://jcgt.org/published/0002/02/09/
+    _transparencyAccumulation.setMagnificationFilter(GL::SamplerFilter::Nearest)
             .setMinificationFilter(GL::SamplerFilter::Nearest)
-            .setStorage(GL::TextureFormat::RGBA16F, GL::defaultFramebuffer.viewport().size())
-            .setSubImage(GL::defaultFramebuffer.viewport().size(), ImageView2D{PixelFormat::RGBA16F, GL::defaultFramebuffer.viewport().size(), nullptr});
+            .setStorage(GL::TextureFormat::RGBA16F, GL::defaultFramebuffer.viewport().size());
 
-    _blendRevealage.setMagnificationFilter(GL::SamplerFilter::Nearest)
+    _transparencyRevealage.setMagnificationFilter(GL::SamplerFilter::Nearest)
             .setMinificationFilter(GL::SamplerFilter::Nearest)
-            .setStorage(GL::TextureFormat::R8UI, GL::defaultFramebuffer.viewport().size())
-            .setSubImage(GL::defaultFramebuffer.viewport().size(), ImageView2D{PixelFormat::R8UI, GL::defaultFramebuffer.viewport().size(), nullptr});
-
+            .setStorage(GL::TextureFormat::R8UI, GL::defaultFramebuffer.viewport().size());
 
     _framebuffer.attachRenderbuffer(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}, _color)
             .attachRenderbuffer(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput}, _vertexId)
-            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorBlendOutput}, _blendAccumulation)
-            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorWeightOutput}, _blendRevealage)
+            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorBlendOutput}, _transparencyAccumulation)
+            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorWeightOutput}, _transparencyRevealage)
             .attachRenderbuffer(GL::Framebuffer::BufferAttachment::Depth, _depth)
             .mapForDraw({{PhongIdShader::ColorOutput,    GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}},
                          {PhongIdShader::ObjectIdOutput, GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput}},
@@ -144,6 +142,9 @@ void App::viewportEvent(ViewportEvent &event)
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, event.framebufferSize());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, event.framebufferSize());
 
+    _transparencyAccumulation.setStorage(GL::TextureFormat::RGBA16F, event.framebufferSize());
+    _transparencyRevealage.setStorage(GL::TextureFormat::R8UI, event.framebufferSize());
+
     _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{event.framebufferSize()}.aspectRatio(), 0.001f, 100.0f))
             .setViewport(event.framebufferSize());
 
@@ -170,8 +171,8 @@ void App::drawEvent()
     GL::Mesh triangles;
     triangles.setCount(3).setPrimitive(GL::MeshPrimitive::Triangles);
 
-    _compositionShader.setTex0(_blendAccumulation);
-    _compositionShader.setTex1(_blendRevealage);
+    _compositionShader.setTex0(_transparencyAccumulation);
+    _compositionShader.setTex1(_transparencyRevealage);
     triangles.draw(_compositionShader);
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);

@@ -16,8 +16,8 @@ PhongIdShader::PhongIdShader() {
     GL::Shader vert{GL::Version::GLES300, GL::Shader::Type::Vertex},
 frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
 #endif
-    vert.addSource(rs.get("PhongId.vert"));
-    frag.addSource(rs.get("PhongId.frag"));
+    vert.addSource(rs.get("PhongTransparentId.vert"));
+    frag.addSource(rs.get("PhongTransparentId.frag"));
     CORRADE_INTERNAL_ASSERT(GL::Shader::compile({vert, frag}));
     attachShaders({vert, frag});
     CORRADE_INTERNAL_ASSERT(link());

@@ -1,12 +1,11 @@
-uniform lowp vec3 ambientColor;
+uniform highp vec3 ambientColor;
 
-in mediump vec3 transformedNormal;
+in highp vec3 transformedNormal;
 in highp vec3 lightDirection;
 in highp vec3 cameraDirection;
-in mediump vec3 vFragColor;
-in mediump vec2 uvFrag;
+in highp vec3 vFragColor;
+in highp vec2 uvFrag;
 
-layout(location = 0) out highp vec4 outColor;
 layout(location = 1) out highp int outObjectId;
 layout(location = 2) out highp vec4 outSumColor;
 layout(location = 3) out highp vec4 outSumWeight;
@@ -28,7 +27,6 @@ void main() {
     }
 
     color.a = 0.2;
-    outColor = color;
     outObjectId = -1;
     //float closestEdge = min(uvFrag.x, min(uvFrag.y, 1.f - uvFrag.x - uvFrag.y));
 
@@ -38,9 +36,6 @@ void main() {
     float linearDepth = viewDepth * depthScale;
     float weight = clamp(0.03 / (1e-5 + pow(linearDepth, 4.0)), 1e-2, 3e3);
 
-    // Blend Func: GL_ONE, GL_ONE
     outSumColor = vec4(color.rgb * color.a, color.a) * weight;
-
-    // Blend Func: GL_ZERO, GL_ONE_MINUS_SRC_ALPHA
     outSumWeight = vec4(color.a);
 }
