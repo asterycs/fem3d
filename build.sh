@@ -10,6 +10,7 @@ fi
 
 if (( $# < 1 )); then
     echo "Usage: ./build.sh <path_to_repositories>"
+    exit 0
 fi
 
 REPOSITORY_PREFIX=$1
