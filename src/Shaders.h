@@ -1,10 +1,12 @@
-#ifndef GP2_SHADERS_H
-#define GP2_SHADERS_H
+#ifndef FEM3D_SHADERS_H
+#define FEM3D_SHADERS_H
 
 #include <Magnum/Math/Color.h>
 #include <Magnum/Math/Matrix4.h>
 
 #include <Magnum/GL/AbstractShaderProgram.h>
+
+#include <Magnum/GL/RectangleTexture.h>
 
 using namespace Magnum;
 
@@ -17,7 +19,9 @@ public:
 
     enum: UnsignedInt {
         ColorOutput = 0,
-        ObjectIdOutput = 1
+        ObjectIdOutput = 1,
+        ColorBlendOutput = 2,
+        ColorWeightOutput = 3
     };
 
     explicit PhongIdShader();
@@ -93,5 +97,35 @@ private:
             _colorUniform;
 };
 
+class CompositionShader: public GL::AbstractShaderProgram {
+public:
+    typedef GL::Attribute<0, Vector3> Position;
 
-#endif //GP2_SHADERS_H
+    enum: UnsignedInt {
+        ColorOutput = 0
+    };
+
+    enum: UnsignedInt {
+        Tex0 = 0,
+        Tex1 = 1
+    };
+
+    explicit CompositionShader();
+
+    CompositionShader& setTex0(GL::RectangleTexture& texture) {
+        setUniform(uniformLocation("ColorTex0"), Tex0);
+        texture.bind(Tex0);
+        return *this;
+    }
+
+    CompositionShader& setTex1(GL::RectangleTexture& texture) {
+        setUniform(uniformLocation("ColorTex1"), Tex1);
+        texture.bind(Tex1);
+        return *this;
+    }
+
+private:
+};
+
+
+#endif //FEM3D_SHADERS_H
