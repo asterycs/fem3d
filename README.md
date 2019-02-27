@@ -32,6 +32,12 @@ make -j
 #### Mesh generation
 Mesh generation is out of the scope for this project. Two MATLAB scripts are included for generating and saving tetrahedron meshes in a simple ASCII format. In order to have this project also WASM ready, the files are built into the final binary. This is specified in "src/resources.conf". You can generate a 3D mesh out of "cube.stl" and move the resulting file to src/.
 
+The MATLAB script can be run in batchmode with
+```
+matlab -nodesktop -nosplash -nodisplay -r "generateMesh;exit"
+```
+
+
 GLSL shaders are written in separate "\*.vert" and "\*.frag" files and are included using the same mechanism as the mesh files. There are also a number of html files in src that can be used for the WASM build.
 
 Programming remarks:
@@ -39,7 +45,5 @@ Programming remarks:
 
 TODO:
 - The mesh file also needs to include information about the boundary nodes
-  - meshToPet works properly for matlab <= R2016a, in R2016b and newer its kind of broken (_no properties for e_).  
-  - The [documentation](https://www.mathworks.com/help/pde/ug/pde.femesh.meshtopet.html) for meshToPet states its a legacy workflow and might not work
 - Draw-independent transparency for visualization__
 - Solver cleanup__
