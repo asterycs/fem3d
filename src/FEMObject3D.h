@@ -61,6 +61,7 @@ private:
     std::vector<Vector3> _meshVertices;
     std::vector<UnsignedInt> _triangleIndices;
     std::vector<UnsignedInt> _tetrahedronIndices;
+    std::vector<UnsignedInt> _boundryIndices;
 };
 
 
