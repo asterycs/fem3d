@@ -24,6 +24,7 @@ public:
                          VertexShader &vertexShader,
                          std::vector<Vector3> vertices,
                          std::vector<UnsignedInt> triangleIndices,
+			 std::vector<UnsignedInt> boundryIndices,
                          std::vector<Vector2> uv,
                          std::vector<UnsignedInt> uvIndices,
                          std::vector<UnsignedInt> tetrahedronIndices,
