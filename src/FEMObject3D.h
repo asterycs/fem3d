@@ -1,5 +1,5 @@
-#ifndef GP2_FEMOBJECT_H
-#define GP2_FEMOBJECT_H
+#ifndef FEM3D_FEMOBJECT_H
+#define FEM3D_FEMOBJECT_H
 
 #include <Magnum/Math/Color.h>
 
@@ -65,4 +65,4 @@ private:
 };
 
 
-#endif //GP2_FEMOBJECT_H
+#endif //FEM3D_FEMOBJECT_H

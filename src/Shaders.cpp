@@ -16,18 +16,11 @@ PhongIdShader::PhongIdShader() {
     GL::Shader vert{GL::Version::GLES300, GL::Shader::Type::Vertex},
 frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
 #endif
-    vert.addSource(rs.get("PhongId.vert"));
-    frag.addSource(rs.get("PhongId.frag"));
+    vert.addSource(rs.get("PhongTransparentId.vert"));
+    frag.addSource(rs.get("PhongTransparentId.frag"));
     CORRADE_INTERNAL_ASSERT(GL::Shader::compile({vert, frag}));
     attachShaders({vert, frag});
     CORRADE_INTERNAL_ASSERT(link());
-
-
-    _lightPositionUniform = uniformLocation("light");
-    _ambientColorUniform = uniformLocation("ambientColor");
-    _transformationMatrixUniform = uniformLocation("transformationMatrix");
-    _projectionMatrixUniform = uniformLocation("projectionMatrix");
-    _normalMatrixUniform = uniformLocation("normalMatrix");
 }
 
 VertexShader::VertexShader() {
@@ -51,4 +44,22 @@ frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
     _objectIdUniform = uniformLocation("objectId");
     _transformationMatrixUniform = uniformLocation("transformationMatrix");
     _projectionMatrixUniform = uniformLocation("projectionMatrix");
+}
+
+CompositionShader::CompositionShader() {
+    Utility::Resource rs("fem3d-data");
+
+#ifndef MAGNUM_TARGET_GLES
+    GL::Shader vert{GL::Version::GL330, GL::Shader::Type::Vertex},
+            frag{GL::Version::GL330, GL::Shader::Type::Fragment};
+#else
+    GL::Shader vert{GL::Version::GLES300, GL::Shader::Type::Vertex},
+frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
+#endif
+    vert.addSource(rs.get("Composition.vert"));
+    frag.addSource(rs.get("Composition.frag"));
+    CORRADE_INTERNAL_ASSERT(GL::Shader::compile({vert, frag}));
+    attachShaders({vert, frag});
+    CORRADE_INTERNAL_ASSERT(link());
+
 }
