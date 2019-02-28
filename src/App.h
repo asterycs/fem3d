@@ -62,8 +62,8 @@ private:
     std::unique_ptr<FEMObject3D> _object;
 
     GL::Framebuffer _framebuffer;
-    GL::Renderbuffer _color, _vertexId, _depth;
-    GL::RectangleTexture _transparencyAccumulation, _transparencyRevealage;
+    GL::Renderbuffer _vertexId, _depth;
+    GL::RectangleTexture _color, _transparencyAccumulation, _transparencyRevealage;
 
     Vector2 _cameraTrackballAngles;
 

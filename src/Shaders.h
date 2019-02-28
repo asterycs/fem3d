@@ -8,6 +8,8 @@
 
 #include <Magnum/GL/RectangleTexture.h>
 
+#include <Magnum/GL/Renderer.h>
+
 using namespace Magnum;
 
 class PhongIdShader: public GL::AbstractShaderProgram {
@@ -27,36 +29,36 @@ public:
     explicit PhongIdShader();
 
     PhongIdShader& setLightPosition(const Vector3& position) {
-        setUniform(_lightPositionUniform, position);
+        setUniform(uniformLocation("light"), position);
         return *this;
     }
 
     PhongIdShader& setAmbientColor(const Color3& color) {
-        setUniform(_ambientColorUniform, color);
+        setUniform(uniformLocation("ambientColor"), color);
         return *this;
     }
 
     PhongIdShader& setTransformationMatrix(const Matrix4& matrix) {
-        setUniform(_transformationMatrixUniform, matrix);
+        setUniform(uniformLocation("transformationMatrix"), matrix);
         return *this;
     }
 
     PhongIdShader& setNormalMatrix(const Matrix3x3& matrix) {
-        setUniform(_normalMatrixUniform, matrix);
+        setUniform(uniformLocation("normalMatrix"), matrix);
         return *this;
     }
 
     PhongIdShader& setProjectionMatrix(const Matrix4& matrix) {
-        setUniform(_projectionMatrixUniform, matrix);
+        setUniform(uniformLocation("projectionMatrix"), matrix);
+        return *this;
+    }
+    
+    PhongIdShader& setDepthScale(const Float scale) {
+        setUniform(uniformLocation("depthScale"), scale);
         return *this;
     }
 
 private:
-    Int     _lightPositionUniform,
-            _ambientColorUniform,
-            _transformationMatrixUniform,
-            _normalMatrixUniform,
-            _projectionMatrixUniform;
 };
 
 class VertexShader: public GL::AbstractShaderProgram {
@@ -105,22 +107,29 @@ public:
         ColorOutput = 0
     };
 
-    enum: UnsignedInt {
-        Tex0 = 0,
-        Tex1 = 1
+    enum: Int {
+        Opaque = 0,
+        TransparencyAccumulation = 1,
+        TransparencyRevealage = 2
     };
 
     explicit CompositionShader();
 
-    CompositionShader& setTex0(GL::RectangleTexture& texture) {
-        setUniform(uniformLocation("ColorTex0"), Tex0);
-        texture.bind(Tex0);
+    CompositionShader& setOpaqueTexture(GL::RectangleTexture& texture) {
+        setUniform(uniformLocation("Opaque"), Opaque);
+        texture.bind(Opaque);
         return *this;
     }
 
-    CompositionShader& setTex1(GL::RectangleTexture& texture) {
-        setUniform(uniformLocation("ColorTex1"), Tex1);
-        texture.bind(Tex1);
+    CompositionShader& setTransparencyAccumulationTexture(GL::RectangleTexture& texture) {
+        setUniform(uniformLocation("TransparencyAccumulation"), TransparencyAccumulation);
+        texture.bind(TransparencyAccumulation);
+        return *this;
+    }
+    
+    CompositionShader& setTransparencyRevealageTexture(GL::RectangleTexture& texture) {
+        setUniform(uniformLocation("TransparencyRevealage"), TransparencyRevealage);
+        texture.bind(TransparencyRevealage);
         return *this;
     }
 

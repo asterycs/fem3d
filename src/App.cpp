@@ -47,7 +47,10 @@ App::App(const Arguments &arguments) :
     // However, OpenGL requires all attached renderbuffers to have the same number of samples.
     // Thus the object picking would need to be done in a separate render pass with single sample renderbuffer.
 
-    _color.setStorage(GL::RenderbufferFormat::RGBA8, GL::defaultFramebuffer.viewport().size());
+    _color.setMagnificationFilter(GL::SamplerFilter::Nearest)
+            .setMinificationFilter(GL::SamplerFilter::Nearest)
+            .setStorage(GL::TextureFormat::RGBA8, GL::defaultFramebuffer.viewport().size());
+    
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, GL::defaultFramebuffer.viewport().size());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, GL::defaultFramebuffer.viewport().size());
 
@@ -58,9 +61,9 @@ App::App(const Arguments &arguments) :
 
     _transparencyRevealage.setMagnificationFilter(GL::SamplerFilter::Nearest)
             .setMinificationFilter(GL::SamplerFilter::Nearest)
-            .setStorage(GL::TextureFormat::R8UI, GL::defaultFramebuffer.viewport().size());
+            .setStorage(GL::TextureFormat::R8, GL::defaultFramebuffer.viewport().size());
 
-    _framebuffer.attachRenderbuffer(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}, _color)
+    _framebuffer.attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}, _color)
             .attachRenderbuffer(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput}, _vertexId)
             .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorBlendOutput}, _transparencyAccumulation)
             .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorWeightOutput}, _transparencyRevealage)
@@ -138,10 +141,10 @@ void App::viewportEvent(ViewportEvent &event)
     GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
 
     _framebuffer.setViewport({{}, event.framebufferSize()});
-    _color.setStorage(GL::RenderbufferFormat::RGBA8, event.framebufferSize());
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, event.framebufferSize());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, event.framebufferSize());
 
+    _color.setStorage(GL::TextureFormat::RGBA8, event.framebufferSize());
     _transparencyAccumulation.setStorage(GL::TextureFormat::RGBA16F, event.framebufferSize());
     _transparencyRevealage.setStorage(GL::TextureFormat::R8UI, event.framebufferSize());
 
@@ -154,10 +157,10 @@ void App::viewportEvent(ViewportEvent &event)
 
 void App::drawEvent()
 {
-    _framebuffer.clearColor(_phongShader.ColorOutput, Color3{0.0f})
+    _framebuffer.clearColor(_phongShader.ColorOutput, Vector4{0.0f})
             .clearColor(_phongShader.ObjectIdOutput, Vector4i{-1})
-            .clearColor(_phongShader.ColorBlendOutput, Vector4(0.0f))
-            .clearColor(_phongShader.ColorWeightOutput, Vector4(1.0f))
+            .clearColor(_phongShader.ColorBlendOutput, Vector4{0.0f})
+            .clearColor(_phongShader.ColorWeightOutput, Vector4(1.f))
             .clearDepth(1.0f)
             .bind();
 
@@ -168,14 +171,16 @@ void App::drawEvent()
 
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
 
-    GL::Mesh triangles;
-    triangles.setCount(3).setPrimitive(GL::MeshPrimitive::Triangles);
+    GL::Mesh fullScreenTriangles;
+    fullScreenTriangles.setCount(3).setPrimitive(GL::MeshPrimitive::Triangles);
 
-    _compositionShader.setTex0(_transparencyAccumulation);
-    _compositionShader.setTex1(_transparencyRevealage);
-    triangles.draw(_compositionShader);
+    _compositionShader.setOpaqueTexture(_color);
+    _compositionShader.setTransparencyAccumulationTexture(_transparencyAccumulation);
+    _compositionShader.setTransparencyRevealageTexture(_transparencyRevealage);
+    fullScreenTriangles.draw(_compositionShader);
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
+
 
     // Blit vertex markers to main fb
     //_framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput});
