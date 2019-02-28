@@ -1,51 +1,55 @@
 #include "FEMTask3D.h"
-
 #include "Eigen/Dense"
 #include "Eigen/SparseCholesky"
 
 #include "Util.h"
 
-Eigen::Vector4f phi(const Eigen::Vector3f& x);
-Eigen::Vector4f phi(const Eigen::Vector3f& x)
+Eigen::Vector4f phi(const Eigen::Vector3f &x);
+Eigen::Vector4f phi(const Eigen::Vector3f &x)
 {
-    return Eigen::Vector4f(1.f-x(0)-x(1)-x(2), x(0), x(1), x(2));
+    return Eigen::Vector4f(1.f - x(0) - x(1) - x(2), x(0), x(1), x(2));
 }
 
-FEMTask3D::FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<UnsignedInt>& tetrahedronIds, const std::set<UnsignedInt>& pinnedVertexIds): _isFeasible{true}, _vertices{vertices}, _tetrahedronIndices{tetrahedronIds}, _pinnedVertexIds{pinnedVertexIds}
+FEMTask3D::FEMTask3D(const std::vector<Vector3> &vertices,
+                     const std::vector<UnsignedInt> &tetrahedronIds,
+                     const std::set<UnsignedInt> &pinnedVertexIds) : _isFeasible{true}, _vertices{vertices},
+                                                                     _tetrahedronIndices{tetrahedronIds},
+                                                                     _pinnedVertexIds{pinnedVertexIds}
 {
 
 }
 
 void FEMTask3D::initialize()
 {
-    Eigen::SparseMatrix<Float> A(_vertices.size(),_vertices.size());
+    Eigen::SparseMatrix<Float> A(_vertices.size(), _vertices.size());
     Eigen::SparseVector<Float> b(_vertices.size());
 
-    Eigen::MatrixXf gphi(3,4);
+    Eigen::MatrixXf gphi(3, 4);
     gphi << -1.f, 1.f, 0.f, 0.f,
             -1.f, 0.f, 1.f, 0.f,
             -1.f, 0.f, 0.f, 1.f;
 
-    Eigen::MatrixXf xip(3,4);
-    xip <<  0.1381966011250105f,0.5854101966249685f,0.1381966011250105f,0.1381966011250105f,
-            0.1381966011250105f,0.1381966011250105f,0.5854101966249685f,0.1381966011250105f,
-            0.1381966011250105f,0.1381966011250105f,0.1381966011250105f,0.5854101966249685f;
+    Eigen::MatrixXf xip(3, 4);
+    xip << 0.1381966011250105f, 0.5854101966249685f, 0.1381966011250105f, 0.1381966011250105f,
+            0.1381966011250105f, 0.1381966011250105f, 0.5854101966249685f, 0.1381966011250105f,
+            0.1381966011250105f, 0.1381966011250105f, 0.1381966011250105f, 0.5854101966249685f;
 
-    const Eigen::Vector4f w(Eigen::Array4f(0.25f, 0.25f, 0.25f, 0.25f)/6.f);
+    const Eigen::Vector4f w(Eigen::Array4f(0.25f, 0.25f, 0.25f, 0.25f) / 6.f);
 
     for (UnsignedInt ti = 0; ti < _tetrahedronIndices.size(); ti += 4)
     {
         const UnsignedInt vi[] = {_tetrahedronIndices[ti],
-                                  _tetrahedronIndices[ti+1],
-                                  _tetrahedronIndices[ti+2],
-                                  _tetrahedronIndices[ti+3]};
+                                  _tetrahedronIndices[ti + 1],
+                                  _tetrahedronIndices[ti + 2],
+                                  _tetrahedronIndices[ti + 3]};
 
         const Eigen::Vector3f p0 = toEigen(_vertices[vi[0]]);
         const Eigen::Vector3f p1 = toEigen(_vertices[vi[1]]);
         const Eigen::Vector3f p2 = toEigen(_vertices[vi[2]]);
         const Eigen::Vector3f p3 = toEigen(_vertices[vi[3]]);
 
-        Eigen::Matrix3f Bk; Bk << p1 - p0, p2 - p0, p3 - p0;
+        Eigen::Matrix3f Bk;
+        Bk << p1 - p0, p2 - p0, p3 - p0;
         //Eigen::Vector3f bk = p0;
 
         for (UnsignedInt i = 0; i < 4; ++i)
@@ -54,7 +58,7 @@ void FEMTask3D::initialize()
             {
                 const Eigen::Vector3f l = Bk.transpose().inverse() * gphi.col(i);
                 const Eigen::Vector3f r = Bk.transpose().inverse() * gphi.col(j);
-                A.coeffRef(vi[i],vi[j]) += w.sum() * l.dot(r) * std::abs(Bk.determinant());
+                A.coeffRef(vi[i], vi[j]) += w.sum() * l.dot(r) * std::abs(Bk.determinant());
             }
         }
     }
@@ -62,16 +66,17 @@ void FEMTask3D::initialize()
     for (UnsignedInt ti = 0; ti < _tetrahedronIndices.size(); ti += 4)
     {
         const UnsignedInt vi[] = {_tetrahedronIndices[ti],
-                                  _tetrahedronIndices[ti+1],
-                                  _tetrahedronIndices[ti+2],
-                                  _tetrahedronIndices[ti+3]};
+                                  _tetrahedronIndices[ti + 1],
+                                  _tetrahedronIndices[ti + 2],
+                                  _tetrahedronIndices[ti + 3]};
 
         const Eigen::Vector3f p0 = toEigen(_vertices[vi[0]]);
         const Eigen::Vector3f p1 = toEigen(_vertices[vi[1]]);
         const Eigen::Vector3f p2 = toEigen(_vertices[vi[2]]);
         const Eigen::Vector3f p3 = toEigen(_vertices[vi[3]]);
 
-        Eigen::Matrix3f Bk; Bk << p1 - p0, p2 - p0, p3 - p0;
+        Eigen::Matrix3f Bk;
+        Bk << p1 - p0, p2 - p0, p3 - p0;
         //Eigen::Vector3f bk = p0;
 
         Eigen::Vector4f bl(Eigen::Vector4f::Zero());
@@ -97,13 +102,16 @@ void FEMTask3D::initialize()
         _isFeasible = false;
     }
 
+
     for (auto pinnedVertexId : _pinnedVertexIds)
     {
-        A.prune([=](UnsignedInt i, UnsignedInt j, Float){ return i != pinnedVertexId && j != pinnedVertexId;});
-        A.coeffRef(pinnedVertexId,pinnedVertexId) = 1.f;
+        A.prune([=](UnsignedInt i, UnsignedInt j, Float)
+                { return i != pinnedVertexId && j != pinnedVertexId; });
+        A.coeffRef(pinnedVertexId, pinnedVertexId) = 1.f;
 
         b.coeffRef(pinnedVertexId) = 0.0f;
     }
+
 
     _A = A;
     _b = b;

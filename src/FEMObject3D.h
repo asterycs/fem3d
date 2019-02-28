@@ -24,6 +24,7 @@ public:
                          VertexShader &vertexShader,
                          std::vector<Vector3> vertices,
                          std::vector<UnsignedInt> triangleIndices,
+                         std::vector<UnsignedInt> boundaryIndices,
                          std::vector<Vector2> uv,
                          std::vector<UnsignedInt> uvIndices,
                          std::vector<UnsignedInt> tetrahedronIndices,
@@ -36,8 +37,8 @@ public:
 
     void solve();
 
-    const std::vector<UnsignedInt>& getTetrahedronIndices() const;
-    const std::vector<Vector3>& getVertices() const;
+    const std::vector<UnsignedInt> &getTetrahedronIndices() const;
+    const std::vector<Vector3> &getVertices() const;
     void setTetrahedronColors(const std::vector<Vector3> &colors);
     void setVertexColors(const std::vector<Vector3> &colors);
 
@@ -60,6 +61,7 @@ private:
     std::vector<Vector3> _meshVertices;
     std::vector<UnsignedInt> _triangleIndices;
     std::vector<UnsignedInt> _tetrahedronIndices;
+    std::vector<UnsignedInt> _boundaryIndices;
 };
 
 

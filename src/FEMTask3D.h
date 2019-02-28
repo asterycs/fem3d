@@ -15,7 +15,7 @@ using namespace Magnum;
 class FEMTask3D
 {
 public:
-    explicit FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<UnsignedInt>& tetrahedronIds, const std::set<UnsignedInt>& pinnedVertexIds);
+    explicit FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<UnsignedInt>& tetrahedronIds,const std::set<UnsignedInt>& pinnedVertexIds);
 
     std::vector<Float> solve();
 
