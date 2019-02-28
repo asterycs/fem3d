@@ -19,7 +19,7 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
                          VertexShader &vertexShader,
                          std::vector<Vector3> vertices,
                          std::vector<UnsignedInt> triangleIndices,
-			 std::vector<UnsignedInt> boundryIndices,
+			 std::vector<UnsignedInt> boundaryIndices,
                          std::vector<Vector2> uv,
                          std::vector<UnsignedInt> uvIndices,
                          std::vector<UnsignedInt> tetrahedronIndices,
@@ -32,13 +32,13 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
                                                                    _indexBuffer{GL::Buffer::TargetHint::ElementArray},
                                                                    _colorBuffer{GL::Buffer::TargetHint::Array},
                                                                    _tetrahedronIndices{tetrahedronIndices},
-								   _boundryIndices{boundryIndices}
+								   _boundaryIndices{boundaryIndices}
 {
     _vertexMarkerVertexBuffer.resize(vertices.size());
     _vertexMarkerIndexBuffer.resize(vertices.size());
     _vertexMarkerMesh.resize(vertices.size());
     _meshVertices = vertices;
-    _boundryIndices=boundryIndices;
+    _boundaryIndices=boundaryIndices;
     for (UnsignedInt i = 0; i < vertices.size(); ++i)
     {
         const Vector3 center = vertices[i];
@@ -167,7 +167,7 @@ bool FEMObject3D::drawsVertexMarkers() const
 
 void FEMObject3D::solve()
 {
-    FEMTask3D task(_meshVertices, _tetrahedronIndices,_boundryIndices, _pinnedVertexIds);
+    FEMTask3D task(_meshVertices, _tetrahedronIndices,_boundaryIndices, _pinnedVertexIds);
     std::vector<Float> vertexValues = task.solve();
 
     if (vertexValues.size() > 0)

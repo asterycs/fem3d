@@ -10,7 +10,7 @@ Eigen::Vector4f phi(const Eigen::Vector3f& x)
     return Eigen::Vector4f(1.f-x(0)-x(1)-x(2), x(0), x(1), x(2));
 }
 
-FEMTask3D::FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<UnsignedInt>& tetrahedronIds,const std::vector<UnsignedInt>& boundryIndices , const std::set<UnsignedInt>& pinnedVertexIds): _isFeasible{true}, _vertices{vertices}, _tetrahedronIndices{tetrahedronIds}, _pinnedVertexIds{pinnedVertexIds}, _boundryIndices{boundryIndices}
+FEMTask3D::FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<UnsignedInt>& tetrahedronIds,const std::vector<UnsignedInt>& boundaryIndices , const std::set<UnsignedInt>& pinnedVertexIds): _isFeasible{true}, _vertices{vertices}, _tetrahedronIndices{tetrahedronIds}, _pinnedVertexIds{pinnedVertexIds}, _boundaryIndices{boundaryIndices}
 {
 
 }
@@ -97,11 +97,11 @@ void FEMTask3D::initialize()
     }
     
     
-    for (auto boundryIdx: _boundryIndices)
+    for (auto boundaryIdx: _boundaryIndices)
     {
-    	b.coeffRef(boundryIdx)=0.0f;	
-        A.prune([=](UnsignedInt i, UnsignedInt j, Float){ return i != boundryIdx && j != boundryIdx;});
-        A.coeffRef(boundryIdx,boundryIdx) = 1.f;
+    	b.coeffRef(boundaryIdx)=0.0f;	
+        A.prune([=](UnsignedInt i, UnsignedInt j, Float){ return i != boundaryIdx && j != boundaryIdx;});
+        A.coeffRef(boundaryIdx,boundaryIdx) = 1.f;
     }
 
     for (auto pinnedVertexId : _pinnedVertexIds)
