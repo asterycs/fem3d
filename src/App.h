@@ -16,7 +16,6 @@
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Renderbuffer.h>
 #include <Magnum/GL/AbstractShaderProgram.h>
-#include <Magnum/GL/RectangleTexture.h>
 
 #include <memory>
 
