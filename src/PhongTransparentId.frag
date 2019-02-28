@@ -1,4 +1,5 @@
 uniform highp vec3 ambientColor;
+uniform highp float depthScale;
 
 in highp vec3 transformedNormal;
 in highp vec3 lightDirection;
@@ -32,7 +33,6 @@ void main() {
 
     float viewDepth = abs(1.0 / gl_FragCoord.w);
 
-    float depthScale = 0.5f;
     float linearDepth = viewDepth * depthScale;
     float weight = clamp(0.03 / (1e-5 + pow(linearDepth, 4.0)), 1e-2, 3e3);
 

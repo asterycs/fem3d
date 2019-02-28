@@ -21,13 +21,6 @@ frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
     CORRADE_INTERNAL_ASSERT(GL::Shader::compile({vert, frag}));
     attachShaders({vert, frag});
     CORRADE_INTERNAL_ASSERT(link());
-
-
-    _lightPositionUniform = uniformLocation("light");
-    _ambientColorUniform = uniformLocation("ambientColor");
-    _transformationMatrixUniform = uniformLocation("transformationMatrix");
-    _projectionMatrixUniform = uniformLocation("projectionMatrix");
-    _normalMatrixUniform = uniformLocation("normalMatrix");
 }
 
 VertexShader::VertexShader() {
