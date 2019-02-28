@@ -1,5 +1,4 @@
 #include "FEMTask3D.h"
-#include "iostream"
 #include "Eigen/Dense"
 #include "Eigen/SparseCholesky"
 
