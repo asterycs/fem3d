@@ -16,6 +16,7 @@
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/GL/Renderbuffer.h>
 #include <Magnum/GL/AbstractShaderProgram.h>
+#include <Magnum/GL/RectangleTexture.h>
 
 #include <memory>
 
@@ -56,11 +57,13 @@ private:
 
     PhongIdShader _phongShader;
     VertexShader _vertexSelectionShader;
+    CompositionShader _compositionShader;
 
     std::unique_ptr<FEMObject3D> _object;
 
     GL::Framebuffer _framebuffer;
-    GL::Renderbuffer _color, _vertexId, _depth;
+    GL::Renderbuffer _vertexId, _depth;
+    GL::Texture2D _color, _transparencyAccumulation, _transparencyRevealage;
 
     Vector2 _cameraTrackballAngles;
 

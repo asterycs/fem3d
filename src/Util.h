@@ -1,5 +1,5 @@
-#ifndef GP2_UTIL_H
-#define GP2_UTIL_H
+#ifndef FEM3D_UTIL_H
+#define FEM3D_UTIL_H
 
 #include <Magnum/Magnum.h>
 #include <Magnum/Math/Color.h>
@@ -61,4 +61,4 @@ std::vector<T> expand(const std::vector<T> &values, std::vector<UnsignedInt> &in
 
 Eigen::Vector3f toEigen(const Vector3 &v);
 
-#endif //GP2_UTIL_H
+#endif //FEM3D_UTIL_H

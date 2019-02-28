@@ -1,14 +1,12 @@
-uniform highp int highlightedVertexId;
 uniform highp int objectId;
+uniform highp vec3 color;
 
-uniform mediump vec3 color;
-
-layout(location = 0) out lowp vec4 fragmentColor;
-layout(location = 1) out lowp int fragmentObjectId;
+layout(location = 0) out highp vec4 outColor;
+layout(location = 1) out highp int outObjectId;
 
 flat in highp int vertexID;
 
 void main() {
-    fragmentColor = vec4(color, 1.f);
-    fragmentObjectId = objectId;
+    outObjectId = objectId;
+    outColor = vec4(color, 1.f);
 }
