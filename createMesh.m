@@ -41,8 +41,8 @@ function createMesh(varargin)
 	faces = freeBoundary(TR)';	
 	boundry_edges=[faces(1,:)',faces(2,:)';faces(1,:)',faces(3,:)';faces(2,:)',faces(3,:)'];
 
-	% Boundry nodes (Not used at the moment, all the information is contained in the edges)
-	%boundry_nodes =unique(faces);
+	%Boundry nodes (Not used at the moment, all the information is contained in the edges)
+	boundry_nodes =sort(unique(faces));
 
 
 	% Plotting functions for quick verification that the modell looks like it should
@@ -59,9 +59,9 @@ function createMesh(varargin)
 %		plot3([px1,px2],[py1,py2],[pz1,pz2])
 %	end
 %	tetramesh(t',p');
+%	scatter3(p(1,boundry_nodes),p(2,boundry_nodes),p(3,boundry_nodes))
 
-	% Write the output files
-	writettg(p,t,name+".ttg");
-	csvwrite(name+"_edges.data",boundry_edges)
+	% Write the output file
+	writettg(p,t,boundry_nodes',name+".ttg");
 	return
 end
