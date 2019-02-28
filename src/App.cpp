@@ -88,9 +88,10 @@ void App::readMeshFile(const std::string& fname)
     const auto str = rs.get(fname);
     std::vector<Vector3> vertices;
     std::vector<UnsignedInt> meshElementIndices;
+    std::vector<UnsignedInt> BoundryIndices; 
     UnsignedInt dim;
 
-    if (parseTtg(str, vertices, meshElementIndices, dim) && dim == 3)
+    if (parseTtg(str, vertices, meshElementIndices,BoundryIndices, dim) && dim == 3)
     {
         Vector3 origin, extent;
         computeAABB(vertices, origin, extent);
