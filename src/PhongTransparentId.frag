@@ -31,10 +31,10 @@ void main() {
     outObjectId = -1;
     //float closestEdge = min(uvFrag.x, min(uvFrag.y, 1.f - uvFrag.x - uvFrag.y));
 
-    float viewDepth = abs(1.0 / gl_FragCoord.w);
+    highp float viewDepth = abs(1.0 / gl_FragCoord.w);
 
-    float linearDepth = viewDepth * depthScale;
-    float weight = clamp(0.03 / (1e-5 + pow(linearDepth, 4.0)), 1e-2, 3e3);
+    highp float linearDepth = viewDepth * depthScale;
+    highp float weight = clamp(0.03 / (1e-5 + pow(linearDepth, 4.0)), 1e-2, 3e3);
 
     outSumColor = vec4(color.rgb * color.a, color.a) * weight;
     outSumWeight = vec4(color.a);

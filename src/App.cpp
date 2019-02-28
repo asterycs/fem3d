@@ -49,7 +49,7 @@ App::App(const Arguments &arguments) :
 
     _color.setBaseLevel(0)
             .setMaxLevel(0)
-            .setImage(0, GL::TextureFormat::RGBA8, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::Float, GL::defaultFramebuffer.viewport().size(), nullptr})
+            .setImage(0, GL::TextureFormat::RGBA8, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::UnsignedByte, GL::defaultFramebuffer.viewport().size(), nullptr})
             .setMagnificationFilter(GL::SamplerFilter::Nearest)
             .setMinificationFilter(GL::SamplerFilter::Nearest);
             
@@ -67,7 +67,7 @@ App::App(const Arguments &arguments) :
             .setMaxLevel(0)
             .setMagnificationFilter(GL::SamplerFilter::Nearest)
             .setMinificationFilter(GL::SamplerFilter::Nearest)
-            .setImage(0, GL::TextureFormat::R8, ImageView2D{GL::PixelFormat::Red, GL::PixelType::Float, GL::defaultFramebuffer.viewport().size(), nullptr});
+            .setImage(0, GL::TextureFormat::R8, ImageView2D{GL::PixelFormat::Red, GL::PixelType::UnsignedByte, GL::defaultFramebuffer.viewport().size(), nullptr});
 
 
     _framebuffer.attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}, _color, 0)
@@ -151,9 +151,9 @@ void App::viewportEvent(ViewportEvent &event)
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, event.framebufferSize());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, event.framebufferSize());
     
-    _color.setImage(0, GL::TextureFormat::RGBA8, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::Float, event.framebufferSize(), nullptr});
+    _color.setImage(0, GL::TextureFormat::RGBA8, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::UnsignedByte, event.framebufferSize(), nullptr});
     _transparencyAccumulation.setImage(0, GL::TextureFormat::RGBA16F, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::Float, event.framebufferSize(), nullptr});
-    _transparencyRevealage.setImage(0, GL::TextureFormat::R8, ImageView2D{GL::PixelFormat::Red, GL::PixelType::Float, event.framebufferSize(), nullptr});
+    _transparencyRevealage.setImage(0, GL::TextureFormat::R8, ImageView2D{GL::PixelFormat::Red, GL::PixelType::UnsignedByte, event.framebufferSize(), nullptr});
 
     _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{event.framebufferSize()}.aspectRatio(), 0.001f, 100.0f))
             .setViewport(event.framebufferSize());
