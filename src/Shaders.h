@@ -5,9 +5,7 @@
 #include <Magnum/Math/Matrix4.h>
 
 #include <Magnum/GL/AbstractShaderProgram.h>
-
-#include <Magnum/GL/RectangleTexture.h>
-
+#include <Magnum/GL/Texture.h>
 #include <Magnum/GL/Renderer.h>
 
 using namespace Magnum;
@@ -22,8 +20,8 @@ public:
     enum: UnsignedInt {
         ColorOutput = 0,
         ObjectIdOutput = 1,
-        ColorBlendOutput = 2,
-        ColorWeightOutput = 3
+        TransparencyAccumulationOutput = 2,
+        TransparencyRevealageOutput = 3
     };
 
     explicit PhongIdShader();
@@ -115,24 +113,29 @@ public:
 
     explicit CompositionShader();
 
-    CompositionShader& setOpaqueTexture(GL::RectangleTexture& texture) {
+    CompositionShader& setOpaqueTexture(GL::Texture2D& texture) {
         setUniform(uniformLocation("Opaque"), Opaque);
         texture.bind(Opaque);
         return *this;
     }
 
-    CompositionShader& setTransparencyAccumulationTexture(GL::RectangleTexture& texture) {
+    CompositionShader& setTransparencyAccumulationTexture(GL::Texture2D& texture) {
         setUniform(uniformLocation("TransparencyAccumulation"), TransparencyAccumulation);
         texture.bind(TransparencyAccumulation);
         return *this;
     }
     
-    CompositionShader& setTransparencyRevealageTexture(GL::RectangleTexture& texture) {
+    CompositionShader& setTransparencyRevealageTexture(GL::Texture2D& texture) {
         setUniform(uniformLocation("TransparencyRevealage"), TransparencyRevealage);
         texture.bind(TransparencyRevealage);
         return *this;
     }
 
+    CompositionShader& setViewportSize(Vector2i size) {
+        setUniform(uniformLocation("viewportSize"), size);
+        return *this;
+    }
+    
 private:
 };
 
