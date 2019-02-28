@@ -118,6 +118,7 @@ void FEMObject3D::draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D
             .setNormalMatrix(transformationMatrix.rotationScaling())
             .setProjectionMatrix(camera.projectionMatrix())
             .setAmbientColor(Color3{})
+            .setDepthScale(0.5f)
             .setLightPosition({13.0f, 2.0f, 5.0f}); // Relative to camera
 
     _triangles.draw(_phongShader);
