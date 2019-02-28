@@ -9,6 +9,6 @@ void main(void)
     float transmittance = texture(ColorTex1, gl_FragCoord.xy).r;
     vec3 averageColor = sumColor.rgb / max(sumColor.a, 0.00001);
 
-    outColor.rgb = averageColor * (1 - transmittance) + vec3(1.f, 1.f, 1.f) * transmittance;
+    outColor.rgb = averageColor * (1.0f - transmittance) + vec3(1.f, 1.f, 1.f) * transmittance;
     outColor.a = 1.f;
 }
