@@ -30,6 +30,9 @@ function createMesh(varargin)
 	mesh = generateMesh(model,'Hmin',elem_size,'GeometricOrder','linear');
 	[p,e,t] = meshToPet(mesh);
 	
+    	% Scale p
+    	p = p/(max(max(p))/3);    
+
 	% Remove uneeded information from the t matrix (only one material parameter)
 	t = t(1:4,:);
 
