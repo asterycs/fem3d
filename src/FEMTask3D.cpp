@@ -4,12 +4,6 @@
 
 #include "Util.h"
 
-Eigen::Vector4f phi(const Eigen::Vector3f &x);
-Eigen::Vector4f phi(const Eigen::Vector3f &x)
-{
-    return Eigen::Vector4f(1.f - x(0) - x(1) - x(2), x(0), x(1), x(2));
-}
-
 FEMTask3D::FEMTask3D(const std::vector<Vector3> &vertices,
                      const std::vector<UnsignedInt> &tetrahedronIds,
                      const std::set<UnsignedInt> &pinnedVertexIds) : _isFeasible{true}, _vertices{vertices},
@@ -23,11 +17,6 @@ void FEMTask3D::initialize()
 {
     Eigen::SparseMatrix<Float> A(_vertices.size(), _vertices.size());
     Eigen::SparseVector<Float> b(_vertices.size());
-
-    Eigen::MatrixXf gphi(3, 4);
-    gphi << -1.f, 1.f, 0.f, 0.f,
-            -1.f, 0.f, 1.f, 0.f,
-            -1.f, 0.f, 0.f, 1.f;
 
     Eigen::MatrixXf xip(3, 4);
     xip << 0.1381966011250105f, 0.5854101966249685f, 0.1381966011250105f, 0.1381966011250105f,
@@ -50,15 +39,20 @@ void FEMTask3D::initialize()
 
         Eigen::Matrix3f Bk;
         Bk << p1 - p0, p2 - p0, p3 - p0;
-        //Eigen::Vector3f bk = p0;
+        Eigen::Vector3f bk = p0;
 
         for (UnsignedInt i = 0; i < 4; ++i)
         {
             for (UnsignedInt j = 0; j < 4; ++j)
             {
-                const Eigen::Vector3f l = Bk.transpose().inverse() * gphi.col(i);
-                const Eigen::Vector3f r = Bk.transpose().inverse() * gphi.col(j);
-                A.coeffRef(vi[i], vi[j]) += w.sum() * l.dot(r) * std::abs(Bk.determinant());
+                for (UnsignedInt k = 0; k < 4; ++k)
+                {
+                    const Eigen::Vector3f globalQuadraturePoint = Bk * xip.col(k) + bk;
+                    const Eigen::Vector3f l = Bk.transpose().inverse() * evaluateDBasis(globalQuadraturePoint).col(i);
+                    const Eigen::Vector3f r = Bk.transpose().inverse() * evaluateDBasis(globalQuadraturePoint).col(j);
+
+                    A.coeffRef(vi[i], vi[j]) += w(k) * l.dot(r) * std::abs(Bk.determinant());
+                }
             }
         }
     }
@@ -85,9 +79,8 @@ void FEMTask3D::initialize()
         {
             for (UnsignedInt i = 0; i < 4; ++i)
             {
-                //const Eigen::Vector3f globalCoord = Bk * xip.col(k) + bk;
-
-                bl(i) += w(k) * phi(xip.col(k))(i) * std::abs(Bk.determinant());
+                //const Eigen::Vector3f globalQuadraturePoint = Bk * xip.col(k) + bk;
+                bl(i) += w(k) * evaluateBasis(xip.col(k))(i) * std::abs(Bk.determinant());
             }
         }
 
@@ -115,6 +108,21 @@ void FEMTask3D::initialize()
 
     _A = A;
     _b = b;
+}
+
+Eigen::Vector4f FEMTask3D::evaluateBasis(const Eigen::Vector3f &x)
+{
+    return Eigen::Vector4f(1.f - x(0) - x(1) - x(2), x(0), x(1), x(2));
+}
+
+Eigen::MatrixXf FEMTask3D::evaluateDBasis(const Eigen::Vector3f &)
+{
+    Eigen::MatrixXf grad(3,4);
+    grad << -1.f, 1.f, 0.f, 0.f,
+            -1.f, 0.f, 1.f, 0.f,
+            -1.f, 0.f, 0.f, 1.f;
+
+    return grad;
 }
 
 std::vector<Float> FEMTask3D::solve()

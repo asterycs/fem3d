@@ -19,6 +19,9 @@ public:
 
     std::vector<Float> solve();
 
+    Eigen::Vector4f evaluateBasis(const Eigen::Vector3f &x);
+    Eigen::MatrixXf evaluateDBasis(const Eigen::Vector3f &x);
+
 
 private:
     void initialize();
