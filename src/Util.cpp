@@ -2,11 +2,15 @@
 
 #include <sstream>
 
-bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<UnsignedInt> &outMeshElementIndices,std::vector<UnsignedInt> &outboundaryIndices, UnsignedInt& outDim)
+bool parseTtg(const std::string &input,
+              std::vector<Vector3> &outVertices,
+              std::vector<UnsignedInt> &outMeshElementIndices,
+              std::vector<UnsignedInt> &outboundaryIndices,
+              UnsignedInt &outDim)
 {
     std::vector<Vector3> vertices;
     std::vector<UnsignedInt> meshElementIndices;
-    std::vector<UnsignedInt> boundaryIndices;	
+    std::vector<UnsignedInt> boundaryIndices;
 
     std::stringstream stream(input);
 
@@ -39,17 +43,18 @@ bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::
 
 
     stream >> c;
-    if(c != std::string{'b'})
-	    return false;
+    if (c != std::string{'b'})
+        return false;
 
     stream >> boundaryCount;
 
-    Debug{} << "Reading ttg with " << vertexCount << " vertices" << ", " << meshElementCount << " elements" << "and " << boundaryCount <<" boundary nodes.";
+    Debug{} << "Reading ttg with " << vertexCount << " vertices" << ", " << meshElementCount << " elements" << "and "
+            << boundaryCount << " boundary nodes.";
 
     // Read vertex coordinates
     for (UnsignedInt i = 0; i < vertexCount; ++i)
     {
-        Float vi[] {0.f, 0.f, 0.f};
+        Float vi[]{0.f, 0.f, 0.f};
 
         for (UnsignedInt j = 0; j < dim; ++j)
         {
@@ -68,7 +73,7 @@ bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::
     {
         UnsignedInt ti[4];
 
-        for (UnsignedInt j = 0; j < dim+1; ++j)
+        for (UnsignedInt j = 0; j < dim + 1; ++j)
         {
             stream >> ti[j];
 
@@ -76,29 +81,32 @@ bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::
                 return false;
         }
 
-        for (UnsignedInt j = 0; j < dim+1; ++j)
+        for (UnsignedInt j = 0; j < dim + 1; ++j)
         {
             meshElementIndices.push_back(ti[j]);
         }
     }
 
-    for (UnsignedInt i =0; i < boundaryCount; ++i){
-    	UnsignedInt ei;
-	stream >> ei;
-	if(!stream.good())
-		return false;
-	boundaryIndices.push_back(ei);
+    for (UnsignedInt i = 0; i < boundaryCount; ++i)
+    {
+        UnsignedInt ei;
+        stream >> ei;
+        if (!stream.good())
+            return false;
+        boundaryIndices.push_back(ei);
     }
 
     outVertices = vertices;
     outMeshElementIndices = meshElementIndices;
     outDim = dim;
-    outboundaryIndices=boundaryIndices;
+    outboundaryIndices = boundaryIndices;
 
     return true;
 }
 
-bool createUVIndices(const std::vector<UnsignedInt>& triangleIndices, std::vector<Vector2>& outUv, std::vector<UnsignedInt>& outUvIndices)
+bool createUVIndices(const std::vector<UnsignedInt> &triangleIndices,
+                     std::vector<Vector2> &outUv,
+                     std::vector<UnsignedInt> &outUvIndices)
 {
     std::vector<Vector2> uv{{0.0f, 0.0f},
                             {1.0f, 0.0f},
@@ -186,7 +194,7 @@ Vector3 valToColor(const Float val)
         return Vector3(1.f, 0.f, 0.f) * (val - 0.5f) * 2.0f + Vector3(1.f, 1.f, 0.f) * (1.0f - val) * 2.0f;
 }
 
-std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals)
+std::vector<Vector3> valuesToHeatGradient(const std::vector<Float> &vals)
 {
     std::vector<Vector3> colors;
     colors.reserve(vals.size());
@@ -194,7 +202,7 @@ std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals)
     if (vals.size() == 0)
         return colors;
 
-    const Float maxValInv = 1.f/ *std::max_element(vals.begin(), vals.end());
+    const Float maxValInv = 1.f / *std::max_element(vals.begin(), vals.end());
 
     for (Float val : vals)
     {
