@@ -63,7 +63,7 @@ private:
 
     GL::Framebuffer _framebuffer;
     GL::Renderbuffer _vertexId, _depth;
-    GL::RectangleTexture _color, _transparencyAccumulation, _transparencyRevealage;
+    GL::Texture2D _color, _transparencyAccumulation, _transparencyRevealage;
 
     Vector2 _cameraTrackballAngles;
 
