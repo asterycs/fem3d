@@ -2,16 +2,18 @@
 
 #include <sstream>
 
-bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<UnsignedInt> &outMeshElementIndices, UnsignedInt& outDim)
+bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<UnsignedInt> &outMeshElementIndices,std::vector<UnsignedInt> &outBoundryIndices, UnsignedInt& outDim)
 {
     std::vector<Vector3> vertices;
     std::vector<UnsignedInt> meshElementIndices;
+    std::vector<UnsignedInt> BoundryIndices;	
 
     std::stringstream stream(input);
 
     UnsignedInt dim;
     UnsignedInt vertexCount;
     UnsignedInt meshElementCount;
+    UnsignedInt boundryCount;
 
     // First line should have dimension
     std::string c;
@@ -34,7 +36,15 @@ bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::
         return false;
 
     stream >> meshElementCount;
-    Debug{} << "Reading ttg with " << vertexCount << " vertices" << "and " << meshElementCount << " elements";
+
+
+    stream >> c;
+    if(c != std::string{'b'})
+	    return false;
+
+    stream >> boundryCount;
+
+    Debug{} << "Reading ttg with " << vertexCount << " vertices" << ", " << meshElementCount << " elements" << "and " << boundryCount <<" boundry nodes.";
 
     // Read vertex coordinates
     for (UnsignedInt i = 0; i < vertexCount; ++i)
@@ -72,10 +82,18 @@ bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::
         }
     }
 
+    for (UnsignedInt i =0; i < boundryCount; ++i){
+    	UnsignedInt ei;
+	stream >> ei;
+	if(!stream.good())
+		return false;
+	BoundryIndices.push_back(ei);
+    }
 
     outVertices = vertices;
     outMeshElementIndices = meshElementIndices;
     outDim = dim;
+    outBoundryIndices=BoundryIndices;
 
     return true;
 }
