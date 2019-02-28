@@ -8,12 +8,12 @@ assert(size(bs,1) == 1)
 
 vertices = size(vs,2);
 tetras = size(ts,2);
-boundry_nodes = size(bs,2);
+boundary_nodes = size(bs,2);
 
 fprintf(fid, ['d ' num2str(3) '\n']);
 fprintf(fid, ['v ' num2str(vertices) '\n']);
 fprintf(fid, ['t ' num2str(tetras) '\n']);
-fprintf(fid, ['b ' num2str(boundry_nodes) '\n' ]);
+fprintf(fid, ['b ' num2str(boundary_nodes) '\n' ]);
 
 for v=vs
     x = num2str(v(1));

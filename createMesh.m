@@ -6,7 +6,7 @@
 % createMesh(geometry,element_size) 
 % Default values are provided
 % No return value, writes two output files:
-% .data containing the node idices for the boundry edges (N_boundry_edges x 2)
+% .data containing the node idices for the boundary edges (N_boundary_edges x 2)
 % .ttg containing p and t matrix for the mesh
 function createMesh(varargin)
 	% Set default values
@@ -36,20 +36,20 @@ function createMesh(varargin)
 	% Remove uneeded information from the t matrix (only one material parameter)
 	t = t(1:4,:);
 
-	% Extract the boundry edges from the triangulation
+	% Extract the boundary edges from the triangulation
 	TR=triangulation(t',p');
 	faces = freeBoundary(TR)';	
-	boundry_edges=[faces(1,:)',faces(2,:)';faces(1,:)',faces(3,:)';faces(2,:)',faces(3,:)'];
+	boundary_edges=[faces(1,:)',faces(2,:)';faces(1,:)',faces(3,:)';faces(2,:)',faces(3,:)'];
 
-	%Boundry nodes (Not used at the moment, all the information is contained in the edges)
-	boundry_nodes =sort(unique(faces));
+	%boundary nodes (Not used at the moment, all the information is contained in the edges)
+	boundary_nodes =sort(unique(faces));
 
 
 	% Plotting functions for quick verification that the modell looks like it should
 %	hold on
-%	for i = 1:size(boundry_edges,1)
-%		p1 = p(:,boundry_edges(i,1));
-%		p2 = p(:,boundry_edges(i,2));
+%	for i = 1:size(boundary_edges,1)
+%		p1 = p(:,boundary_edges(i,1));
+%		p2 = p(:,boundary_edges(i,2));
 %		px1 = p1(1) ;
 %		py1 = p1(2) ;
 %		pz1 = p1(3) ;
@@ -59,9 +59,9 @@ function createMesh(varargin)
 %		plot3([px1,px2],[py1,py2],[pz1,pz2])
 %	end
 %	tetramesh(t',p');
-%	scatter3(p(1,boundry_nodes),p(2,boundry_nodes),p(3,boundry_nodes))
+%	scatter3(p(1,boundary_nodes),p(2,boundary_nodes),p(3,boundary_nodes))
 
 	% Write the output file
-	writettg(p,t,boundry_nodes',name+".ttg");
+	writettg(p,t,boundary_nodes',name+".ttg");
 	return
 end

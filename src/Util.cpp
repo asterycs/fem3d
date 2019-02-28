@@ -2,18 +2,18 @@
 
 #include <sstream>
 
-bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<UnsignedInt> &outMeshElementIndices,std::vector<UnsignedInt> &outBoundryIndices, UnsignedInt& outDim)
+bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<UnsignedInt> &outMeshElementIndices,std::vector<UnsignedInt> &outboundaryIndices, UnsignedInt& outDim)
 {
     std::vector<Vector3> vertices;
     std::vector<UnsignedInt> meshElementIndices;
-    std::vector<UnsignedInt> BoundryIndices;	
+    std::vector<UnsignedInt> boundaryIndices;	
 
     std::stringstream stream(input);
 
     UnsignedInt dim;
     UnsignedInt vertexCount;
     UnsignedInt meshElementCount;
-    UnsignedInt boundryCount;
+    UnsignedInt boundaryCount;
 
     // First line should have dimension
     std::string c;
@@ -42,9 +42,9 @@ bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::
     if(c != std::string{'b'})
 	    return false;
 
-    stream >> boundryCount;
+    stream >> boundaryCount;
 
-    Debug{} << "Reading ttg with " << vertexCount << " vertices" << ", " << meshElementCount << " elements" << "and " << boundryCount <<" boundry nodes.";
+    Debug{} << "Reading ttg with " << vertexCount << " vertices" << ", " << meshElementCount << " elements" << "and " << boundaryCount <<" boundary nodes.";
 
     // Read vertex coordinates
     for (UnsignedInt i = 0; i < vertexCount; ++i)
@@ -82,18 +82,18 @@ bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::
         }
     }
 
-    for (UnsignedInt i =0; i < boundryCount; ++i){
+    for (UnsignedInt i =0; i < boundaryCount; ++i){
     	UnsignedInt ei;
 	stream >> ei;
 	if(!stream.good())
 		return false;
-	BoundryIndices.push_back(ei);
+	boundaryIndices.push_back(ei);
     }
 
     outVertices = vertices;
     outMeshElementIndices = meshElementIndices;
     outDim = dim;
-    outBoundryIndices=BoundryIndices;
+    outboundaryIndices=boundaryIndices;
 
     return true;
 }
