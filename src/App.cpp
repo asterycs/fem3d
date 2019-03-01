@@ -259,13 +259,20 @@ void App::mouseMoveEvent(MouseMoveEvent &event)
     if (!(event.buttons() & MouseMoveEvent::Button::Left))
         return;
 
+    const Float cameraMovementSpeed = 0.005f;
     const Vector2i posDiff = event.relativePosition();
+    _cameraTrackballAngles[0] += static_cast<Float>(posDiff[0]) * cameraMovementSpeed;
+    
+    // Restrict the up-down angle
+    if ((_cameraTrackballAngles[1] < Constants::pi()*0.5f && posDiff[1] > 0)
+        || (_cameraTrackballAngles[1] > -Constants::pi()*0.5f && posDiff[1] < 0)) {
+            
+        _cameraTrackballAngles[1] += static_cast<Float>(posDiff[1]) * cameraMovementSpeed;
+        _cameraObject->rotate(Math::Rad(-static_cast<Float>(posDiff[1]) * cameraMovementSpeed),
+                            _camera->cameraMatrix().inverted().right().normalized());    
+    }
 
-    _cameraTrackballAngles[0] -= static_cast<Float>(posDiff[0]) * 0.01f;
-    _cameraTrackballAngles[1] -= static_cast<Float>(posDiff[1]) * 0.01f;
-
-    _cameraObject->rotate(Math::Rad(-posDiff[1] * 0.005f), _camera->cameraMatrix().inverted().right().normalized());
-    _cameraObject->rotate(Math::Rad(-posDiff[0] * 0.005f), Vector3(0.f, 1.f, 0.f));
+    _cameraObject->rotate(Math::Rad(-static_cast<Float>(posDiff[0]) * cameraMovementSpeed), Vector3(0.f, 1.f, 0.f));
 
     event.setAccepted();
     redraw();
