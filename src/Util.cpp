@@ -48,7 +48,7 @@ bool parseTtg(const std::string &input,
 
     stream >> boundaryCount;
 
-    Debug{} << "Reading ttg with " << vertexCount << " vertices" << ", " << meshElementCount << " elements" << "and "
+    Debug{} << "Reading ttg with " << vertexCount << " vertices, " << meshElementCount << " elements" << "and "
             << boundaryCount << " boundary nodes.";
 
     // Read vertex coordinates

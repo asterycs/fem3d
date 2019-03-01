@@ -10,28 +10,26 @@
 % .ttg containing p and t matrix for the mesh
 function createMesh(varargin)
 	% Set default values
-	Defaults ={"cube",0.5};
+	Defaults ={"cube.stl",0.5};
 	Defaults(1:nargin) = varargin;
 
-	name = Defaults{1};
-	elem_size=Defaults{2};
+	filename = Defaults{1};
+	elem_size = Defaults{2};
+    
+    if ~isfile(filename)
+        warning('File not found. Exiting')
+        return
+    end
 	
 	% Load the stl file and create the mesh
-	model = createpde;
-	switch name
-		case 'cube'
-			importGeometry(model,'cube.stl');
-		case 'bracket'
-			importGeometry(model,'BracketTwoHoles.stl');
-		otherwise
-			warning('Unsuported geometry option. Exiting')
-			return
-	end
-	mesh = generateMesh(model,'Hmin',elem_size,'GeometricOrder','linear');
+	model = createpde;    
+    importGeometry(model,filename);
+
+	mesh = generateMesh(model,'Hmax',elem_size,'GeometricOrder','linear');
 	[p,e,t] = meshToPet(mesh);
 	
-    	% Scale p
-    	p = p/(max(max(p))/3);    
+    % Scale p
+    p = p/(max(max(p))/3);    
 
 	% Remove uneeded information from the t matrix (only one material parameter)
 	t = t(1:4,:);
@@ -58,8 +56,10 @@ function createMesh(varargin)
 %		pz2 = p2(3) ;
 %		plot3([px1,px2],[py1,py2],[pz1,pz2])
 %	end
-%	tetramesh(t',p');
+	tetramesh(t',p');
 %	scatter3(p(1,boundary_nodes),p(2,boundary_nodes),p(3,boundary_nodes))
+
+    [~, name, ~] = fileparts(filename)
 
 	% Write the output file
 	writettg(p,t,boundary_nodes',name+".ttg");

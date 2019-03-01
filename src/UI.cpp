@@ -9,7 +9,9 @@ UiPlane::UiPlane(Ui::UserInterface &ui) :
                                   {Ui::Snap::Top | Ui::Snap::Left, Range2D::fromSize(Vector2::yAxis(-WidgetHeight), ButtonSize)},
                                   "Toggle markers", Ui::Style::Default},
         solveButton{*this, {Ui::Snap::Bottom, toggleVertexMarkersButton, ButtonSize},
-                    "Solve", Ui::Style::Default}
+                    "Solve", Ui::Style::Default},
+        geomButton{*this, {Ui::Snap::Bottom, solveButton, ButtonSize},
+                    "Change geometry", Ui::Style::Default}
 {
 
 }
