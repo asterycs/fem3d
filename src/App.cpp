@@ -177,7 +177,7 @@ void App::drawEvent()
     _framebuffer.clearColor(_phongShader.ColorOutput, Vector4{0.0f})
             .clearColor(_phongShader.ObjectIdOutput, Vector4i{-1})
             .clearColor(_phongShader.TransparencyAccumulationOutput, Vector4{0.0f})
-            .clearColor(_phongShader.TransparencyRevealageOutput, Vector4(1.f))
+            .clearColor(_phongShader.TransparencyRevealageOutput, Vector4{1.f})
             .clearDepth(1.0f)
             .bind();
 
@@ -186,6 +186,7 @@ void App::drawEvent()
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth)
             .bind();
 
+    // Compose into default framebuffer
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
 
     GL::Mesh fullScreenTriangles;
@@ -199,8 +200,8 @@ void App::drawEvent()
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
 
-    // Blit vertex markers to main fb
-    //_framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput});
+    // Blit render target attachments for debugging
+    //_framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.TransparencyAccumulationOutput});
     //GL::AbstractFramebuffer::blit(_framebuffer, GL::defaultFramebuffer,
     //                              {{}, _framebuffer.viewport().size()}, GL::FramebufferBlit::Color);
 
