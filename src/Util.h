@@ -18,6 +18,7 @@ bool extractTriangleIndices(const std::vector<std::vector<UnsignedInt>> &tetrahe
 
 Vector3 valToColor(const Float val);
 std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals);
+std::vector<Float> computeNorm(const std::vector<Eigen::Vector3f>& input);
 
 template<typename T>
 std::vector<T> repeat(const std::vector<T> &values, const UnsignedInt times)

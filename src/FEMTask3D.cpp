@@ -123,10 +123,10 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMTask3D::evaluateS
     std::vector<Float> U(solution.size());
     std::vector<Eigen::Vector3f> dU(solution.size());
 
-    Eigen::MatrixXf corners(3, 4);
-    corners << 0.f, 1.f, 0.f, 0.f,
-               0.f, 0.f, 1.f, 0.f,
-               0.f, 0.f, 0.f, 1.f;
+    Eigen::MatrixXf localCorners(3, 4);
+    localCorners << 0.f, 1.f, 0.f, 0.f,
+                    0.f, 0.f, 1.f, 0.f,
+                    0.f, 0.f, 0.f, 1.f;
 
     for (auto& vi : _tetrahedronIndices)
     {
@@ -134,16 +134,26 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMTask3D::evaluateS
         Eigen::Vector3f bk;
         std::tie(Bk, bk) = computeAffine(vi);
 
+        Eigen::MatrixXf dL(3,4);
+        Eigen::Vector4f multipliers;
+
         for (UnsignedInt i = 0; i < 4; ++i)
         {
             U[vi[i]] = solution(vi[i]);
+            multipliers(i) = solution(vi[i]);
         }
 
         for (UnsignedInt i = 0; i < 4; ++i)
         {
-            const Eigen::Vector3f
+            const Eigen::Vector3f currentCorner = localCorners.col(i);
+            dL.col(i) = Bk.inverse().transpose() * evaluateDBasis(currentCorner).col(i);
+        }
 
-            const Eigen::MatrixXf dLi = evaluateDBasis()
+        const Eigen::Vector3f cornerGradient = dL * multipliers;
+
+        for (UnsignedInt i = 0; i < 4; ++i)
+        {
+            dU[vi[i]] += cornerGradient;
         }
     }
 

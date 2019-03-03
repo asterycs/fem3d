@@ -202,3 +202,17 @@ std::vector<Vector3> valuesToHeatGradient(const std::vector<Float> &vals)
 
     return colors;
 }
+
+std::vector<Float> computeNorm(const std::vector<Eigen::Vector3f>& input)
+{
+    std::vector<Float> norms(input.size());
+
+    UnsignedInt i = 0;
+    for (auto& e : input)
+    {
+        norms[i] = e.norm();
+        ++i;
+    }
+
+    return norms;
+}

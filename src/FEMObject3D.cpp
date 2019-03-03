@@ -42,6 +42,8 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
     _vertexMarkerIndexBuffer.resize(vertices.size());
     _vertexMarkerMesh.resize(vertices.size());
 
+    _pinnedVertexIds.clear();
+
     for (UnsignedInt i = 0; i < vertices.size(); ++i)
     {
         const Vector3 center = vertices[i];
@@ -180,7 +182,8 @@ void FEMObject3D::solve()
 
         std::tie(U, dU) = task.evaluateSolution(solution);
 
-        std::vector<Vector3> vertexColors = valuesToHeatGradient(U);
+        const auto norms = computeNorm(dU);
+        std::vector<Vector3> vertexColors = valuesToHeatGradient(norms);
         this->setVertexColors(vertexColors);
     }
 }

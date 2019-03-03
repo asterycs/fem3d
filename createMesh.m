@@ -56,7 +56,7 @@ function createMesh(varargin)
 %		pz2 = p2(3) ;
 %		plot3([px1,px2],[py1,py2],[pz1,pz2])
 %	end
-	tetramesh(t',p');
+%	tetramesh(t',p');
 %	scatter3(p(1,boundary_nodes),p(2,boundary_nodes),p(3,boundary_nodes))
 
     [~, name, ~] = fileparts(filename)
