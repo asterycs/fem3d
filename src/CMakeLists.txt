@@ -27,8 +27,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -Wunused \
     -Wunused-label \
     -Wunused-value \
-    -Wunused-variable \
-    -D_GLIBCXX_ASSERTIONS")
+    -Wunused-variable")
 
 find_package(Magnum REQUIRED
     GL

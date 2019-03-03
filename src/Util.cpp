@@ -4,12 +4,12 @@
 
 bool parseTtg(const std::string &input,
               std::vector<Vector3> &outVertices,
-              std::vector<UnsignedInt> &outMeshElementIndices,
+              std::vector<std::vector<UnsignedInt>> &outMeshElementIndices,
               std::vector<UnsignedInt> &outboundaryIndices,
               UnsignedInt &outDim)
 {
     std::vector<Vector3> vertices;
-    std::vector<UnsignedInt> meshElementIndices;
+    std::vector<std::vector<UnsignedInt>> meshElementIndices;
     std::vector<UnsignedInt> boundaryIndices;
 
     std::stringstream stream(input);
@@ -54,7 +54,7 @@ bool parseTtg(const std::string &input,
     // Read vertex coordinates
     for (UnsignedInt i = 0; i < vertexCount; ++i)
     {
-        Float vi[]{0.f, 0.f, 0.f};
+        std::array<Float, 3> vi{{0.f, 0.f, 0.f}};
 
         for (UnsignedInt j = 0; j < dim; ++j)
         {
@@ -71,7 +71,7 @@ bool parseTtg(const std::string &input,
     // Read mesh element indices
     for (UnsignedInt i = 0; i < meshElementCount; ++i)
     {
-        UnsignedInt ti[4];
+        std::array<UnsignedInt, 4> ti;
 
         for (UnsignedInt j = 0; j < dim + 1; ++j)
         {
@@ -81,10 +81,7 @@ bool parseTtg(const std::string &input,
                 return false;
         }
 
-        for (UnsignedInt j = 0; j < dim + 1; ++j)
-        {
-            meshElementIndices.push_back(ti[j]);
-        }
+        meshElementIndices.push_back({ti.begin(), ti.begin() + dim + 1});
     }
 
     for (UnsignedInt i = 0; i < boundaryCount; ++i)
@@ -129,21 +126,15 @@ bool createUVIndices(const std::vector<UnsignedInt> &triangleIndices,
     return true;
 }
 
-bool extractTriangleIndices(const std::vector<UnsignedInt> &tetrahedronIndices,
+bool extractTriangleIndices(const std::vector<std::vector<UnsignedInt>> &tetrahedronIndices,
                             std::vector<UnsignedInt> &triangleIndices)
 {
-    if (tetrahedronIndices.size() % 4 != 0)
+    for (auto& currentIndices : tetrahedronIndices)
     {
-        Error{} << "Wrong number of tetrahedron indices";
-        return false;
-    }
-
-    for (UnsignedInt i = 0; i < tetrahedronIndices.size(); i += 4)
-    {
-        const UnsignedInt i0 = tetrahedronIndices[i];
-        const UnsignedInt i1 = tetrahedronIndices[i + 1];
-        const UnsignedInt i2 = tetrahedronIndices[i + 2];
-        const UnsignedInt i3 = tetrahedronIndices[i + 3];
+        const UnsignedInt i0 = currentIndices[0];
+        const UnsignedInt i1 = currentIndices[1];
+        const UnsignedInt i2 = currentIndices[2];
+        const UnsignedInt i3 = currentIndices[3];
 
         triangleIndices.push_back(i0);
         triangleIndices.push_back(i1);

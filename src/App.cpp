@@ -124,11 +124,11 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
         const auto fname = fnames[i];
         const auto str = rs.get(fname);
         std::vector<Vector3> vertices;
-        std::vector<UnsignedInt> meshElementIndices;
+        std::vector<std::vector<UnsignedInt>> meshElementIndices;
         std::vector<UnsignedInt> boundaryIndices; 
         UnsignedInt dim;
 
-        if (parseTtg(str, vertices, meshElementIndices,boundaryIndices, dim) && dim == 3)
+        if (parseTtg(str, vertices, meshElementIndices, boundaryIndices, dim) && dim == 3)
         {
             Vector3 origin, extent;
             computeAABB(vertices, origin, extent);
@@ -144,7 +144,7 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
             // Create uv data. Not used atm.
             createUVIndices(triangleIndices, uv, uvIndices);
 
-            _objects.emplace_back(std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices,boundaryIndices, uv,
+            _objects.emplace_back(std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, boundaryIndices, uv,
                                                     uvIndices, meshElementIndices, _scene, _drawableGroups[i]));
         } else
         {

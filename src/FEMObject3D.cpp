@@ -22,7 +22,7 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
                          std::vector<UnsignedInt> boundaryIndices,
                          std::vector<Vector2> uv,
                          std::vector<UnsignedInt> uvIndices,
-                         std::vector<UnsignedInt> tetrahedronIndices,
+                         std::vector<std::vector<UnsignedInt>> tetrahedronIndices,
                          Object3D &parent,
                          SceneGraph::DrawableGroup3D &drawables) : Object3D{&parent},
                                                                    SceneGraph::Drawable3D{*this, &drawables},
@@ -97,7 +97,7 @@ void FEMObject3D::setVertexColors(const std::vector<Vector3> &colors)
     _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
 }
 
-const std::vector<UnsignedInt> &FEMObject3D::getTetrahedronIndices() const
+const std::vector<std::vector<UnsignedInt>> &FEMObject3D::getTetrahedronIndices() const
 {
     return _tetrahedronIndices;
 }
@@ -170,11 +170,17 @@ bool FEMObject3D::drawsVertexMarkers() const
 void FEMObject3D::solve()
 {
     FEMTask3D task(_meshVertices, _tetrahedronIndices, _pinnedVertexIds);
-    std::vector<Float> vertexValues = task.solve();
+    task.initialize();
+    Eigen::VectorXf solution = task.solve();
 
-    if (vertexValues.size() > 0)
+    if (solution.size() > 0)
     {
-        std::vector<Vector3> vertexColors = valuesToHeatGradient(vertexValues);
+        std::vector<Float> U;
+        std::vector<Eigen::Vector3f> dU;
+
+        std::tie(U, dU) = task.evaluateSolution(solution);
+
+        std::vector<Vector3> vertexColors = valuesToHeatGradient(U);
         this->setVertexColors(vertexColors);
     }
 }
