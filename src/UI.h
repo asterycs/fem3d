@@ -9,6 +9,8 @@
 #include "Magnum/Ui/Plane.h"
 #include "Magnum/Ui/UserInterface.h"
 
+#include <memory>
+
 using namespace Magnum;
 using namespace Magnum::Math::Literals;
 
@@ -17,6 +19,7 @@ struct UiPlane: Ui::Plane {
 
     Ui::Button toggleVertexMarkersButton;
     Ui::Button solveButton;
+    Ui::Button geomButton;
 };
 
 #endif //FEM3D_UI_H

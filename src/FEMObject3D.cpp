@@ -58,7 +58,7 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
         _vertexMarkerIndexBuffer[i].setData(MeshTools::compressIndicesAs<UnsignedShort>(data.indices()),
                                             GL::BufferUsage::StaticDraw);
 
-        _vertexMarkerMesh[i].setCount(data.indices().size())
+        _vertexMarkerMesh[i].setCount(static_cast<Int>(data.indices().size()))
                 .setPrimitive(data.primitive())
                 .addVertexBuffer(_vertexMarkerVertexBuffer[i], 0, PhongIdShader::Position{}, PhongIdShader::Normal{})
                 .setIndexBuffer(_vertexMarkerIndexBuffer[i], 0, MeshIndexType::UnsignedShort);
@@ -78,7 +78,7 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
     _colorBuffer.setData(colors, GL::BufferUsage::StaticDraw);
 
     // Using a vertex buffer would be beneficial but that makes updating colors later much more difficult
-    _triangles.setCount(triangleIndices.size())
+    _triangles.setCount(static_cast<Int>(triangleIndices.size()))
             .setPrimitive(GL::MeshPrimitive::Triangles)
             .addVertexBuffer(_triangleBuffer, 0, PhongIdShader::Position{}, PhongIdShader::Normal{},
                              PhongIdShader::UV{})

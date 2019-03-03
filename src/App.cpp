@@ -35,6 +35,7 @@ App::App(const Arguments &arguments) :
         Platform::Application{arguments, Configuration{}
                 .setTitle("Finite element")
                 .setWindowFlags(Configuration::WindowFlag::Resizable)},
+        _currentGeom{0},
         _framebuffer{GL::defaultFramebuffer.viewport()}
 {
 #ifndef MAGNUM_TARGET_GLES
@@ -84,15 +85,18 @@ App::App(const Arguments &arguments) :
 
     /* Configure camera */
     _cameraObject = std::make_unique<Object3D>(&_scene);
-    _cameraObject->translate(Vector3::zAxis(8.0f));
+    _cameraObject->translate(Vector3::zAxis(8.0f))
+                   .rotate(Math::Rad(Constants::pi()*0.5f), Vector3{1.f, 0.f, 0.f});
     _camera = std::make_unique<SceneGraph::Camera3D>(*_cameraObject);
     _camera->setAspectRatioPolicy(SceneGraph::AspectRatioPolicy::NotPreserved)
             .setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{GL::defaultFramebuffer.viewport().size()}.aspectRatio(), 0.001f, 100.0f))
             .setViewport(GL::defaultFramebuffer.viewport().size());
 
+    const std::vector<std::string> fnames{"geom1.ttg","geom2.ttg","geom3.ttg"};
+    _drawableGroups.resize(fnames.size());
+    readMeshFiles(fnames);
     initUi();
 
-    readMeshFile("cube.ttg");
 }
 
 void App::initUi()
@@ -108,39 +112,44 @@ void App::initUi()
     Interconnect::connect(_baseUiPlane->toggleVertexMarkersButton, &Ui::Button::tapped, *this,
                           &App::toggleVertexMarkersButtonCallback);
     Interconnect::connect(_baseUiPlane->solveButton, &Ui::Button::tapped, *this, &App::solveButtonCallback);
+    Interconnect::connect(_baseUiPlane->geomButton, &Ui::Button::tapped, *this, &App::geomButtonCallback);
 }
 
-void App::readMeshFile(const std::string& fname)
+void App::readMeshFiles(const std::vector<std::string>& fnames)
 {
     Utility::Resource rs("fem3d-data");
 
-    const auto str = rs.get(fname);
-    std::vector<Vector3> vertices;
-    std::vector<UnsignedInt> meshElementIndices;
-    std::vector<UnsignedInt> boundaryIndices; 
-    UnsignedInt dim;
-
-    if (parseTtg(str, vertices, meshElementIndices,boundaryIndices, dim) && dim == 3)
+    for (UnsignedInt i = 0; i < fnames.size(); ++i)
     {
-        Vector3 origin, extent;
-        computeAABB(vertices, origin, extent);
-        MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
+        const auto fname = fnames[i];
+        const auto str = rs.get(fname);
+        std::vector<Vector3> vertices;
+        std::vector<UnsignedInt> meshElementIndices;
+        std::vector<UnsignedInt> boundaryIndices; 
+        UnsignedInt dim;
 
-        std::vector<Vector2> uv;
-        std::vector<UnsignedInt> triangleIndices;
-        std::vector<UnsignedInt> uvIndices;
+        if (parseTtg(str, vertices, meshElementIndices,boundaryIndices, dim) && dim == 3)
+        {
+            Vector3 origin, extent;
+            computeAABB(vertices, origin, extent);
+            MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
 
-        // Expand tetrahedrons to triangles for visualization
-        extractTriangleIndices(meshElementIndices, triangleIndices);
+            std::vector<Vector2> uv;
+            std::vector<UnsignedInt> triangleIndices;
+            std::vector<UnsignedInt> uvIndices;
 
-        // Create uv data. Not used atm.
-        createUVIndices(triangleIndices, uv, uvIndices);
+            // Expand tetrahedrons to triangles for visualization
+            extractTriangleIndices(meshElementIndices, triangleIndices);
 
-        _object = std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices,boundaryIndices, uv,
-                                                uvIndices, meshElementIndices, _scene, _drawables);
-    } else
-    {
-        Error{} << "Could not parse mesh file";
+            // Create uv data. Not used atm.
+            createUVIndices(triangleIndices, uv, uvIndices);
+
+            _objects.emplace_back(std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices,boundaryIndices, uv,
+                                                    uvIndices, meshElementIndices, _scene, _drawableGroups[i]));
+        } else
+        {
+            Error{} << "Could not parse mesh file " << fname;
+        }
     }
 }
 
@@ -168,15 +177,16 @@ void App::drawEvent()
     _framebuffer.clearColor(_phongShader.ColorOutput, Vector4{0.0f})
             .clearColor(_phongShader.ObjectIdOutput, Vector4i{-1})
             .clearColor(_phongShader.TransparencyAccumulationOutput, Vector4{0.0f})
-            .clearColor(_phongShader.TransparencyRevealageOutput, Vector4(1.f))
+            .clearColor(_phongShader.TransparencyRevealageOutput, Vector4{1.f})
             .clearDepth(1.0f)
             .bind();
 
-    _camera->draw(_drawables);
+    _camera->draw(_drawableGroups[_currentGeom]);
 
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth)
             .bind();
 
+    // Compose into default framebuffer
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
 
     GL::Mesh fullScreenTriangles;
@@ -190,8 +200,8 @@ void App::drawEvent()
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
 
-    // Blit vertex markers to main fb
-    //_framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput});
+    // Blit render target attachments for debugging
+    //_framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.TransparencyAccumulationOutput});
     //GL::AbstractFramebuffer::blit(_framebuffer, GL::defaultFramebuffer,
     //                              {{}, _framebuffer.viewport().size()}, GL::FramebufferBlit::Color);
 
@@ -240,7 +250,7 @@ void App::mousePressEvent(MouseEvent &event)
 
     if (selectedVertexId >= 0)
     {
-        _object->togglePinnedVertex(static_cast<UnsignedInt>(selectedVertexId));
+        _objects[_currentGeom]->togglePinnedVertex(static_cast<UnsignedInt>(selectedVertexId));
         Debug{} << "Toggled vertex number " << selectedVertexId;
     }
 
@@ -259,13 +269,20 @@ void App::mouseMoveEvent(MouseMoveEvent &event)
     if (!(event.buttons() & MouseMoveEvent::Button::Left))
         return;
 
+    const Float cameraMovementSpeed = 0.005f;
     const Vector2i posDiff = event.relativePosition();
-
-    _cameraTrackballAngles[0] -= static_cast<Float>(posDiff[0]) * 0.01f;
-    _cameraTrackballAngles[1] -= static_cast<Float>(posDiff[1]) * 0.01f;
-
-    _cameraObject->rotate(Math::Rad(-posDiff[1] * 0.005f), _camera->cameraMatrix().inverted().right().normalized());
-    _cameraObject->rotate(Math::Rad(-posDiff[0] * 0.005f), Vector3(0.f, 1.f, 0.f));
+    _cameraTrackballAngles[0] += static_cast<Float>(posDiff[0]) * cameraMovementSpeed;
+    
+    // Restrict the up-down angle
+    if ((_cameraTrackballAngles[1] < Constants::pi()*0.5f && posDiff[1] > 0)
+        || (_cameraTrackballAngles[1] > -Constants::pi()*0.5f && posDiff[1] < 0)) {
+            
+        _cameraTrackballAngles[1] += static_cast<Float>(posDiff[1]) * cameraMovementSpeed;
+        _cameraObject->rotate(Math::Rad(-static_cast<Float>(posDiff[1]) * cameraMovementSpeed),
+                            _camera->cameraMatrix().inverted().right().normalized());    
+    }
+    
+    _cameraObject->rotate(Math::Rad(-static_cast<Float>(posDiff[0]) * cameraMovementSpeed), Vector3(0.f, 0.f, 1.f));
 
     event.setAccepted();
     redraw();
@@ -316,10 +333,16 @@ void App::drawUi()
 
 void App::toggleVertexMarkersButtonCallback()
 {
-    _object->toggleVertexMarkers();
+    _objects[_currentGeom]->toggleVertexMarkers();
 }
 
 void App::solveButtonCallback()
 {
-    _object->solve();
+    _objects[_currentGeom]->solve();
+}
+
+void App::geomButtonCallback()
+{
+    _currentGeom += 1;
+    _currentGeom %= static_cast<UnsignedInt>(_objects.size());
 }

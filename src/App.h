@@ -40,25 +40,27 @@ private:
 
     void toggleVertexMarkersButtonCallback();
     void solveButtonCallback();
+    void geomButtonCallback();
 
     void initUi();
     void drawUi();
 
-    void readMeshFile(const std::string& fname);
+    void readMeshFiles(const std::vector<std::string>& fnames);
 
     void keyPressEvent(KeyEvent &event) override;
     void textInputEvent(TextInputEvent &event) override;
 
+    UnsignedInt _currentGeom;
     Scene3D _scene;
     std::unique_ptr<Object3D> _cameraObject;
     std::unique_ptr<SceneGraph::Camera3D> _camera;
-    SceneGraph::DrawableGroup3D _drawables;
+    std::vector<SceneGraph::DrawableGroup3D> _drawableGroups;
 
     PhongIdShader _phongShader;
     VertexShader _vertexSelectionShader;
     CompositionShader _compositionShader;
 
-    std::unique_ptr<FEMObject3D> _object;
+    std::vector<std::unique_ptr<FEMObject3D>> _objects;
 
     GL::Framebuffer _framebuffer;
     GL::Renderbuffer _vertexId, _depth;
