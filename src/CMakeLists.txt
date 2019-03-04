@@ -42,7 +42,10 @@ find_package(MagnumPlugins REQUIRED
         StbTrueTypeFont)
     
 find_package(MagnumExtras REQUIRED
-    Ui)
+        Ui)
+
+find_package(MagnumIntegration REQUIRED
+        ImGui)
 
 find_package(OpenMP)
 if(OPENMP_FOUND)
@@ -74,7 +77,8 @@ target_link_libraries(fem3d PRIVATE
     Magnum::Trade
     Magnum::Primitives
     MagnumExtras::Ui
-    MagnumPlugins::StbTrueTypeFont)
+    MagnumPlugins::StbTrueTypeFont
+    MagnumIntegration::ImGui)
 
 if(CORRADE_TARGET_EMSCRIPTEN)
     install(TARGETS fem3d DESTINATION ${MAGNUM_DEPLOY_PREFIX})
