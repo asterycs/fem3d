@@ -120,8 +120,8 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMTask3D::evaluateS
     if (_vertices.size() == 0 || _tetrahedronIndices.size() == 0 || solution.size() != static_cast<long>(_vertices.size()))
         return std::make_pair(std::vector<Float>(), std::vector<Eigen::Vector3f>());
 
-    std::vector<Float> U(solution.size());
-    std::vector<Eigen::Vector3f> dU(solution.size());
+    std::vector<Float> U(solution.size(), 0.f);
+    std::vector<Eigen::Vector3f> dU(solution.size(), Eigen::Vector3f::Zero());
 
     Eigen::MatrixXf localCorners(3, 4);
     localCorners << 0.f, 1.f, 0.f, 0.f,
@@ -137,6 +137,7 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMTask3D::evaluateS
         Eigen::MatrixXf dL(3,4);
         Eigen::Vector4f multipliers;
 
+        // Copy function values
         for (UnsignedInt i = 0; i < 4; ++i)
         {
             U[vi[i]] = solution(vi[i]);
@@ -150,7 +151,7 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMTask3D::evaluateS
         }
 
         const Eigen::Vector3f cornerGradient = dL * multipliers;
-
+        // Sum gradients at vertices
         for (UnsignedInt i = 0; i < 4; ++i)
         {
             dU[vi[i]] += cornerGradient;

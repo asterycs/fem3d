@@ -19,6 +19,8 @@ public:
 
     void initialize();
     Eigen::VectorXf solve() const;
+
+    // Return function value and gradients at mesh vertices
     std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> evaluateSolution(const Eigen::VectorXf& solution) const;
 
 private:
