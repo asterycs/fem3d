@@ -4,6 +4,8 @@
 
 #include "Util.h"
 
+#include <array>
+
 FEMTask3D::FEMTask3D(const std::vector<Vector3> &vertices,
                      const std::vector<std::vector<UnsignedInt>> &tetrahedronIds,
                      const std::set<UnsignedInt> &pinnedVertexIds) : _vertices{vertices},

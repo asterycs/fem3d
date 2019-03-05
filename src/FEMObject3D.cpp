@@ -42,8 +42,6 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
     _vertexMarkerIndexBuffer.resize(vertices.size());
     _vertexMarkerMesh.resize(vertices.size());
 
-    _pinnedVertexIds.clear();
-
     for (UnsignedInt i = 0; i < vertices.size(); ++i)
     {
         const Vector3 center = vertices[i];
@@ -136,7 +134,7 @@ void FEMObject3D::draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D
     {
         for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i)
         {
-            if (_pinnedVertexIds.find(static_cast<Int>(i)) != _pinnedVertexIds.end())
+            if (_pinnedVertexIds.find(i) != _pinnedVertexIds.end())
                 _vertexShader.setColor({1.f, 0.f, 0.f});
             else
                 _vertexShader.setColor({1.f, 1.f, 1.f});

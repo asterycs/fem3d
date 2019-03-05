@@ -17,15 +17,17 @@
 #include <Magnum/GL/Renderbuffer.h>
 #include <Magnum/GL/AbstractShaderProgram.h>
 
+#include <imgui.h>
+#include <Magnum/ImGuiIntegration/Context.hpp>
+
 #include <memory>
 
 #include "FEMObject3D.h"
 #include "Typedefs.h"
-#include "UI.h"
 
 using namespace Magnum;
 
-class App : public Platform::Application, public Interconnect::Receiver
+class App : public Platform::Application
 {
 public:
     explicit App(const Arguments &arguments);
@@ -38,16 +40,12 @@ private:
     void mouseReleaseEvent(MouseEvent &event) override;
     void mouseScrollEvent(MouseScrollEvent &event) override;
 
-    void toggleVertexMarkersButtonCallback();
-    void solveButtonCallback();
-    void geomButtonCallback();
-
-    void initUi();
     void drawUi();
 
     void readMeshFiles(const std::vector<std::string>& fnames);
 
     void keyPressEvent(KeyEvent &event) override;
+    void keyReleaseEvent(KeyEvent &event) override;
     void textInputEvent(TextInputEvent &event) override;
 
     UnsignedInt _currentGeom;
@@ -68,8 +66,7 @@ private:
 
     Vector2 _cameraTrackballAngles;
 
-    std::unique_ptr<Ui::UserInterface> _ui;
-    std::unique_ptr<UiPlane> _baseUiPlane;
+    ImGuiIntegration::Context _imgui{NoCreate};
 };
 
 #endif

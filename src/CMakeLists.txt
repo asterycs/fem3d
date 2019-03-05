@@ -27,7 +27,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -Wunused \
     -Wunused-label \
     -Wunused-value \
-    -Wunused-variable")
+    -Wunused-variable \
+    -Wsign-conversion \
+    -Wno-error=sign-conversion")
 
 find_package(Magnum REQUIRED
     GL
@@ -40,9 +42,6 @@ find_package(Magnum REQUIRED
 
 find_package(MagnumPlugins REQUIRED
         StbTrueTypeFont)
-    
-find_package(MagnumExtras REQUIRED
-        Ui)
 
 find_package(MagnumIntegration REQUIRED
         ImGui)
@@ -76,7 +75,6 @@ target_link_libraries(fem3d PRIVATE
     Magnum::Shaders
     Magnum::Trade
     Magnum::Primitives
-    MagnumExtras::Ui
     MagnumPlugins::StbTrueTypeFont
     MagnumIntegration::ImGui)
 

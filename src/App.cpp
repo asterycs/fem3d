@@ -95,24 +95,9 @@ App::App(const Arguments &arguments) :
     const std::vector<std::string> fnames{"geom1.ttg","geom2.ttg","geom3.ttg"};
     _drawableGroups.resize(fnames.size());
     readMeshFiles(fnames);
-    initUi();
 
-}
-
-void App::initUi()
-{
-    Ui::StyleConfiguration style = Ui::defaultStyleConfiguration();
-
-    _baseUiPlane.reset();
-    _ui.reset();
-
-    _ui = std::make_unique<Ui::UserInterface>(Vector2(GL::defaultFramebuffer.viewport().size()), windowSize(), framebufferSize(), style, "»");
-    _baseUiPlane = std::make_unique<UiPlane>(*_ui);
-
-    Interconnect::connect(_baseUiPlane->toggleVertexMarkersButton, &Ui::Button::tapped, *this,
-                          &App::toggleVertexMarkersButtonCallback);
-    Interconnect::connect(_baseUiPlane->solveButton, &Ui::Button::tapped, *this, &App::solveButtonCallback);
-    Interconnect::connect(_baseUiPlane->geomButton, &Ui::Button::tapped, *this, &App::geomButtonCallback);
+    _imgui = ImGuiIntegration::Context(Vector2{windowSize()},
+            windowSize(), framebufferSize());
 }
 
 void App::readMeshFiles(const std::vector<std::string>& fnames)
@@ -168,7 +153,9 @@ void App::viewportEvent(ViewportEvent &event)
     _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{event.framebufferSize()}.aspectRatio(), 0.001f, 100.0f))
             .setViewport(event.framebufferSize());
 
-    initUi();
+    _imgui.relayout(Vector2{event.windowSize()},
+            event.windowSize(), event.framebufferSize());
+
     redraw();
 }
 
@@ -213,6 +200,12 @@ void App::drawEvent()
 
 void App::mouseScrollEvent(MouseScrollEvent &event)
 {
+    if (_imgui.handleMouseScrollEvent(event))
+    {
+        redraw();
+        return;
+    }
+
     if (!event.offset().y()) return;
 
     // Distance to origin
@@ -228,9 +221,8 @@ void App::mouseScrollEvent(MouseScrollEvent &event)
 
 void App::mousePressEvent(MouseEvent &event)
 {
-    if (_ui->handlePressEvent(event.position()))
+    if (_imgui.handleMousePressEvent(event))
     {
-        event.setAccepted();
         redraw();
         return;
     }
@@ -259,9 +251,8 @@ void App::mousePressEvent(MouseEvent &event)
 
 void App::mouseMoveEvent(MouseMoveEvent &event)
 {
-    if (_ui->handleMoveEvent(event.position()))
+    if (_imgui.handleMouseMoveEvent(event))
     {
-        event.setAccepted();
         redraw();
         return;
     }
@@ -290,9 +281,8 @@ void App::mouseMoveEvent(MouseMoveEvent &event)
 
 void App::mouseReleaseEvent(MouseEvent &event)
 {
-    if (_ui->handleReleaseEvent(event.position()))
+    if (_imgui.handleMouseReleaseEvent(event))
     {
-        event.setAccepted();
         redraw();
         return;
     }
@@ -306,43 +296,76 @@ void App::mouseReleaseEvent(MouseEvent &event)
 
 void App::textInputEvent(TextInputEvent &event)
 {
-    if (isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleTextInput(event))
+    if (_imgui.handleTextInputEvent(event))
         redraw();
 
 }
 
 void App::keyPressEvent(KeyEvent &event)
 {
-    if (isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleKeyPress(event))
+    if (_imgui.handleKeyPressEvent(event))
+        redraw();
+}
+
+void App::keyReleaseEvent(KeyEvent &event)
+{
+    if (_imgui.handleKeyReleaseEvent(event))
         redraw();
 }
 
 void App::drawUi()
 {
+    bool _showTestWindow = true;
+    bool _showAnotherWindow = false;
+    Color4 _clearColor = 0x72909aff_rgbaf;
+    Float _floatValue = 0.0f;
+
+    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add,
+            GL::Renderer::BlendEquation::Add);
+    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,
+            GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+
+    _imgui.newFrame();
+
+    if(ImGui::GetIO().WantTextInput && !isTextInputActive())
+        startTextInput();
+    else if(!ImGui::GetIO().WantTextInput && isTextInputActive())
+        stopTextInput();
+
+    {
+        ImGui::Text("Hello, world!");
+        ImGui::SliderFloat("Float", &_floatValue, 0.0f, 1.0f);
+        if(ImGui::ColorEdit3("Clear Color", _clearColor.data()))
+            GL::Renderer::setClearColor(_clearColor);
+        if(ImGui::Button("Test Window"))
+            _showTestWindow ^= true;
+        if(ImGui::Button("Another Window"))
+            _showAnotherWindow ^= true;
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
+    }
+/*
+    if(_showAnotherWindow) {
+        ImGui::SetNextWindowSize(ImVec2(500, 100), ImGuiSetCond_FirstUseEver);
+        ImGui::Begin("Another Window", &_showAnotherWindow);
+        ImGui::Text("Hello");
+        ImGui::End();
+    }
+
+    if(_showTestWindow) {
+        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+        ImGui::ShowTestWindow();
+    }
+*/
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
-    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::One,
-                                   GL::Renderer::BlendFunction::OneMinusSourceAlpha);
-    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
+    GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
+    GL::Renderer::enable(GL::Renderer::Feature::ScissorTest);
 
-    _ui->draw();
+    _imgui.drawFrame();
 
+    GL::Renderer::disable(GL::Renderer::Feature::ScissorTest);
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
+    GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
     GL::Renderer::disable(GL::Renderer::Feature::Blending);
-}
-
-void App::toggleVertexMarkersButtonCallback()
-{
-    _objects[_currentGeom]->toggleVertexMarkers();
-}
-
-void App::solveButtonCallback()
-{
-    _objects[_currentGeom]->solve();
-}
-
-void App::geomButtonCallback()
-{
-    _currentGeom += 1;
-    _currentGeom %= static_cast<UnsignedInt>(_objects.size());
 }

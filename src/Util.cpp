@@ -1,5 +1,6 @@
 #include "Util.h"
 
+#include <array>
 #include <sstream>
 
 bool parseTtg(const std::string &input,

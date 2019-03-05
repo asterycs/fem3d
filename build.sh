@@ -32,6 +32,7 @@ echo MAGNUM_EXTRAS_PREFIX: $MAGNUM_EXTRAS_PREFIX
 
 # Corrade
 cd $CORRADE_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 rm -rf $SDL2_BUILD_PREFIX
 mkdir $SDL2_BUILD_PREFIX
 cd $SDL2_BUILD_PREFIX
@@ -43,6 +44,7 @@ sudo make install
 
 # Magnum
 cd $MAGNUM_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 rm -rf $SDL2_BUILD_PREFIX
 mkdir $SDL2_BUILD_PREFIX
 cd $SDL2_BUILD_PREFIX
@@ -54,6 +56,7 @@ sudo make install
 
 # Magnum plugins
 cd $MAGNUM_PLUGINS_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 rm -rf $SDL2_BUILD_PREFIX
 mkdir $SDL2_BUILD_PREFIX
 cd $SDL2_BUILD_PREFIX
@@ -64,6 +67,7 @@ sudo make install
 
 # Magnum extras
 cd $MAGNUM_EXTRAS_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 rm -rf $SDL2_BUILD_PREFIX
 mkdir $SDL2_BUILD_PREFIX
 cd $SDL2_BUILD_PREFIX
@@ -74,6 +78,7 @@ sudo make install
 
 # Magnum integration
 cd $MAGNUM_INTEGRATION_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 rm -rf $SDL2_BUILD_PREFIX
 mkdir $SDL2_BUILD_PREFIX
 cd $SDL2_BUILD_PREFIX
@@ -85,6 +90,7 @@ sudo make install
 if [ "$BUILD_EMSCRIPTEN" = true ]; then
 
   cd $CORRADE_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   rm -rf $EMSCRIPTEN_BUILD_PREFIX
   mkdir $EMSCRIPTEN_BUILD_PREFIX
   cd $EMSCRIPTEN_BUILD_PREFIX
@@ -93,6 +99,7 @@ if [ "$BUILD_EMSCRIPTEN" = true ]; then
   make install
 
   cd $MAGNUM_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   rm -rf $EMSCRIPTEN_BUILD_PREFIX
   mkdir $EMSCRIPTEN_BUILD_PREFIX
   cd $EMSCRIPTEN_BUILD_PREFIX
@@ -102,6 +109,7 @@ if [ "$BUILD_EMSCRIPTEN" = true ]; then
   make install
 
   cd $MAGNUM_PLUGINS_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   rm -rf $EMSCRIPTEN_BUILD_PREFIX
   mkdir $EMSCRIPTEN_BUILD_PREFIX
   cd $EMSCRIPTEN_BUILD_PREFIX
@@ -110,6 +118,7 @@ if [ "$BUILD_EMSCRIPTEN" = true ]; then
   make install
 
   cd $MAGNUM_EXTRAS_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   rm -rf $EMSCRIPTEN_BUILD_PREFIX
   mkdir $EMSCRIPTEN_BUILD_PREFIX
   cd $EMSCRIPTEN_BUILD_PREFIX
@@ -119,6 +128,7 @@ if [ "$BUILD_EMSCRIPTEN" = true ]; then
 
   # Magnum integration
   cd $MAGNUM_INTEGRATION_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   rm -rf $EMSCRIPTEN_BUILD_PREFIX
   mkdir $EMSCRIPTEN_BUILD_PREFIX
   cd $EMSCRIPTEN_BUILD_PREFIX
