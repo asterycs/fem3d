@@ -157,14 +157,9 @@ void FEMObject3D::togglePinnedVertex(const UnsignedInt vertexId)
 
 }
 
-void FEMObject3D::toggleVertexMarkers()
+void FEMObject3D::drawVertexMarkers(const bool draw)
 {
-    _drawVertexMarkers = !_drawVertexMarkers;
-}
-
-bool FEMObject3D::drawsVertexMarkers() const
-{
-    return _drawVertexMarkers;
+    _drawVertexMarkers = draw;
 }
 
 std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()

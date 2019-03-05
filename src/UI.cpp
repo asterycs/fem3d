@@ -4,7 +4,7 @@
 
 using namespace Magnum::Math::Literals;
 
-UI::UI(const Vector2i& size) : _imgui{Vector2{size}, size, size}, _showGradient{false}//, _floatValue{0.f}
+UI::UI(const Vector2i& size, const UnsignedInt nScenes) : _imgui{Vector2{size}, size, size}, _nScenes{nScenes}, _showGradient{false}, _showVertexMarkers{true}//, _floatValue{0.f}
 {
     draw();
 }
@@ -39,11 +39,18 @@ void UI::draw()
         if (ImGui::Button("Solve", ImVec2(110,20)))
             _solveButtonCallback(_showGradient);
 
-        if (ImGui::Button("Toggle markers", ImVec2(110,20)))
-            _showVertexMarkersButtonCallback();
+        if (ImGui::Button(_showVertexMarkers ? "Markers on" : "Markers off", ImVec2(110,20)))
+        {
+            _showVertexMarkers = !_showVertexMarkers;
+            _showVertexMarkersButtonCallback(_showVertexMarkers);
+        }
 
-        if (ImGui::Button("Change scene", ImVec2(110,20)))
-            _changeGeometryButtonCallback();
+        std::string sceneButtonLabel{"Scene " + std::to_string(_currentScene)};
+        if (ImGui::Button(sceneButtonLabel.c_str(), ImVec2(110,20)))
+        {
+            ++_currentScene %= _nScenes;
+            _changeGeometryButtonCallback(_currentScene);
+        }
 
         ImGui::End();
     }
@@ -101,12 +108,12 @@ void UI::setSolveButtonCallback(std::function<void(bool)> function)
     _solveButtonCallback = function;
 }
 
-void UI::setShowVertexMarkersButtonCallback(std::function<void()> function)
+void UI::setShowVertexMarkersButtonCallback(std::function<void(bool)> function)
 {
     _showVertexMarkersButtonCallback = function;
 }
 
-void UI::setChangeGeometryButtonCallback(std::function<void()> function)
+void UI::setChangeGeometryButtonCallback(std::function<void(unsigned int)> function)
 {
     _changeGeometryButtonCallback = function;
 }

@@ -38,9 +38,9 @@ private:
     void mouseReleaseEvent(MouseEvent &event) override;
     void mouseScrollEvent(MouseScrollEvent &event) override;
 
-    void toggleVertexMarkersButtonCallback();
+    void showVertexMarkersButtonCallback(bool show);
     void solveButtonCallback(bool showGradient);
-    void geomButtonCallback();
+    void geomButtonCallback(UnsignedInt geometry);
 
     void readMeshFiles(const std::vector<std::string>& fnames);
     void initUi();

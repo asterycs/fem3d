@@ -37,7 +37,7 @@ App::App(const Arguments &arguments) :
                 .setWindowFlags(Configuration::WindowFlag::Resizable)},
         _currentGeom{0},
         _framebuffer{GL::defaultFramebuffer.viewport()},
-        _ui{windowSize()}
+        _ui{windowSize(), 3}
 {
 #ifndef MAGNUM_TARGET_GLES
     MAGNUM_ASSERT_GL_VERSION_SUPPORTED(GL::Version::GL330);
@@ -103,8 +103,8 @@ App::App(const Arguments &arguments) :
 void App::initUi()
 {
     _ui.setSolveButtonCallback(std::bind(&App::solveButtonCallback, this, std::placeholders::_1));
-    _ui.setShowVertexMarkersButtonCallback(std::bind(&App::toggleVertexMarkersButtonCallback, this));
-    _ui.setChangeGeometryButtonCallback(std::bind(&App::geomButtonCallback, this));
+    _ui.setShowVertexMarkersButtonCallback(std::bind(&App::showVertexMarkersButtonCallback, this, std::placeholders::_1));
+    _ui.setChangeGeometryButtonCallback(std::bind(&App::geomButtonCallback, this, std::placeholders::_1));
 }
 
 void App::readMeshFiles(const std::vector<std::string>& fnames)
@@ -325,9 +325,9 @@ void App::keyReleaseEvent(KeyEvent &event)
         redraw();
 }
 
-void App::toggleVertexMarkersButtonCallback()
+void App::showVertexMarkersButtonCallback(bool show)
 {
-    _objects[_currentGeom]->toggleVertexMarkers();
+    _objects[_currentGeom]->drawVertexMarkers(show);
 }
 
 void App::solveButtonCallback(bool showGradient)
@@ -351,8 +351,7 @@ void App::solveButtonCallback(bool showGradient)
     }
 }
 
-void App::geomButtonCallback()
+void App::geomButtonCallback(const UnsignedInt geometry)
 {
-    _currentGeom += 1;
-    _currentGeom %= static_cast<UnsignedInt>(_objects.size());
+    _currentGeom = geometry;
 }

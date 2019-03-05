@@ -15,14 +15,14 @@ class App;
 
 class UI {
 public:
-    explicit UI(const Vector2i& size);
+    explicit UI(const Vector2i& size, const UnsignedInt nScenes);
 
     void resize(const Vector2i& size);
     void draw();
 
     void setSolveButtonCallback(std::function<void(bool)> function);
-    void setShowVertexMarkersButtonCallback(std::function<void()> function);
-    void setChangeGeometryButtonCallback(std::function<void()> function);
+    void setShowVertexMarkersButtonCallback(std::function<void(bool)> function);
+    void setChangeGeometryButtonCallback(std::function<void(unsigned int)> function);
 
     bool wantsTextInput();
 
@@ -39,10 +39,14 @@ private:
     ImGuiIntegration::Context _imgui{NoCreate};
     //float _floatValue;
 
+    unsigned int _nScenes;
+    unsigned int _currentScene;
     bool _showGradient;
+    bool _showVertexMarkers;
+
     std::function<void(bool)> _solveButtonCallback;
-    std::function<void()> _showVertexMarkersButtonCallback;
-    std::function<void()> _changeGeometryButtonCallback;
+    std::function<void(bool)> _showVertexMarkersButtonCallback;
+    std::function<void(UnsignedInt)> _changeGeometryButtonCallback;
 };
 
 #endif //FEM3D_UI_H

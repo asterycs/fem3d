@@ -32,8 +32,7 @@ public:
                          SceneGraph::DrawableGroup3D &drawables);
     void togglePinnedVertex(const UnsignedInt vertexId);
 
-    void toggleVertexMarkers();
-    bool drawsVertexMarkers() const;
+    void drawVertexMarkers(const bool);
 
     std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> solve();
 
