@@ -167,7 +167,7 @@ bool FEMObject3D::drawsVertexMarkers() const
     return _drawVertexMarkers;
 }
 
-void FEMObject3D::solve()
+std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 {
     FEMTask3D task(_meshVertices, _tetrahedronIndices, _pinnedVertexIds);
     task.initialize();
@@ -175,13 +175,8 @@ void FEMObject3D::solve()
 
     if (solution.size() > 0)
     {
-        std::vector<Float> U;
-        std::vector<Eigen::Vector3f> dU;
-
-        std::tie(U, dU) = task.evaluateSolution(solution);
-
-        const auto norms = computeNorm(dU);
-        std::vector<Vector3> vertexColors = valuesToHeatGradient(norms);
-        this->setVertexColors(vertexColors);
+        return task.evaluateSolution(solution);
     }
+    else
+        return std::make_pair<std::vector<Float>, std::vector<Eigen::Vector3f>>({}, {});
 }

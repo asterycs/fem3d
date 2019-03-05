@@ -36,7 +36,8 @@ App::App(const Arguments &arguments) :
                 .setTitle("Finite element")
                 .setWindowFlags(Configuration::WindowFlag::Resizable)},
         _currentGeom{0},
-        _framebuffer{GL::defaultFramebuffer.viewport()}
+        _framebuffer{GL::defaultFramebuffer.viewport()},
+        _ui{windowSize()}
 {
 #ifndef MAGNUM_TARGET_GLES
     MAGNUM_ASSERT_GL_VERSION_SUPPORTED(GL::Version::GL330);
@@ -83,7 +84,7 @@ App::App(const Arguments &arguments) :
 
     CORRADE_INTERNAL_ASSERT(_framebuffer.checkStatus(GL::FramebufferTarget::Draw) == GL::Framebuffer::Status::Complete);
 
-    /* Configure camera */
+    // Configure camera
     _cameraObject = std::make_unique<Object3D>(&_scene);
     _cameraObject->translate(Vector3::zAxis(8.0f))
                    .rotate(Math::Rad(Constants::pi()*0.5f), Vector3{1.f, 0.f, 0.f});
@@ -96,8 +97,14 @@ App::App(const Arguments &arguments) :
     _drawableGroups.resize(fnames.size());
     readMeshFiles(fnames);
 
-    _imgui = ImGuiIntegration::Context(Vector2{windowSize()},
-            windowSize(), framebufferSize());
+    initUi();
+}
+
+void App::initUi()
+{
+    _ui.setSolveButtonCallback(std::bind(&App::solveButtonCallback, this, std::placeholders::_1));
+    _ui.setShowVertexMarkersButtonCallback(std::bind(&App::toggleVertexMarkersButtonCallback, this));
+    _ui.setChangeGeometryButtonCallback(std::bind(&App::geomButtonCallback, this));
 }
 
 void App::readMeshFiles(const std::vector<std::string>& fnames)
@@ -153,14 +160,18 @@ void App::viewportEvent(ViewportEvent &event)
     _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{event.framebufferSize()}.aspectRatio(), 0.001f, 100.0f))
             .setViewport(event.framebufferSize());
 
-    _imgui.relayout(Vector2{event.windowSize()},
-            event.windowSize(), event.framebufferSize());
+    _ui.resize(event.windowSize());
 
     redraw();
 }
 
 void App::drawEvent()
 {
+    if(_ui.wantsTextInput() && !isTextInputActive())
+        startTextInput();
+    else if(!_ui.wantsTextInput() && isTextInputActive())
+        stopTextInput();
+
     _framebuffer.clearColor(_phongShader.ColorOutput, Vector4{0.0f})
             .clearColor(_phongShader.ObjectIdOutput, Vector4i{-1})
             .clearColor(_phongShader.TransparencyAccumulationOutput, Vector4{0.0f})
@@ -192,15 +203,16 @@ void App::drawEvent()
     //GL::AbstractFramebuffer::blit(_framebuffer, GL::defaultFramebuffer,
     //                              {{}, _framebuffer.viewport().size()}, GL::FramebufferBlit::Color);
 
-    drawUi();
+    _ui.draw();
 
     swapBuffers();
+    redraw();
 }
 
 
 void App::mouseScrollEvent(MouseScrollEvent &event)
 {
-    if (_imgui.handleMouseScrollEvent(event))
+    if (_ui.handleMouseScrollEvent(event))
     {
         redraw();
         return;
@@ -221,7 +233,7 @@ void App::mouseScrollEvent(MouseScrollEvent &event)
 
 void App::mousePressEvent(MouseEvent &event)
 {
-    if (_imgui.handleMousePressEvent(event))
+    if (_ui.handleMousePressEvent(event))
     {
         redraw();
         return;
@@ -251,7 +263,7 @@ void App::mousePressEvent(MouseEvent &event)
 
 void App::mouseMoveEvent(MouseMoveEvent &event)
 {
-    if (_imgui.handleMouseMoveEvent(event))
+    if (_ui.handleMouseMoveEvent(event))
     {
         redraw();
         return;
@@ -281,7 +293,7 @@ void App::mouseMoveEvent(MouseMoveEvent &event)
 
 void App::mouseReleaseEvent(MouseEvent &event)
 {
-    if (_imgui.handleMouseReleaseEvent(event))
+    if (_ui.handleMouseReleaseEvent(event))
     {
         redraw();
         return;
@@ -296,76 +308,51 @@ void App::mouseReleaseEvent(MouseEvent &event)
 
 void App::textInputEvent(TextInputEvent &event)
 {
-    if (_imgui.handleTextInputEvent(event))
+    if (_ui.handleTextInputEvent(event))
         redraw();
 
 }
 
 void App::keyPressEvent(KeyEvent &event)
 {
-    if (_imgui.handleKeyPressEvent(event))
+    if (_ui.handleKeyPressEvent(event))
         redraw();
 }
 
 void App::keyReleaseEvent(KeyEvent &event)
 {
-    if (_imgui.handleKeyReleaseEvent(event))
+    if (_ui.handleKeyReleaseEvent(event))
         redraw();
 }
 
-void App::drawUi()
+void App::toggleVertexMarkersButtonCallback()
 {
-    bool _showTestWindow = true;
-    bool _showAnotherWindow = false;
-    Color4 _clearColor = 0x72909aff_rgbaf;
-    Float _floatValue = 0.0f;
+    _objects[_currentGeom]->toggleVertexMarkers();
+}
 
-    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add,
-            GL::Renderer::BlendEquation::Add);
-    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,
-            GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+void App::solveButtonCallback(bool showGradient)
+{
+    std::vector<Float> U;
+    std::vector<Eigen::Vector3f> dU;
 
-    _imgui.newFrame();
+    std::tie(U, dU) = _objects[_currentGeom]->solve();
 
-    if(ImGui::GetIO().WantTextInput && !isTextInputActive())
-        startTextInput();
-    else if(!ImGui::GetIO().WantTextInput && isTextInputActive())
-        stopTextInput();
-
+    if (U.size() > 0 && dU.size() > 0)
     {
-        ImGui::Text("Hello, world!");
-        ImGui::SliderFloat("Float", &_floatValue, 0.0f, 1.0f);
-        if(ImGui::ColorEdit3("Clear Color", _clearColor.data()))
-            GL::Renderer::setClearColor(_clearColor);
-        if(ImGui::Button("Test Window"))
-            _showTestWindow ^= true;
-        if(ImGui::Button("Another Window"))
-            _showAnotherWindow ^= true;
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
-    }
-/*
-    if(_showAnotherWindow) {
-        ImGui::SetNextWindowSize(ImVec2(500, 100), ImGuiSetCond_FirstUseEver);
-        ImGui::Begin("Another Window", &_showAnotherWindow);
-        ImGui::Text("Hello");
-        ImGui::End();
-    }
+        std::vector<Float> magnitudes;
 
-    if(_showTestWindow) {
-        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
-        ImGui::ShowTestWindow();
+        if (showGradient)
+            magnitudes = computeNorm(dU);
+        else
+            magnitudes = U;
+
+        std::vector<Vector3> vertexColors = valuesToHeatGradient(magnitudes);
+        _objects[_currentGeom]->setVertexColors(vertexColors);
     }
-*/
-    GL::Renderer::enable(GL::Renderer::Feature::Blending);
-    GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
-    GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
-    GL::Renderer::enable(GL::Renderer::Feature::ScissorTest);
+}
 
-    _imgui.drawFrame();
-
-    GL::Renderer::disable(GL::Renderer::Feature::ScissorTest);
-    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
-    GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
-    GL::Renderer::disable(GL::Renderer::Feature::Blending);
+void App::geomButtonCallback()
+{
+    _currentGeom += 1;
+    _currentGeom %= static_cast<UnsignedInt>(_objects.size());
 }

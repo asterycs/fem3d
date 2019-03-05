@@ -35,7 +35,7 @@ public:
     void toggleVertexMarkers();
     bool drawsVertexMarkers() const;
 
-    void solve();
+    std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> solve();
 
     const std::vector<std::vector<UnsignedInt>> &getTetrahedronIndices() const;
     const std::vector<Vector3> &getVertices() const;
