@@ -4,9 +4,11 @@
 
 #include "Util.h"
 
+#include <array>
+
 FEMTask3D::FEMTask3D(const std::vector<Vector3> &vertices,
-                     const std::vector<UnsignedInt> &tetrahedronIds,
-                     const std::set<UnsignedInt> &pinnedVertexIds) : _isFeasible{true}, _vertices{vertices},
+                     const std::vector<std::vector<UnsignedInt>> &tetrahedronIds,
+                     const std::set<UnsignedInt> &pinnedVertexIds) : _vertices{vertices},
                                                                      _tetrahedronIndices{tetrahedronIds},
                                                                      _pinnedVertexIds{pinnedVertexIds}
 {
@@ -25,21 +27,12 @@ void FEMTask3D::initialize()
 
     const Eigen::Vector4f w(Eigen::Array4f(0.25f, 0.25f, 0.25f, 0.25f) / 6.f);
 
-    for (UnsignedInt ti = 0; ti < _tetrahedronIndices.size(); ti += 4)
+    for (auto& vi : _tetrahedronIndices)
     {
-        const UnsignedInt vi[] = {_tetrahedronIndices[ti],
-                                  _tetrahedronIndices[ti + 1],
-                                  _tetrahedronIndices[ti + 2],
-                                  _tetrahedronIndices[ti + 3]};
-
-        const Eigen::Vector3f p0 = toEigen(_vertices[vi[0]]);
-        const Eigen::Vector3f p1 = toEigen(_vertices[vi[1]]);
-        const Eigen::Vector3f p2 = toEigen(_vertices[vi[2]]);
-        const Eigen::Vector3f p3 = toEigen(_vertices[vi[3]]);
-
         Eigen::Matrix3f Bk;
-        Bk << p1 - p0, p2 - p0, p3 - p0;
-        Eigen::Vector3f bk = p0;
+        Eigen::Vector3f bk;
+
+        std::tie(Bk, bk) = computeAffine(vi);
 
         for (UnsignedInt i = 0; i < 4; ++i)
         {
@@ -57,21 +50,12 @@ void FEMTask3D::initialize()
         }
     }
 
-    for (UnsignedInt ti = 0; ti < _tetrahedronIndices.size(); ti += 4)
+    for (auto& vi : _tetrahedronIndices)
     {
-        const UnsignedInt vi[] = {_tetrahedronIndices[ti],
-                                  _tetrahedronIndices[ti + 1],
-                                  _tetrahedronIndices[ti + 2],
-                                  _tetrahedronIndices[ti + 3]};
-
-        const Eigen::Vector3f p0 = toEigen(_vertices[vi[0]]);
-        const Eigen::Vector3f p1 = toEigen(_vertices[vi[1]]);
-        const Eigen::Vector3f p2 = toEigen(_vertices[vi[2]]);
-        const Eigen::Vector3f p3 = toEigen(_vertices[vi[3]]);
-
         Eigen::Matrix3f Bk;
-        Bk << p1 - p0, p2 - p0, p3 - p0;
-        //Eigen::Vector3f bk = p0;
+        Eigen::Vector3f bk;
+
+        std::tie(Bk, bk) = computeAffine(vi);
 
         Eigen::Vector4f bl(Eigen::Vector4f::Zero());
 
@@ -90,12 +74,6 @@ void FEMTask3D::initialize()
         }
     }
 
-    if (_pinnedVertexIds.size() == 0)
-    {
-        _isFeasible = false;
-    }
-
-
     for (auto pinnedVertexId : _pinnedVertexIds)
     {
         A.prune([=](UnsignedInt i, UnsignedInt j, Float)
@@ -110,12 +88,26 @@ void FEMTask3D::initialize()
     _b = b;
 }
 
-Eigen::Vector4f FEMTask3D::evaluateBasis(const Eigen::Vector3f &x)
+std::pair<Eigen::Matrix3f, Eigen::Vector3f> FEMTask3D::computeAffine(const std::vector<UnsignedInt>& elemVertexIndices) const
+{
+    const Eigen::Vector3f p0 = toEigen(_vertices[elemVertexIndices[0]]);
+    const Eigen::Vector3f p1 = toEigen(_vertices[elemVertexIndices[1]]);
+    const Eigen::Vector3f p2 = toEigen(_vertices[elemVertexIndices[2]]);
+    const Eigen::Vector3f p3 = toEigen(_vertices[elemVertexIndices[3]]);
+
+    Eigen::Matrix3f Bk;
+    Bk << p1 - p0, p2 - p0, p3 - p0;
+    Eigen::Vector3f bk = p0;
+
+    return std::make_pair(Bk, bk);
+}
+
+Eigen::Vector4f FEMTask3D::evaluateBasis(const Eigen::Vector3f &x) const
 {
     return Eigen::Vector4f(1.f - x(0) - x(1) - x(2), x(0), x(1), x(2));
 }
 
-Eigen::MatrixXf FEMTask3D::evaluateDBasis(const Eigen::Vector3f &)
+Eigen::MatrixXf FEMTask3D::evaluateDBasis(const Eigen::Vector3f &) const
 {
     Eigen::MatrixXf grad(3,4);
     grad << -1.f, 1.f, 0.f, 0.f,
@@ -125,34 +117,72 @@ Eigen::MatrixXf FEMTask3D::evaluateDBasis(const Eigen::Vector3f &)
     return grad;
 }
 
-std::vector<Float> FEMTask3D::solve()
+std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMTask3D::evaluateSolution(const Eigen::VectorXf& solution) const
 {
-    initialize();
+    if (_vertices.size() == 0 || _tetrahedronIndices.size() == 0 || solution.size() != static_cast<long>(_vertices.size()))
+        return std::make_pair(std::vector<Float>(), std::vector<Eigen::Vector3f>());
 
-    if (!_isFeasible)
+    std::vector<Float> U(solution.size(), 0.f);
+    std::vector<Eigen::Vector3f> dU(solution.size(), Eigen::Vector3f::Zero());
+
+    Eigen::MatrixXf localCorners(3, 4);
+    localCorners << 0.f, 1.f, 0.f, 0.f,
+                    0.f, 0.f, 1.f, 0.f,
+                    0.f, 0.f, 0.f, 1.f;
+
+    for (auto& vi : _tetrahedronIndices)
     {
-        Debug{} << "Problem is infeasible, doing nothing";
-        return std::vector<Float>();
+        Eigen::Matrix3f Bk;
+        Eigen::Vector3f bk;
+        std::tie(Bk, bk) = computeAffine(vi);
+
+        Eigen::MatrixXf dL(3,4);
+        Eigen::Vector4f multipliers;
+
+        // Copy function values
+        for (UnsignedInt i = 0; i < 4; ++i)
+        {
+            U[vi[i]] = solution(vi[i]);
+            multipliers(i) = solution(vi[i]);
+        }
+
+        for (UnsignedInt i = 0; i < 4; ++i)
+        {
+            const Eigen::Vector3f currentCorner = localCorners.col(i);
+            dL.col(i) = Bk.inverse().transpose() * evaluateDBasis(currentCorner).col(i);
+        }
+
+        const Eigen::Vector3f cornerGradient = dL * multipliers;
+        // Sum gradients at vertices
+        for (UnsignedInt i = 0; i < 4; ++i)
+        {
+            dU[vi[i]] += cornerGradient;
+        }
     }
 
+    return std::make_pair(U, dU);
+}
+
+Eigen::VectorXf FEMTask3D::solve() const
+{
     Eigen::SimplicialLLT<Eigen::SparseMatrix<Float>> solver;
     solver.compute(_A);
 
     if (solver.info() != Eigen::Success)
     {
-        Debug{} << "Could not solve linear system";
-        return std::vector<Float>();
+        Warning{} << "Could not solve linear system";
+        return Eigen::VectorXf();
     }
 
     Eigen::VectorXf x = solver.solve(_b);
 
     if (solver.info() != Eigen::Success)
     {
-        Debug{} << "Could not solve linear system";
-        return std::vector<Float>();
+        Warning{} << "Could not solve linear system";
+        return Eigen::VectorXf();
     }
 
-    return std::vector<Float>(x.data(), x.data() + x.size());
+    return x;
 }
 
 

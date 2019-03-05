@@ -20,6 +20,7 @@ CORRADE_PREFIX=${REPOSITORY_PREFIX}"/corrade"
 MAGNUM_PREFIX=${REPOSITORY_PREFIX}"/magnum"
 MAGNUM_EXTRAS_PREFIX=${REPOSITORY_PREFIX}"/magnum-extras"
 MAGNUM_PLUGINS_PREFIX=${REPOSITORY_PREFIX}"/magnum-plugins"
+MAGNUM_INTEGRATION_PREFIX=${REPOSITORY_PREFIX}"/magnum-integration"
 
 SDL2_BUILD_PREFIX="build"
 EMSCRIPTEN_BUILD_PREFIX="build-emscripten"
@@ -31,6 +32,7 @@ echo MAGNUM_EXTRAS_PREFIX: $MAGNUM_EXTRAS_PREFIX
 
 # Corrade
 cd $CORRADE_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 rm -rf $SDL2_BUILD_PREFIX
 mkdir $SDL2_BUILD_PREFIX
 cd $SDL2_BUILD_PREFIX
@@ -42,6 +44,7 @@ sudo make install
 
 # Magnum
 cd $MAGNUM_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 rm -rf $SDL2_BUILD_PREFIX
 mkdir $SDL2_BUILD_PREFIX
 cd $SDL2_BUILD_PREFIX
@@ -53,6 +56,7 @@ sudo make install
 
 # Magnum plugins
 cd $MAGNUM_PLUGINS_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 rm -rf $SDL2_BUILD_PREFIX
 mkdir $SDL2_BUILD_PREFIX
 cd $SDL2_BUILD_PREFIX
@@ -63,6 +67,7 @@ sudo make install
 
 # Magnum extras
 cd $MAGNUM_EXTRAS_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 rm -rf $SDL2_BUILD_PREFIX
 mkdir $SDL2_BUILD_PREFIX
 cd $SDL2_BUILD_PREFIX
@@ -71,9 +76,21 @@ cmake -DCMAKE_BUILD_TYPE=Release -DWITH_UI=ON -DWITH_UI_GALLERY=ON ..
 make -j
 sudo make install
 
+# Magnum integration
+cd $MAGNUM_INTEGRATION_PREFIX
+rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+rm -rf $SDL2_BUILD_PREFIX
+mkdir $SDL2_BUILD_PREFIX
+cd $SDL2_BUILD_PREFIX
+cmake -DCMAKE_BUILD_TYPE=Release -DWITH_IMGUI=ON -DIMGUI_DIR=$REPOSITORY_PREFIX/imgui ..
+
+make -j
+sudo make install
+
 if [ "$BUILD_EMSCRIPTEN" = true ]; then
 
   cd $CORRADE_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   rm -rf $EMSCRIPTEN_BUILD_PREFIX
   mkdir $EMSCRIPTEN_BUILD_PREFIX
   cd $EMSCRIPTEN_BUILD_PREFIX
@@ -82,6 +99,7 @@ if [ "$BUILD_EMSCRIPTEN" = true ]; then
   make install
 
   cd $MAGNUM_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   rm -rf $EMSCRIPTEN_BUILD_PREFIX
   mkdir $EMSCRIPTEN_BUILD_PREFIX
   cd $EMSCRIPTEN_BUILD_PREFIX
@@ -91,6 +109,7 @@ if [ "$BUILD_EMSCRIPTEN" = true ]; then
   make install
 
   cd $MAGNUM_PLUGINS_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   rm -rf $EMSCRIPTEN_BUILD_PREFIX
   mkdir $EMSCRIPTEN_BUILD_PREFIX
   cd $EMSCRIPTEN_BUILD_PREFIX
@@ -99,6 +118,7 @@ if [ "$BUILD_EMSCRIPTEN" = true ]; then
   make install
 
   cd $MAGNUM_EXTRAS_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
   rm -rf $EMSCRIPTEN_BUILD_PREFIX
   mkdir $EMSCRIPTEN_BUILD_PREFIX
   cd $EMSCRIPTEN_BUILD_PREFIX
@@ -106,4 +126,14 @@ if [ "$BUILD_EMSCRIPTEN" = true ]; then
   make -j
   make install
 
+  # Magnum integration
+  cd $MAGNUM_INTEGRATION_PREFIX
+  rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+  rm -rf $EMSCRIPTEN_BUILD_PREFIX
+  mkdir $EMSCRIPTEN_BUILD_PREFIX
+  cd $EMSCRIPTEN_BUILD_PREFIX
+  cmake -DCMAKE_BUILD_TYPE=Release -DWITH_IMGUI=ON -DIMGUI_DIR=$REPOSITORY_PREFIX/imgui -DCMAKE_TOOLCHAIN_FILE="../toolchains/generic/Emscripten-wasm.cmake" -DCMAKE_INSTALL_PREFIX=$EMSCRIPTEN_PREFIX ..
+
+  make -j
+  make install
 fi

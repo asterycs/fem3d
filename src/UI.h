@@ -1,25 +1,48 @@
 #ifndef FEM3D_UI_H
 #define FEM3D_UI_H
 
-#include "Magnum/Ui/Anchor.h"
-#include "Magnum/Ui/Button.h"
-#include "Magnum/Ui/Input.h"
-#include "Magnum/Ui/Label.h"
-#include "Magnum/Ui/Modal.h"
-#include "Magnum/Ui/Plane.h"
-#include "Magnum/Ui/UserInterface.h"
+#include <imgui.h>
+#include <Magnum/ImGuiIntegration/Context.hpp>
+#include <Magnum/Magnum.h>
+#include <Magnum/Platform/Sdl2Application.h>
+#include <Magnum/Math/Color.h>
 
-#include <memory>
+#include <functional>
 
 using namespace Magnum;
-using namespace Magnum::Math::Literals;
 
-struct UiPlane: Ui::Plane {
-    explicit UiPlane(Ui::UserInterface& ui);
+class App;
 
-    Ui::Button toggleVertexMarkersButton;
-    Ui::Button solveButton;
-    Ui::Button geomButton;
+class UI {
+public:
+    explicit UI(const Vector2i& size);
+
+    void resize(const Vector2i& size);
+    void draw();
+
+    void setSolveButtonCallback(std::function<void(bool)> function);
+    void setShowVertexMarkersButtonCallback(std::function<void()> function);
+    void setChangeGeometryButtonCallback(std::function<void()> function);
+
+    bool wantsTextInput();
+
+    bool handleKeyPressEvent(Platform::Application::KeyEvent& event);
+    bool handleKeyReleaseEvent(Platform::Application::KeyEvent& event);
+
+    bool handleMousePressEvent(Platform::Application::MouseEvent& event);
+    bool handleMouseReleaseEvent(Platform::Application::MouseEvent& event);
+    bool handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event);
+    bool handleMouseScrollEvent(Platform::Application::MouseScrollEvent& event);
+    bool handleTextInputEvent(Platform::Application::TextInputEvent& event);
+
+private:
+    ImGuiIntegration::Context _imgui{NoCreate};
+    //float _floatValue;
+
+    bool _showGradient;
+    std::function<void(bool)> _solveButtonCallback;
+    std::function<void()> _showVertexMarkersButtonCallback;
+    std::function<void()> _changeGeometryButtonCallback;
 };
 
 #endif //FEM3D_UI_H

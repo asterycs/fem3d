@@ -22,7 +22,7 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
                          std::vector<UnsignedInt> boundaryIndices,
                          std::vector<Vector2> uv,
                          std::vector<UnsignedInt> uvIndices,
-                         std::vector<UnsignedInt> tetrahedronIndices,
+                         std::vector<std::vector<UnsignedInt>> tetrahedronIndices,
                          Object3D &parent,
                          SceneGraph::DrawableGroup3D &drawables) : Object3D{&parent},
                                                                    SceneGraph::Drawable3D{*this, &drawables},
@@ -97,7 +97,7 @@ void FEMObject3D::setVertexColors(const std::vector<Vector3> &colors)
     _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
 }
 
-const std::vector<UnsignedInt> &FEMObject3D::getTetrahedronIndices() const
+const std::vector<std::vector<UnsignedInt>> &FEMObject3D::getTetrahedronIndices() const
 {
     return _tetrahedronIndices;
 }
@@ -134,7 +134,7 @@ void FEMObject3D::draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D
     {
         for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i)
         {
-            if (_pinnedVertexIds.find(static_cast<Int>(i)) != _pinnedVertexIds.end())
+            if (_pinnedVertexIds.find(i) != _pinnedVertexIds.end())
                 _vertexShader.setColor({1.f, 0.f, 0.f});
             else
                 _vertexShader.setColor({1.f, 1.f, 1.f});
@@ -167,14 +167,16 @@ bool FEMObject3D::drawsVertexMarkers() const
     return _drawVertexMarkers;
 }
 
-void FEMObject3D::solve()
+std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 {
     FEMTask3D task(_meshVertices, _tetrahedronIndices, _pinnedVertexIds);
-    std::vector<Float> vertexValues = task.solve();
+    task.initialize();
+    Eigen::VectorXf solution = task.solve();
 
-    if (vertexValues.size() > 0)
+    if (solution.size() > 0)
     {
-        std::vector<Vector3> vertexColors = valuesToHeatGradient(vertexValues);
-        this->setVertexColors(vertexColors);
+        return task.evaluateSolution(solution);
     }
+    else
+        return std::make_pair<std::vector<Float>, std::vector<Eigen::Vector3f>>({}, {});
 }

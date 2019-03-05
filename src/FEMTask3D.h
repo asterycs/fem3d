@@ -15,21 +15,21 @@ using namespace Magnum;
 class FEMTask3D
 {
 public:
-    explicit FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<UnsignedInt>& tetrahedronIds,const std::set<UnsignedInt>& pinnedVertexIds);
+    explicit FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<std::vector<UnsignedInt>>& tetrahedronIds,const std::set<UnsignedInt>& pinnedVertexIds);
 
-    std::vector<Float> solve();
+    void initialize();
+    Eigen::VectorXf solve() const;
 
-    Eigen::Vector4f evaluateBasis(const Eigen::Vector3f &x);
-    Eigen::MatrixXf evaluateDBasis(const Eigen::Vector3f &x);
-
+    // Return function value and gradients at mesh vertices
+    std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> evaluateSolution(const Eigen::VectorXf& solution) const;
 
 private:
-    void initialize();
-
-    bool _isFeasible;
+    Eigen::Vector4f evaluateBasis(const Eigen::Vector3f &x) const;
+    Eigen::MatrixXf evaluateDBasis(const Eigen::Vector3f &x) const;
+    std::pair<Eigen::Matrix3f, Eigen::Vector3f> computeAffine(const std::vector<UnsignedInt>& elemVertexIndices) const;
 
     std::vector<Vector3> _vertices;
-    std::vector<UnsignedInt> _tetrahedronIndices;
+    std::vector<std::vector<UnsignedInt>> _tetrahedronIndices;
     std::set<UnsignedInt> _pinnedVertexIds;
 
     Eigen::SparseMatrix<Float> _A;

@@ -36,7 +36,8 @@ App::App(const Arguments &arguments) :
                 .setTitle("Finite element")
                 .setWindowFlags(Configuration::WindowFlag::Resizable)},
         _currentGeom{0},
-        _framebuffer{GL::defaultFramebuffer.viewport()}
+        _framebuffer{GL::defaultFramebuffer.viewport()},
+        _ui{windowSize()}
 {
 #ifndef MAGNUM_TARGET_GLES
     MAGNUM_ASSERT_GL_VERSION_SUPPORTED(GL::Version::GL330);
@@ -83,7 +84,7 @@ App::App(const Arguments &arguments) :
 
     CORRADE_INTERNAL_ASSERT(_framebuffer.checkStatus(GL::FramebufferTarget::Draw) == GL::Framebuffer::Status::Complete);
 
-    /* Configure camera */
+    // Configure camera
     _cameraObject = std::make_unique<Object3D>(&_scene);
     _cameraObject->translate(Vector3::zAxis(8.0f))
                    .rotate(Math::Rad(Constants::pi()*0.5f), Vector3{1.f, 0.f, 0.f});
@@ -95,24 +96,15 @@ App::App(const Arguments &arguments) :
     const std::vector<std::string> fnames{"geom1.ttg","geom2.ttg","geom3.ttg"};
     _drawableGroups.resize(fnames.size());
     readMeshFiles(fnames);
-    initUi();
 
+    initUi();
 }
 
 void App::initUi()
 {
-    Ui::StyleConfiguration style = Ui::defaultStyleConfiguration();
-
-    _baseUiPlane.reset();
-    _ui.reset();
-
-    _ui = std::make_unique<Ui::UserInterface>(Vector2(GL::defaultFramebuffer.viewport().size()), windowSize(), framebufferSize(), style, "»");
-    _baseUiPlane = std::make_unique<UiPlane>(*_ui);
-
-    Interconnect::connect(_baseUiPlane->toggleVertexMarkersButton, &Ui::Button::tapped, *this,
-                          &App::toggleVertexMarkersButtonCallback);
-    Interconnect::connect(_baseUiPlane->solveButton, &Ui::Button::tapped, *this, &App::solveButtonCallback);
-    Interconnect::connect(_baseUiPlane->geomButton, &Ui::Button::tapped, *this, &App::geomButtonCallback);
+    _ui.setSolveButtonCallback(std::bind(&App::solveButtonCallback, this, std::placeholders::_1));
+    _ui.setShowVertexMarkersButtonCallback(std::bind(&App::toggleVertexMarkersButtonCallback, this));
+    _ui.setChangeGeometryButtonCallback(std::bind(&App::geomButtonCallback, this));
 }
 
 void App::readMeshFiles(const std::vector<std::string>& fnames)
@@ -124,11 +116,11 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
         const auto fname = fnames[i];
         const auto str = rs.get(fname);
         std::vector<Vector3> vertices;
-        std::vector<UnsignedInt> meshElementIndices;
+        std::vector<std::vector<UnsignedInt>> meshElementIndices;
         std::vector<UnsignedInt> boundaryIndices; 
         UnsignedInt dim;
 
-        if (parseTtg(str, vertices, meshElementIndices,boundaryIndices, dim) && dim == 3)
+        if (parseTtg(str, vertices, meshElementIndices, boundaryIndices, dim) && dim == 3)
         {
             Vector3 origin, extent;
             computeAABB(vertices, origin, extent);
@@ -144,7 +136,7 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
             // Create uv data. Not used atm.
             createUVIndices(triangleIndices, uv, uvIndices);
 
-            _objects.emplace_back(std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices,boundaryIndices, uv,
+            _objects.emplace_back(std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, boundaryIndices, uv,
                                                     uvIndices, meshElementIndices, _scene, _drawableGroups[i]));
         } else
         {
@@ -168,12 +160,18 @@ void App::viewportEvent(ViewportEvent &event)
     _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{event.framebufferSize()}.aspectRatio(), 0.001f, 100.0f))
             .setViewport(event.framebufferSize());
 
-    initUi();
+    _ui.resize(event.windowSize());
+
     redraw();
 }
 
 void App::drawEvent()
 {
+    if(_ui.wantsTextInput() && !isTextInputActive())
+        startTextInput();
+    else if(!_ui.wantsTextInput() && isTextInputActive())
+        stopTextInput();
+
     _framebuffer.clearColor(_phongShader.ColorOutput, Vector4{0.0f})
             .clearColor(_phongShader.ObjectIdOutput, Vector4i{-1})
             .clearColor(_phongShader.TransparencyAccumulationOutput, Vector4{0.0f})
@@ -205,14 +203,21 @@ void App::drawEvent()
     //GL::AbstractFramebuffer::blit(_framebuffer, GL::defaultFramebuffer,
     //                              {{}, _framebuffer.viewport().size()}, GL::FramebufferBlit::Color);
 
-    drawUi();
+    _ui.draw();
 
     swapBuffers();
+    redraw();
 }
 
 
 void App::mouseScrollEvent(MouseScrollEvent &event)
 {
+    if (_ui.handleMouseScrollEvent(event))
+    {
+        redraw();
+        return;
+    }
+
     if (!event.offset().y()) return;
 
     // Distance to origin
@@ -228,9 +233,8 @@ void App::mouseScrollEvent(MouseScrollEvent &event)
 
 void App::mousePressEvent(MouseEvent &event)
 {
-    if (_ui->handlePressEvent(event.position()))
+    if (_ui.handleMousePressEvent(event))
     {
-        event.setAccepted();
         redraw();
         return;
     }
@@ -259,9 +263,8 @@ void App::mousePressEvent(MouseEvent &event)
 
 void App::mouseMoveEvent(MouseMoveEvent &event)
 {
-    if (_ui->handleMoveEvent(event.position()))
+    if (_ui.handleMouseMoveEvent(event))
     {
-        event.setAccepted();
         redraw();
         return;
     }
@@ -290,9 +293,8 @@ void App::mouseMoveEvent(MouseMoveEvent &event)
 
 void App::mouseReleaseEvent(MouseEvent &event)
 {
-    if (_ui->handleReleaseEvent(event.position()))
+    if (_ui.handleMouseReleaseEvent(event))
     {
-        event.setAccepted();
         redraw();
         return;
     }
@@ -306,29 +308,21 @@ void App::mouseReleaseEvent(MouseEvent &event)
 
 void App::textInputEvent(TextInputEvent &event)
 {
-    if (isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleTextInput(event))
+    if (_ui.handleTextInputEvent(event))
         redraw();
 
 }
 
 void App::keyPressEvent(KeyEvent &event)
 {
-    if (isTextInputActive() && _ui->focusedInputWidget() && _ui->focusedInputWidget()->handleKeyPress(event))
+    if (_ui.handleKeyPressEvent(event))
         redraw();
 }
 
-void App::drawUi()
+void App::keyReleaseEvent(KeyEvent &event)
 {
-    GL::Renderer::enable(GL::Renderer::Feature::Blending);
-    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::One,
-                                   GL::Renderer::BlendFunction::OneMinusSourceAlpha);
-    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
-    GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
-
-    _ui->draw();
-
-    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
-    GL::Renderer::disable(GL::Renderer::Feature::Blending);
+    if (_ui.handleKeyReleaseEvent(event))
+        redraw();
 }
 
 void App::toggleVertexMarkersButtonCallback()
@@ -336,9 +330,25 @@ void App::toggleVertexMarkersButtonCallback()
     _objects[_currentGeom]->toggleVertexMarkers();
 }
 
-void App::solveButtonCallback()
+void App::solveButtonCallback(bool showGradient)
 {
-    _objects[_currentGeom]->solve();
+    std::vector<Float> U;
+    std::vector<Eigen::Vector3f> dU;
+
+    std::tie(U, dU) = _objects[_currentGeom]->solve();
+
+    if (U.size() > 0 && dU.size() > 0)
+    {
+        std::vector<Float> magnitudes;
+
+        if (showGradient)
+            magnitudes = computeNorm(dU);
+        else
+            magnitudes = U;
+
+        std::vector<Vector3> vertexColors = valuesToHeatGradient(magnitudes);
+        _objects[_currentGeom]->setVertexColors(vertexColors);
+    }
 }
 
 void App::geomButtonCallback()

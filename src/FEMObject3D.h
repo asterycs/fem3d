@@ -27,7 +27,7 @@ public:
                          std::vector<UnsignedInt> boundaryIndices,
                          std::vector<Vector2> uv,
                          std::vector<UnsignedInt> uvIndices,
-                         std::vector<UnsignedInt> tetrahedronIndices,
+                         std::vector<std::vector<UnsignedInt>> tetrahedronIndices,
                          Object3D &parent,
                          SceneGraph::DrawableGroup3D &drawables);
     void togglePinnedVertex(const UnsignedInt vertexId);
@@ -35,9 +35,9 @@ public:
     void toggleVertexMarkers();
     bool drawsVertexMarkers() const;
 
-    void solve();
+    std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> solve();
 
-    const std::vector<UnsignedInt> &getTetrahedronIndices() const;
+    const std::vector<std::vector<UnsignedInt>> &getTetrahedronIndices() const;
     const std::vector<Vector3> &getVertices() const;
     void setTetrahedronColors(const std::vector<Vector3> &colors);
     void setVertexColors(const std::vector<Vector3> &colors);
@@ -60,7 +60,7 @@ private:
 
     std::vector<Vector3> _meshVertices;
     std::vector<UnsignedInt> _triangleIndices;
-    std::vector<UnsignedInt> _tetrahedronIndices;
+    std::vector<std::vector<UnsignedInt>> _tetrahedronIndices;
     std::vector<UnsignedInt> _boundaryIndices;
 };
 

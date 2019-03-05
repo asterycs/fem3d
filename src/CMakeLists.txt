@@ -28,7 +28,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -Wunused-label \
     -Wunused-value \
     -Wunused-variable \
-    -D_GLIBCXX_ASSERTIONS")
+    -Wsign-conversion \
+    -Wno-error=sign-conversion")
 
 find_package(Magnum REQUIRED
     GL
@@ -41,9 +42,9 @@ find_package(Magnum REQUIRED
 
 find_package(MagnumPlugins REQUIRED
         StbTrueTypeFont)
-    
-find_package(MagnumExtras REQUIRED
-    Ui)
+
+find_package(MagnumIntegration REQUIRED
+        ImGui)
 
 find_package(OpenMP)
 if(OPENMP_FOUND)
@@ -78,8 +79,8 @@ target_link_libraries(fem3d PRIVATE
     Magnum::Shaders
     Magnum::Trade
     Magnum::Primitives
-    MagnumExtras::Ui
-    MagnumPlugins::StbTrueTypeFont)
+    MagnumPlugins::StbTrueTypeFont
+    MagnumIntegration::ImGui)
 
 if(CORRADE_TARGET_EMSCRIPTEN)
     install(TARGETS fem3d DESTINATION ${MAGNUM_DEPLOY_PREFIX})

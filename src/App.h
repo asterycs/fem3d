@@ -25,7 +25,7 @@
 
 using namespace Magnum;
 
-class App : public Platform::Application, public Interconnect::Receiver
+class App : public Platform::Application
 {
 public:
     explicit App(const Arguments &arguments);
@@ -39,15 +39,14 @@ private:
     void mouseScrollEvent(MouseScrollEvent &event) override;
 
     void toggleVertexMarkersButtonCallback();
-    void solveButtonCallback();
+    void solveButtonCallback(bool showGradient);
     void geomButtonCallback();
 
-    void initUi();
-    void drawUi();
-
     void readMeshFiles(const std::vector<std::string>& fnames);
+    void initUi();
 
     void keyPressEvent(KeyEvent &event) override;
+    void keyReleaseEvent(KeyEvent &event) override;
     void textInputEvent(TextInputEvent &event) override;
 
     UnsignedInt _currentGeom;
@@ -67,9 +66,7 @@ private:
     GL::Texture2D _color, _transparencyAccumulation, _transparencyRevealage;
 
     Vector2 _cameraTrackballAngles;
-
-    std::unique_ptr<Ui::UserInterface> _ui;
-    std::unique_ptr<UiPlane> _baseUiPlane;
+    UI _ui;
 };
 
 #endif
