@@ -11,12 +11,13 @@ Instructions for building the WASM version
 Here is what is needed for the desktop build:
 
 SDL2 (prebuilt or from source)  
-https://github.com/ocornut/imgui.git__
+https://github.com/ocornut/imgui.git  
 
 https://github.com/mosra/corrade.git  
 https://github.com/mosra/magnum.git  
 https://github.com/mosra/magnum-plugins.git  
-https://github.com/mosra/magnum-extras.git__
+https://github.com/mosra/magnum-extras.git  
+https://github.com/mosra/magnum-integration.git  
 
 This project has been developed against the "v2019.01" branch of the above repositories. Pre-built packages can be found for Arch can be found in AUR. "build.sh" might be useful when building from source.
 
