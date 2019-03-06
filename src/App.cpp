@@ -101,6 +101,7 @@ void App::initUi()
     _ui.setShowVertexMarkersButtonCallback(
             std::bind(&App::showVertexMarkersButtonCallback, this, std::placeholders::_1));
     _ui.setChangeGeometryButtonCallback(std::bind(&App::geomButtonCallback, this, std::placeholders::_1));
+    _ui.setClearPinnedVerticesButtonCallback(std::bind(&App::clearPinnedVerticesCallback, this));
 }
 
 void App::readMeshFiles(const std::vector<std::string>& fnames)
@@ -356,4 +357,9 @@ void App::solveButtonCallback(bool showGradient)
 void App::geomButtonCallback(const UnsignedInt geometry)
 {
     _currentGeom = geometry;
+}
+
+void App::clearPinnedVerticesCallback()
+{
+    _objects[_currentGeom]->clearPinnedVertices();
 }

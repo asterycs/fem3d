@@ -23,6 +23,7 @@ public:
     void setSolveButtonCallback(std::function<void(bool)> function);
     void setShowVertexMarkersButtonCallback(std::function<void(bool)> function);
     void setChangeGeometryButtonCallback(std::function<void(unsigned int)> function);
+    void setClearPinnedVerticesButtonCallback(std::function<void()> function);
 
     bool wantsTextInput();
 
@@ -49,6 +50,7 @@ private:
     std::function<void(bool)> _solveButtonCallback;
     std::function<void(bool)> _showVertexMarkersButtonCallback;
     std::function<void(UnsignedInt)> _changeGeometryButtonCallback;
+    std::function<void()> _clearPinnedVerticesCallback;
 };
 
 #endif //FEM3D_UI_H

@@ -158,6 +158,11 @@ void FEMObject3D::togglePinnedVertex(const UnsignedInt vertexId)
 
 }
 
+void FEMObject3D::clearPinnedVertices()
+{
+    _pinnedVertexIds.clear();
+}
+
 void FEMObject3D::drawVertexMarkers(const bool draw)
 {
     _drawVertexMarkers = draw;

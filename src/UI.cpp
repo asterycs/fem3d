@@ -46,9 +46,10 @@ void UI::draw()
         ImGui::Text("%.3f ms/frame (%.1f FPS)",
                     1000.0 / Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 
-        if (ImGui::Button(_showGradient ? "Show gradient" : "Show function", ImVec2(110, 20)))
+        if (ImGui::Button(_showGradient ? "dU" : "U", ImVec2(110, 20)))
             _showGradient = !_showGradient;
 
+        ImGui::SameLine();
         if (ImGui::Button("Solve", ImVec2(110, 20)))
             _solveButtonCallback(_showGradient);
 
@@ -56,6 +57,11 @@ void UI::draw()
         {
             _showVertexMarkers = !_showVertexMarkers;
             _showVertexMarkersButtonCallback(_showVertexMarkers);
+        }
+
+        if (ImGui::Button("Clear pinned", ImVec2(110, 20)))
+        {
+            _clearPinnedVerticesCallback();
         }
 
         std::string sceneButtonLabel{"Scene " + std::to_string(_currentScene)};
@@ -132,4 +138,9 @@ void UI::setShowVertexMarkersButtonCallback(std::function<void(bool)> function)
 void UI::setChangeGeometryButtonCallback(std::function<void(unsigned int)> function)
 {
     _changeGeometryButtonCallback = function;
+}
+
+void UI::setClearPinnedVerticesButtonCallback(std::function<void()> function)
+{
+    _clearPinnedVerticesCallback = function;
 }

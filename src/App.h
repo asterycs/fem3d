@@ -40,6 +40,7 @@ private:
     void showVertexMarkersButtonCallback(bool show);
     void solveButtonCallback(bool showGradient);
     void geomButtonCallback(UnsignedInt geometry);
+    void clearPinnedVerticesCallback();
 
     void readMeshFiles(const std::vector<std::string>& fnames);
     void initUi();

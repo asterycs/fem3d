@@ -29,7 +29,9 @@ public:
                          std::vector<std::vector<UnsignedInt>> tetrahedronIndices,
                          Object3D& parent,
                          SceneGraph::DrawableGroup3D& drawables);
+
     void togglePinnedVertex(const UnsignedInt vertexId);
+    void clearPinnedVertices();
 
     void drawVertexMarkers(const bool);
 
