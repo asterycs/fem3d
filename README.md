@@ -11,7 +11,7 @@ Instructions for building the WASM version
 Here is what is needed for the desktop build:
 
 SDL2 (prebuilt or from source)  
-https://github.com/ocornut/imgui.git  
+https://github.com/ocornut/imgui.git  (v1.66b for WASM build)
 
 https://github.com/mosra/corrade.git  
 https://github.com/mosra/magnum.git  

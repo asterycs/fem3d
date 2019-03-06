@@ -79,11 +79,11 @@ FEMObject3D::FEMObject3D(PhongIdShader& phongShader,
     _colorBuffer.setData(colors, GL::BufferUsage::StaticDraw);
 
     // Using a vertex buffer would be beneficial but that makes updating colors later much more difficult
-    _triangles.setCount(static_cast<Int>(triangleIndices.size()))
-            .setPrimitive(GL::MeshPrimitive::Triangles)
+    _triangles.setPrimitive(GL::MeshPrimitive::Triangles)
             .addVertexBuffer(_triangleBuffer, 0, PhongIdShader::Position{}, PhongIdShader::Normal{},
                              PhongIdShader::UV{})
-            .addVertexBuffer(_colorBuffer, 0, PhongIdShader::VertexColor{});
+            .addVertexBuffer(_colorBuffer, 0, PhongIdShader::VertexColor{})
+            .setCount(static_cast<Int>(triangleIndices.size()));
 }
 
 void FEMObject3D::setTetrahedronColors(const std::vector<Vector3>& colors)

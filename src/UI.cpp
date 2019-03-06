@@ -1,6 +1,7 @@
 #include "UI.h"
 
 #include <Magnum/GL/Renderer.h>
+#include <Magnum/GL/Context.h>
 
 using namespace Magnum::Math::Literals;
 
@@ -8,8 +9,12 @@ UI::UI(const Vector2i& size, const UnsignedInt nScenes)
         :_imgui{NoCreate}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
          _showVertexMarkers{true}
 {
+    GL::Context::current().resetState(GL::Context::State::EnterExternal);
+
     ImGui::CreateContext();
     _imgui = ImGuiIntegration::Context{*ImGui::GetCurrentContext(), Vector2{size}, size, size};
+
+    GL::Context::current().resetState(GL::Context::State::ExitExternal);
 
     draw();
 }
@@ -21,6 +26,8 @@ void UI::resize(const Vector2i& size)
 
 void UI::draw()
 {
+    GL::Context::current().resetState(GL::Context::State::EnterExternal);
+
     GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
     GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,
                                    GL::Renderer::BlendFunction::OneMinusSourceAlpha);
@@ -68,6 +75,8 @@ void UI::draw()
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
     GL::Renderer::disable(GL::Renderer::Feature::Blending);
+
+    GL::Context::current().resetState(GL::Context::State::ExitExternal);
 }
 
 bool UI::wantsTextInput()
