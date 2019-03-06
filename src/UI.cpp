@@ -5,7 +5,7 @@
 using namespace Magnum::Math::Literals;
 
 UI::UI(const Vector2i& size, const UnsignedInt nScenes)
-        :_imgui{Vector2{size}, size, size}, _nScenes{nScenes}, _showGradient{false},
+        :_imgui{Vector2{size}, size, size}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
          _showVertexMarkers{true}//, _floatValue{0.f}
 {
     draw();
