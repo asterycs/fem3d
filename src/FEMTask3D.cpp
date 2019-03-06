@@ -29,10 +29,7 @@ void FEMTask3D::initialize()
 
     for (auto& vi : _tetrahedronIndices)
     {
-        Eigen::Matrix3f Bk;
-        Eigen::Vector3f bk;
-
-        std::tie(Bk, bk) = computeAffine(vi);
+        const auto [Bk, bk] = computeAffine(vi);
 
         for (UnsignedInt i = 0; i < 4; ++i)
         {
@@ -52,10 +49,7 @@ void FEMTask3D::initialize()
 
     for (auto& vi : _tetrahedronIndices)
     {
-        Eigen::Matrix3f Bk;
-        Eigen::Vector3f bk;
-
-        std::tie(Bk, bk) = computeAffine(vi);
+        const auto [Bk, bk] = computeAffine(vi);
 
         Eigen::Vector4f bl(Eigen::Vector4f::Zero());
 
@@ -132,9 +126,7 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMTask3D::evaluateS
 
     for (auto& vi : _tetrahedronIndices)
     {
-        Eigen::Matrix3f Bk;
-        Eigen::Vector3f bk;
-        std::tie(Bk, bk) = computeAffine(vi);
+        const auto [Bk, bk] = computeAffine(vi);
 
         Eigen::MatrixXf dL(3,4);
         Eigen::Vector4f multipliers;

@@ -1,37 +1,23 @@
 #include "App.h"
 
-#include <Corrade/Utility/Resource.h>
-
 #include <Magnum/Image.h>
-#include <Magnum/PixelFormat.h>
 
-#include <Magnum/GL/Buffer.h>
 #include <Magnum/GL/Context.h>
-#include <Magnum/GL/Renderer.h>
 #include <Magnum/GL/Shader.h>
-#include <Magnum/GL/Texture.h>
 #include <Magnum/GL/TextureFormat.h>
 #include <Magnum/GL/Version.h>
 #include <Magnum/GL/RenderbufferFormat.h>
 
-#include <Magnum/Primitives/Cube.h>
-#include <Magnum/Primitives/Plane.h>
-#include <Magnum/Primitives/UVSphere.h>
-
-#include <Magnum/Trade/MeshData3D.h>
-#include <Magnum/Trade/AbstractImporter.h>
-
 #include <Magnum/MeshTools/Transform.h>
 
-#include <sstream>
-#include <limits>
 #include <random>
 
 #include "Util.h"
 
 using namespace Math::Literals;
 
-App::App(const Arguments &arguments) :
+App::App(const Arguments& arguments)
+        :
         Platform::Application{arguments, Configuration{}
                 .setTitle("Finite element")
                 .setWindowFlags(Configuration::WindowFlag::Resizable)},
@@ -51,10 +37,11 @@ App::App(const Arguments &arguments) :
 
     _color.setBaseLevel(0)
             .setMaxLevel(0)
-            .setImage(0, GL::TextureFormat::RGBA8, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::UnsignedByte, GL::defaultFramebuffer.viewport().size(), nullptr})
+            .setImage(0, GL::TextureFormat::RGBA8, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::UnsignedByte,
+                                                               GL::defaultFramebuffer.viewport().size(), nullptr})
             .setMagnificationFilter(GL::SamplerFilter::Nearest)
             .setMinificationFilter(GL::SamplerFilter::Nearest);
-            
+
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, GL::defaultFramebuffer.viewport().size());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, GL::defaultFramebuffer.viewport().size());
 
@@ -63,37 +50,45 @@ App::App(const Arguments &arguments) :
             .setMaxLevel(0)
             .setMagnificationFilter(GL::SamplerFilter::Nearest)
             .setMinificationFilter(GL::SamplerFilter::Nearest)
-            .setImage(0, GL::TextureFormat::RGBA16F, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::Float, GL::defaultFramebuffer.viewport().size(), nullptr});
+            .setImage(0, GL::TextureFormat::RGBA16F,
+                      ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::Float, GL::defaultFramebuffer.viewport().size(),
+                                  nullptr});
 
     _transparencyRevealage.setBaseLevel(0)
             .setMaxLevel(0)
             .setMagnificationFilter(GL::SamplerFilter::Nearest)
             .setMinificationFilter(GL::SamplerFilter::Nearest)
-            .setImage(0, GL::TextureFormat::R8, ImageView2D{GL::PixelFormat::Red, GL::PixelType::UnsignedByte, GL::defaultFramebuffer.viewport().size(), nullptr});
-
+            .setImage(0, GL::TextureFormat::R8, ImageView2D{GL::PixelFormat::Red, GL::PixelType::UnsignedByte,
+                                                            GL::defaultFramebuffer.viewport().size(), nullptr});
 
     _framebuffer.attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}, _color, 0)
             .attachRenderbuffer(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput}, _vertexId)
-            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.TransparencyAccumulationOutput}, _transparencyAccumulation, 0)
-            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.TransparencyRevealageOutput}, _transparencyRevealage, 0)
+            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.TransparencyAccumulationOutput},
+                           _transparencyAccumulation, 0)
+            .attachTexture(GL::Framebuffer::ColorAttachment{_phongShader.TransparencyRevealageOutput},
+                           _transparencyRevealage, 0)
             .attachRenderbuffer(GL::Framebuffer::BufferAttachment::Depth, _depth)
-            .mapForDraw({{PhongIdShader::ColorOutput,    GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}},
+            .mapForDraw({{PhongIdShader::ColorOutput, GL::Framebuffer::ColorAttachment{_phongShader.ColorOutput}},
                          {PhongIdShader::ObjectIdOutput, GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput}},
-                         {PhongIdShader::TransparencyAccumulationOutput, GL::Framebuffer::ColorAttachment{_phongShader.TransparencyAccumulationOutput}},
-                         {PhongIdShader::TransparencyRevealageOutput, GL::Framebuffer::ColorAttachment{_phongShader.TransparencyRevealageOutput}}});
+                         {PhongIdShader::TransparencyAccumulationOutput,
+                          GL::Framebuffer::ColorAttachment{_phongShader.TransparencyAccumulationOutput}},
+                         {PhongIdShader::TransparencyRevealageOutput,
+                          GL::Framebuffer::ColorAttachment{_phongShader.TransparencyRevealageOutput}}});
 
     CORRADE_INTERNAL_ASSERT(_framebuffer.checkStatus(GL::FramebufferTarget::Draw) == GL::Framebuffer::Status::Complete);
 
     // Configure camera
     _cameraObject = std::make_unique<Object3D>(&_scene);
     _cameraObject->translate(Vector3::zAxis(8.0f))
-                   .rotate(Math::Rad(Constants::pi()*0.5f), Vector3{1.f, 0.f, 0.f});
+            .rotate(Math::Rad(Constants::pi() * 0.5f), Vector3{1.f, 0.f, 0.f});
     _camera = std::make_unique<SceneGraph::Camera3D>(*_cameraObject);
     _camera->setAspectRatioPolicy(SceneGraph::AspectRatioPolicy::NotPreserved)
-            .setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{GL::defaultFramebuffer.viewport().size()}.aspectRatio(), 0.001f, 100.0f))
+            .setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf,
+                                                                Vector2{GL::defaultFramebuffer.viewport().size()}.aspectRatio(),
+                                                                0.001f, 100.0f))
             .setViewport(GL::defaultFramebuffer.viewport().size());
 
-    const std::vector<std::string> fnames{"geom1.ttg","geom2.ttg","geom3.ttg"};
+    const std::vector<std::string> fnames{"geom1.ttg", "geom2.ttg", "geom3.ttg"};
     _drawableGroups.resize(fnames.size());
     readMeshFiles(fnames);
 
@@ -103,7 +98,8 @@ App::App(const Arguments &arguments) :
 void App::initUi()
 {
     _ui.setSolveButtonCallback(std::bind(&App::solveButtonCallback, this, std::placeholders::_1));
-    _ui.setShowVertexMarkersButtonCallback(std::bind(&App::showVertexMarkersButtonCallback, this, std::placeholders::_1));
+    _ui.setShowVertexMarkersButtonCallback(
+            std::bind(&App::showVertexMarkersButtonCallback, this, std::placeholders::_1));
     _ui.setChangeGeometryButtonCallback(std::bind(&App::geomButtonCallback, this, std::placeholders::_1));
 }
 
@@ -117,7 +113,7 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
         const auto str = rs.get(fname);
         std::vector<Vector3> vertices;
         std::vector<std::vector<UnsignedInt>> meshElementIndices;
-        std::vector<UnsignedInt> boundaryIndices; 
+        std::vector<UnsignedInt> boundaryIndices;
         UnsignedInt dim;
 
         if (parseTtg(str, vertices, meshElementIndices, boundaryIndices, dim) && dim == 3)
@@ -136,28 +132,38 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
             // Create uv data. Not used atm.
             createUVIndices(triangleIndices, uv, uvIndices);
 
-            _objects.emplace_back(std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices, boundaryIndices, uv,
-                                                    uvIndices, meshElementIndices, _scene, _drawableGroups[i]));
-        } else
+            _objects.emplace_back(
+                    std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices,
+                                                  boundaryIndices, uv,
+                                                  uvIndices, meshElementIndices, _scene, _drawableGroups[i]));
+        }
+        else
         {
             Error{} << "Could not parse mesh file " << fname;
         }
     }
 }
 
-void App::viewportEvent(ViewportEvent &event)
+void App::viewportEvent(ViewportEvent& event)
 {
     GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
 
     _framebuffer.setViewport({{}, event.framebufferSize()});
     _vertexId.setStorage(GL::RenderbufferFormat::R32I, event.framebufferSize());
     _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, event.framebufferSize());
-    
-    _color.setImage(0, GL::TextureFormat::RGBA8, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::UnsignedByte, event.framebufferSize(), nullptr});
-    _transparencyAccumulation.setImage(0, GL::TextureFormat::RGBA16F, ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::Float, event.framebufferSize(), nullptr});
-    _transparencyRevealage.setImage(0, GL::TextureFormat::R8, ImageView2D{GL::PixelFormat::Red, GL::PixelType::UnsignedByte, event.framebufferSize(), nullptr});
 
-    _camera->setProjectionMatrix(Matrix4::perspectiveProjection(35.0_degf, Vector2{event.framebufferSize()}.aspectRatio(), 0.001f, 100.0f))
+    _color.setImage(0, GL::TextureFormat::RGBA8,
+                    ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::UnsignedByte, event.framebufferSize(), nullptr});
+    _transparencyAccumulation.setImage(0, GL::TextureFormat::RGBA16F,
+                                       ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::Float, event.framebufferSize(),
+                                                   nullptr});
+    _transparencyRevealage.setImage(0, GL::TextureFormat::R8,
+                                    ImageView2D{GL::PixelFormat::Red, GL::PixelType::UnsignedByte,
+                                                event.framebufferSize(), nullptr});
+
+    _camera->setProjectionMatrix(
+                    Matrix4::perspectiveProjection(35.0_degf, Vector2{event.framebufferSize()}.aspectRatio(), 0.001f,
+                                                   100.0f))
             .setViewport(event.framebufferSize());
 
     _ui.resize(event.windowSize());
@@ -167,9 +173,9 @@ void App::viewportEvent(ViewportEvent &event)
 
 void App::drawEvent()
 {
-    if(_ui.wantsTextInput() && !isTextInputActive())
+    if (_ui.wantsTextInput() && !isTextInputActive())
         startTextInput();
-    else if(!_ui.wantsTextInput() && isTextInputActive())
+    else if (!_ui.wantsTextInput() && isTextInputActive())
         stopTextInput();
 
     _framebuffer.clearColor(_phongShader.ColorOutput, Vector4{0.0f})
@@ -209,8 +215,7 @@ void App::drawEvent()
     redraw();
 }
 
-
-void App::mouseScrollEvent(MouseScrollEvent &event)
+void App::mouseScrollEvent(MouseScrollEvent& event)
 {
     if (_ui.handleMouseScrollEvent(event))
     {
@@ -218,6 +223,7 @@ void App::mouseScrollEvent(MouseScrollEvent &event)
         return;
     }
 
+    // This might be better as a callback called from UI
     if (!event.offset().y()) return;
 
     // Distance to origin
@@ -230,8 +236,7 @@ void App::mouseScrollEvent(MouseScrollEvent &event)
     redraw();
 }
 
-
-void App::mousePressEvent(MouseEvent &event)
+void App::mousePressEvent(MouseEvent& event)
 {
     if (_ui.handleMousePressEvent(event))
     {
@@ -241,7 +246,6 @@ void App::mousePressEvent(MouseEvent &event)
 
     if (event.button() != MouseEvent::Button::Left)
         return;
-
 
     event.setAccepted();
 
@@ -261,7 +265,7 @@ void App::mousePressEvent(MouseEvent &event)
     redraw();
 }
 
-void App::mouseMoveEvent(MouseMoveEvent &event)
+void App::mouseMoveEvent(MouseMoveEvent& event)
 {
     if (_ui.handleMouseMoveEvent(event))
     {
@@ -275,23 +279,24 @@ void App::mouseMoveEvent(MouseMoveEvent &event)
     const Float cameraMovementSpeed = 0.005f;
     const Vector2i posDiff = event.relativePosition();
     _cameraTrackballAngles[0] += static_cast<Float>(posDiff[0]) * cameraMovementSpeed;
-    
+
     // Restrict the up-down angle
-    if ((_cameraTrackballAngles[1] < Constants::pi()*0.5f && posDiff[1] > 0)
-        || (_cameraTrackballAngles[1] > -Constants::pi()*0.5f && posDiff[1] < 0)) {
-            
+    if ((_cameraTrackballAngles[1] < Constants::pi() * 0.5f && posDiff[1] > 0)
+            || (_cameraTrackballAngles[1] > -Constants::pi() * 0.5f && posDiff[1] < 0))
+    {
+
         _cameraTrackballAngles[1] += static_cast<Float>(posDiff[1]) * cameraMovementSpeed;
         _cameraObject->rotate(Math::Rad(-static_cast<Float>(posDiff[1]) * cameraMovementSpeed),
-                            _camera->cameraMatrix().inverted().right().normalized());    
+                              _camera->cameraMatrix().inverted().right().normalized());
     }
-    
+
     _cameraObject->rotate(Math::Rad(-static_cast<Float>(posDiff[0]) * cameraMovementSpeed), Vector3(0.f, 0.f, 1.f));
 
     event.setAccepted();
     redraw();
 }
 
-void App::mouseReleaseEvent(MouseEvent &event)
+void App::mouseReleaseEvent(MouseEvent& event)
 {
     if (_ui.handleMouseReleaseEvent(event))
     {
@@ -306,20 +311,20 @@ void App::mouseReleaseEvent(MouseEvent &event)
     redraw();
 }
 
-void App::textInputEvent(TextInputEvent &event)
+void App::textInputEvent(TextInputEvent& event)
 {
     if (_ui.handleTextInputEvent(event))
         redraw();
 
 }
 
-void App::keyPressEvent(KeyEvent &event)
+void App::keyPressEvent(KeyEvent& event)
 {
     if (_ui.handleKeyPressEvent(event))
         redraw();
 }
 
-void App::keyReleaseEvent(KeyEvent &event)
+void App::keyReleaseEvent(KeyEvent& event)
 {
     if (_ui.handleKeyReleaseEvent(event))
         redraw();
@@ -332,10 +337,7 @@ void App::showVertexMarkersButtonCallback(bool show)
 
 void App::solveButtonCallback(bool showGradient)
 {
-    std::vector<Float> U;
-    std::vector<Eigen::Vector3f> dU;
-
-    std::tie(U, dU) = _objects[_currentGeom]->solve();
+    const auto[U, dU] = _objects[_currentGeom]->solve();
 
     if (U.size() > 0 && dU.size() > 0)
     {

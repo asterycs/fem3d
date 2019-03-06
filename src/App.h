@@ -25,18 +25,17 @@
 
 using namespace Magnum;
 
-class App : public Platform::Application
-{
+class App : public Platform::Application {
 public:
-    explicit App(const Arguments &arguments);
+    explicit App(const Arguments& arguments);
 
 private:
-    void viewportEvent(ViewportEvent &event) override;
+    void viewportEvent(ViewportEvent& event) override;
     void drawEvent() override;
-    void mousePressEvent(MouseEvent &event) override;
-    void mouseMoveEvent(MouseMoveEvent &event) override;
-    void mouseReleaseEvent(MouseEvent &event) override;
-    void mouseScrollEvent(MouseScrollEvent &event) override;
+    void mousePressEvent(MouseEvent& event) override;
+    void mouseMoveEvent(MouseMoveEvent& event) override;
+    void mouseReleaseEvent(MouseEvent& event) override;
+    void mouseScrollEvent(MouseScrollEvent& event) override;
 
     void showVertexMarkersButtonCallback(bool show);
     void solveButtonCallback(bool showGradient);
@@ -45,9 +44,9 @@ private:
     void readMeshFiles(const std::vector<std::string>& fnames);
     void initUi();
 
-    void keyPressEvent(KeyEvent &event) override;
-    void keyReleaseEvent(KeyEvent &event) override;
-    void textInputEvent(TextInputEvent &event) override;
+    void keyPressEvent(KeyEvent& event) override;
+    void keyReleaseEvent(KeyEvent& event) override;
+    void textInputEvent(TextInputEvent& event) override;
 
     UnsignedInt _currentGeom;
     Scene3D _scene;

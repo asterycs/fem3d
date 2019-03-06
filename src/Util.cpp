@@ -3,11 +3,11 @@
 #include <array>
 #include <sstream>
 
-bool parseTtg(const std::string &input,
-              std::vector<Vector3> &outVertices,
-              std::vector<std::vector<UnsignedInt>> &outMeshElementIndices,
-              std::vector<UnsignedInt> &outboundaryIndices,
-              UnsignedInt &outDim)
+bool parseTtg(const std::string& input,
+              std::vector<Vector3>& outVertices,
+              std::vector<std::vector<UnsignedInt>>& outMeshElementIndices,
+              std::vector<UnsignedInt>& outboundaryIndices,
+              UnsignedInt& outDim)
 {
     std::vector<Vector3> vertices;
     std::vector<std::vector<UnsignedInt>> meshElementIndices;
@@ -41,7 +41,6 @@ bool parseTtg(const std::string &input,
         return false;
 
     stream >> meshElementCount;
-
 
     stream >> c;
     if (c != std::string{'b'})
@@ -102,9 +101,9 @@ bool parseTtg(const std::string &input,
     return true;
 }
 
-bool createUVIndices(const std::vector<UnsignedInt> &triangleIndices,
-                     std::vector<Vector2> &outUv,
-                     std::vector<UnsignedInt> &outUvIndices)
+bool createUVIndices(const std::vector<UnsignedInt>& triangleIndices,
+                     std::vector<Vector2>& outUv,
+                     std::vector<UnsignedInt>& outUvIndices)
 {
     std::vector<Vector2> uv{{0.0f, 0.0f},
                             {1.0f, 0.0f},
@@ -120,15 +119,14 @@ bool createUVIndices(const std::vector<UnsignedInt> &triangleIndices,
         }
     }
 
-
     outUv = uv;
     outUvIndices = uvIndices;
 
     return true;
 }
 
-bool extractTriangleIndices(const std::vector<std::vector<UnsignedInt>> &tetrahedronIndices,
-                            std::vector<UnsignedInt> &triangleIndices)
+bool extractTriangleIndices(const std::vector<std::vector<UnsignedInt>>& tetrahedronIndices,
+                            std::vector<UnsignedInt>& triangleIndices)
 {
     for (auto& currentIndices : tetrahedronIndices)
     {
@@ -157,7 +155,7 @@ bool extractTriangleIndices(const std::vector<std::vector<UnsignedInt>> &tetrahe
     return true;
 }
 
-void computeAABB(const std::vector<Vector3> &vertices, Vector3 &origin, Vector3 &extent)
+void computeAABB(const std::vector<Vector3>& vertices, Vector3& origin, Vector3& extent)
 {
     Vector3 min{std::numeric_limits<Float>::max()};
     Vector3 max{std::numeric_limits<Float>::min()};
@@ -173,7 +171,7 @@ void computeAABB(const std::vector<Vector3> &vertices, Vector3 &origin, Vector3 
     extent = 0.5 * diff;
 }
 
-Eigen::Vector3f toEigen(const Vector3 &v)
+Eigen::Vector3f toEigen(const Vector3& v)
 {
     return Eigen::Vector3f(v[0], v[1], v[2]);
 }
@@ -186,7 +184,7 @@ Vector3 valToColor(const Float val)
         return Vector3(1.f, 0.f, 0.f) * (val - 0.5f) * 2.0f + Vector3(1.f, 1.f, 0.f) * (1.0f - val) * 2.0f;
 }
 
-std::vector<Vector3> valuesToHeatGradient(const std::vector<Float> &vals)
+std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals)
 {
     std::vector<Vector3> colors;
     colors.reserve(vals.size());

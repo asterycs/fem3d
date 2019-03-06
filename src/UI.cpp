@@ -4,7 +4,9 @@
 
 using namespace Magnum::Math::Literals;
 
-UI::UI(const Vector2i& size, const UnsignedInt nScenes) : _imgui{Vector2{size}, size, size}, _nScenes{nScenes}, _showGradient{false}, _showVertexMarkers{true}//, _floatValue{0.f}
+UI::UI(const Vector2i& size, const UnsignedInt nScenes)
+        :_imgui{Vector2{size}, size, size}, _nScenes{nScenes}, _showGradient{false},
+         _showVertexMarkers{true}//, _floatValue{0.f}
 {
     draw();
 }
@@ -17,7 +19,8 @@ void UI::resize(const Vector2i& size)
 void UI::draw()
 {
     GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
-    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,
+                                   GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
     GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
@@ -31,25 +34,26 @@ void UI::draw()
 
         //ImGui::SliderFloat("Float", &_floatValue, 0.0f, 1.0f);
         ImGui::Text("%.3f ms/frame (%.1f FPS)",
-                1000.0/Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
+                    1000.0 / Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
 
-        if (ImGui::Button(_showGradient ? "Show gradient" : "Show function", ImVec2(110,20)))
+        if (ImGui::Button(_showGradient ? "Show gradient" : "Show function", ImVec2(110, 20)))
             _showGradient = !_showGradient;
 
-        if (ImGui::Button("Solve", ImVec2(110,20)))
+        if (ImGui::Button("Solve", ImVec2(110, 20)))
             _solveButtonCallback(_showGradient);
 
-        if (ImGui::Button(_showVertexMarkers ? "Markers on" : "Markers off", ImVec2(110,20)))
+        if (ImGui::Button(_showVertexMarkers ? "Markers on" : "Markers off", ImVec2(110, 20)))
         {
             _showVertexMarkers = !_showVertexMarkers;
             _showVertexMarkersButtonCallback(_showVertexMarkers);
         }
 
         std::string sceneButtonLabel{"Scene " + std::to_string(_currentScene)};
-        if (ImGui::Button(sceneButtonLabel.c_str(), ImVec2(110,20)))
+        if (ImGui::Button(sceneButtonLabel.c_str(), ImVec2(110, 20)))
         {
             ++_currentScene %= _nScenes;
             _changeGeometryButtonCallback(_currentScene);
+            _showVertexMarkersButtonCallback(_showVertexMarkers);
         }
 
         ImGui::End();

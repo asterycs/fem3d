@@ -32,13 +32,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -Wno-error=sign-conversion")
 
 find_package(Magnum REQUIRED
-    GL
-    MeshTools
-    Shaders
-    SceneGraph
-    Trade
-    Sdl2Application
-    Primitives)
+        GL
+        MeshTools
+        Shaders
+        SceneGraph
+        Trade
+        Sdl2Application
+        Primitives)
 
 find_package(MagnumPlugins REQUIRED
         StbTrueTypeFont)
@@ -47,14 +47,14 @@ find_package(MagnumIntegration REQUIRED
         ImGui)
 
 find_package(OpenMP)
-if(OPENMP_FOUND)
+if (OPENMP_FOUND)
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
+endif ()
 
-if(CORRADE_TARGET_EMSCRIPTEN)
+if (CORRADE_TARGET_EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1")
-endif()
+endif ()
 
 corrade_add_resource(fem3d_RESOURCES resources.conf)
 
@@ -71,26 +71,26 @@ add_executable(fem3d ${fem3d_SRC} ${fem3d_RESOURCES})
 
 add_dependencies(fem3d eigen)
 target_link_libraries(fem3d PRIVATE
-    Magnum::Application
-    Magnum::GL
-    Magnum::Magnum
-    Magnum::MeshTools
-    Magnum::SceneGraph
-    Magnum::Shaders
-    Magnum::Trade
-    Magnum::Primitives
-    MagnumPlugins::StbTrueTypeFont
-    MagnumIntegration::ImGui)
+        Magnum::Application
+        Magnum::GL
+        Magnum::Magnum
+        Magnum::MeshTools
+        Magnum::SceneGraph
+        Magnum::Shaders
+        Magnum::Trade
+        Magnum::Primitives
+        MagnumPlugins::StbTrueTypeFont
+        MagnumIntegration::ImGui)
 
-if(CORRADE_TARGET_EMSCRIPTEN)
+if (CORRADE_TARGET_EMSCRIPTEN)
     install(TARGETS fem3d DESTINATION ${MAGNUM_DEPLOY_PREFIX})
     install(FILES
-        index.html
-        EmscriptenApplication.js
-        fem3dstyle.css
-        DESTINATION ${MAGNUM_DEPLOY_PREFIX})
+            index.html
+            EmscriptenApplication.js
+            fem3dstyle.css
+            DESTINATION ${MAGNUM_DEPLOY_PREFIX})
     install(FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/fem3d.js.mem
-        ${CMAKE_CURRENT_BINARY_DIR}/fem3d.wasm
-        DESTINATION ${MAGNUM_DEPLOY_PREFIX} OPTIONAL)
-endif()
+            ${CMAKE_CURRENT_BINARY_DIR}/fem3d.js.mem
+            ${CMAKE_CURRENT_BINARY_DIR}/fem3d.wasm
+            DESTINATION ${MAGNUM_DEPLOY_PREFIX} OPTIONAL)
+endif ()

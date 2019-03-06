@@ -17,38 +17,37 @@
 
 using namespace Magnum;
 
-class FEMObject3D : public Object3D, SceneGraph::Drawable3D
-{
+class FEMObject3D : public Object3D, SceneGraph::Drawable3D {
 public:
-    explicit FEMObject3D(PhongIdShader &phongShader,
-                         VertexShader &vertexShader,
+    explicit FEMObject3D(PhongIdShader& phongShader,
+                         VertexShader& vertexShader,
                          std::vector<Vector3> vertices,
                          std::vector<UnsignedInt> triangleIndices,
                          std::vector<UnsignedInt> boundaryIndices,
                          std::vector<Vector2> uv,
                          std::vector<UnsignedInt> uvIndices,
                          std::vector<std::vector<UnsignedInt>> tetrahedronIndices,
-                         Object3D &parent,
-                         SceneGraph::DrawableGroup3D &drawables);
+                         Object3D& parent,
+                         SceneGraph::DrawableGroup3D& drawables);
     void togglePinnedVertex(const UnsignedInt vertexId);
 
     void drawVertexMarkers(const bool);
 
     std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> solve();
 
-    const std::vector<std::vector<UnsignedInt>> &getTetrahedronIndices() const;
-    const std::vector<Vector3> &getVertices() const;
-    void setTetrahedronColors(const std::vector<Vector3> &colors);
-    void setVertexColors(const std::vector<Vector3> &colors);
+    const std::vector<std::vector<UnsignedInt>>& getTetrahedronIndices() const;
+    const std::vector<Vector3>& getVertices() const;
+    void setTetrahedronColors(const std::vector<Vector3>& colors);
+    void setVertexColors(const std::vector<Vector3>& colors);
 
 private:
-    void draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera) override;
+    void draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) override;
 
     bool _drawVertexMarkers;
     std::set<UnsignedInt> _pinnedVertexIds;
 
-    PhongIdShader &_phongShader;
-    VertexShader &_vertexShader;
+    PhongIdShader& _phongShader;
+    VertexShader& _vertexShader;
 
     GL::Buffer _triangleBuffer, _indexBuffer, _colorBuffer;
     GL::Mesh _triangles;
@@ -62,6 +61,5 @@ private:
     std::vector<std::vector<UnsignedInt>> _tetrahedronIndices;
     std::vector<UnsignedInt> _boundaryIndices;
 };
-
 
 #endif //FEM3D_FEMOBJECT_H

@@ -6,7 +6,8 @@
 #include <Magnum/GL/Version.h>
 #include <Magnum/GL/Shader.h>
 
-PhongIdShader::PhongIdShader() {
+PhongIdShader::PhongIdShader()
+{
     Utility::Resource rs("fem3d-data");
 
 #ifndef MAGNUM_TARGET_GLES
@@ -23,7 +24,8 @@ frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
     CORRADE_INTERNAL_ASSERT(link());
 }
 
-VertexShader::VertexShader() {
+VertexShader::VertexShader()
+{
     Utility::Resource rs("fem3d-data");
 
 #ifndef MAGNUM_TARGET_GLES
@@ -39,14 +41,14 @@ frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
     attachShaders({vert, frag});
     CORRADE_INTERNAL_ASSERT(link());
 
-
     _colorUniform = uniformLocation("color");
     _objectIdUniform = uniformLocation("objectId");
     _transformationMatrixUniform = uniformLocation("transformationMatrix");
     _projectionMatrixUniform = uniformLocation("projectionMatrix");
 }
 
-CompositionShader::CompositionShader() {
+CompositionShader::CompositionShader()
+{
     Utility::Resource rs("fem3d-data");
 
 #ifndef MAGNUM_TARGET_GLES

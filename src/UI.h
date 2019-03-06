@@ -44,6 +44,9 @@ private:
     bool _showGradient;
     bool _showVertexMarkers;
 
+    //bool _inPinnedVertexEditMode;
+    //bool _inLoadVertexEditMode;
+
     std::function<void(bool)> _solveButtonCallback;
     std::function<void(bool)> _showVertexMarkersButtonCallback;
     std::function<void(UnsignedInt)> _changeGeometryButtonCallback;

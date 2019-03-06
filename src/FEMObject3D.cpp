@@ -15,28 +15,29 @@
 
 using namespace Math::Literals;
 
-FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
-                         VertexShader &vertexShader,
+FEMObject3D::FEMObject3D(PhongIdShader& phongShader,
+                         VertexShader& vertexShader,
                          std::vector<Vector3> vertices,
                          std::vector<UnsignedInt> triangleIndices,
                          std::vector<UnsignedInt> boundaryIndices,
                          std::vector<Vector2> uv,
                          std::vector<UnsignedInt> uvIndices,
                          std::vector<std::vector<UnsignedInt>> tetrahedronIndices,
-                         Object3D &parent,
-                         SceneGraph::DrawableGroup3D &drawables) : Object3D{&parent},
-                                                                   SceneGraph::Drawable3D{*this, &drawables},
-                                                                   _drawVertexMarkers{true},
-                                                                   _pinnedVertexIds{boundaryIndices.begin(), boundaryIndices.end()},
-                                                                   _phongShader(phongShader),
-                                                                   _vertexShader(vertexShader),
-                                                                   _triangleBuffer{GL::Buffer::TargetHint::Array},
-                                                                   _indexBuffer{GL::Buffer::TargetHint::ElementArray},
-                                                                   _colorBuffer{GL::Buffer::TargetHint::Array},
-                                                                   _meshVertices{vertices},
-                                                                   _triangleIndices{triangleIndices},
-                                                                   _tetrahedronIndices{tetrahedronIndices},
-                                                                   _boundaryIndices{boundaryIndices}
+                         Object3D& parent,
+                         SceneGraph::DrawableGroup3D& drawables)
+        :Object3D{&parent},
+         SceneGraph::Drawable3D{*this, &drawables},
+         _drawVertexMarkers{true},
+         _pinnedVertexIds{boundaryIndices.begin(), boundaryIndices.end()},
+         _phongShader(phongShader),
+         _vertexShader(vertexShader),
+         _triangleBuffer{GL::Buffer::TargetHint::Array},
+         _indexBuffer{GL::Buffer::TargetHint::ElementArray},
+         _colorBuffer{GL::Buffer::TargetHint::Array},
+         _meshVertices{vertices},
+         _triangleIndices{triangleIndices},
+         _tetrahedronIndices{tetrahedronIndices},
+         _boundaryIndices{boundaryIndices}
 {
     _vertexMarkerVertexBuffer.resize(vertices.size());
     _vertexMarkerIndexBuffer.resize(vertices.size());
@@ -85,29 +86,29 @@ FEMObject3D::FEMObject3D(PhongIdShader &phongShader,
             .addVertexBuffer(_colorBuffer, 0, PhongIdShader::VertexColor{});
 }
 
-void FEMObject3D::setTetrahedronColors(const std::vector<Vector3> &colors)
+void FEMObject3D::setTetrahedronColors(const std::vector<Vector3>& colors)
 {
     std::vector<Vector3> expandedColor = repeat(colors, 12);
     _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
 }
 
-void FEMObject3D::setVertexColors(const std::vector<Vector3> &colors)
+void FEMObject3D::setVertexColors(const std::vector<Vector3>& colors)
 {
     std::vector<Vector3> expandedColor = expand(colors, _triangleIndices);
     _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
 }
 
-const std::vector<std::vector<UnsignedInt>> &FEMObject3D::getTetrahedronIndices() const
+const std::vector<std::vector<UnsignedInt>>& FEMObject3D::getTetrahedronIndices() const
 {
     return _tetrahedronIndices;
 }
 
-const std::vector<Vector3> &FEMObject3D::getVertices() const
+const std::vector<Vector3>& FEMObject3D::getVertices() const
 {
     return _meshVertices;
 }
 
-void FEMObject3D::draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D &camera)
+void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera)
 {
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
@@ -139,7 +140,7 @@ void FEMObject3D::draw(const Matrix4 &transformationMatrix, SceneGraph::Camera3D
             else
                 _vertexShader.setColor({1.f, 1.f, 1.f});
 
-            _vertexShader.setObjectId(i);
+            _vertexShader.setObjectId(static_cast<Int>(i));
 
             _vertexMarkerMesh[i].draw(_vertexShader);
         }
