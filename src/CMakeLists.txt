@@ -40,9 +40,6 @@ find_package(Magnum REQUIRED
         Sdl2Application
         Primitives)
 
-find_package(MagnumPlugins REQUIRED
-        StbTrueTypeFont)
-
 find_package(MagnumIntegration REQUIRED
         ImGui)
 
@@ -79,7 +76,6 @@ target_link_libraries(fem3d PRIVATE
         Magnum::Shaders
         Magnum::Trade
         Magnum::Primitives
-        MagnumPlugins::StbTrueTypeFont
         MagnumIntegration::ImGui)
 
 if (CORRADE_TARGET_EMSCRIPTEN)

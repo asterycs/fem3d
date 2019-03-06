@@ -37,7 +37,6 @@ public:
 
 private:
     ImGuiIntegration::Context _imgui{NoCreate};
-    //float _floatValue;
 
     unsigned int _nScenes;
     unsigned int _currentScene;

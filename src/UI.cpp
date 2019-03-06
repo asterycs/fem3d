@@ -5,9 +5,12 @@
 using namespace Magnum::Math::Literals;
 
 UI::UI(const Vector2i& size, const UnsignedInt nScenes)
-        :_imgui{Vector2{size}, size, size}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
-         _showVertexMarkers{true}//, _floatValue{0.f}
+        :_imgui{NoCreate}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
+         _showVertexMarkers{true}
 {
+    ImGui::CreateContext();
+    _imgui = ImGuiIntegration::Context{*ImGui::GetCurrentContext(), Vector2{size}, size, size};
+
     draw();
 }
 

@@ -65,6 +65,7 @@ private:
     GL::Texture2D _color, _transparencyAccumulation, _transparencyRevealage;
 
     Vector2 _cameraTrackballAngles;
+
     UI _ui;
 };
 
