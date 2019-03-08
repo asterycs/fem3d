@@ -148,7 +148,7 @@ bool UI::handleMousePressEvent(Platform::Application::MouseEvent& event)
 
 bool UI::handleMouseReleaseEvent(Platform::Application::MouseEvent& event)
 {
-    if (_inPinnedVertexLassoMode)
+    if (_inPinnedVertexLassoMode && _currentLasso.pixels.size() != 0)
     {
         _app->toggleVertices(_currentLasso);
         _currentLasso.clear();

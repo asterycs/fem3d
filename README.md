@@ -45,3 +45,4 @@ Programming remarks:
 TODO:
 * Instructions for building the WASM version
 * Send all events App -> Ui and create callbacks for actions in App and clean upp the mess
+* Lasso: check if vertex is INSIDE the loop
