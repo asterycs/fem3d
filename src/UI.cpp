@@ -96,6 +96,22 @@ void UI::drawOptions()
         _app->setVertexMarkersVisibility(_showVertexMarkers);
     }
 
+    const bool showAbout = ImGui::Button("About", ImVec2(110, 20));
+    if (showAbout)
+    {
+        ImGui::OpenPopup("About");
+    }
+    if (ImGui::BeginPopup("About"))
+    {
+        ImGui::Text("Made using:");
+        ImGui::Text("Magnum: https://magnum.graphics/");
+        ImGui::Text("SDL2: https://www.libsdl.org/");
+        ImGui::Text("Eigen: http://eigen.tuxfamily.org/");
+        ImGui::Text("Source: https://github.com/asterycs/fem3d/");
+
+        ImGui::EndPopup();
+    }
+
     ImGui::End();
 }
 
