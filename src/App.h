@@ -34,6 +34,8 @@ public:
     void setCurrentGeometry(UnsignedInt geometry);
     void clearPinnedVertices();
 
+    void toggleVertices(const UI::Lasso& lasso);
+
 private:
     void viewportEvent(ViewportEvent& event) override;
     void drawEvent() override;
@@ -41,13 +43,17 @@ private:
     void mouseMoveEvent(MouseMoveEvent& event) override;
     void mouseReleaseEvent(MouseEvent& event) override;
     void mouseScrollEvent(MouseScrollEvent& event) override;
-
-    void readMeshFiles(const std::vector<std::string>& fnames);
-    void initUi();
-
     void keyPressEvent(KeyEvent& event) override;
     void keyReleaseEvent(KeyEvent& event) override;
     void textInputEvent(TextInputEvent& event) override;
+
+    void resizeFramebuffers(const Vector2i& size);
+    void resizeRenderbuffers(const Vector2i& size);
+    void resizeTextures(const Vector2i& size);
+    void resizeCamera(const Vector2i& size);
+
+    void readMeshFiles(const std::vector<std::string>& fnames);
+    void initUi();
 
     UnsignedInt _currentGeom;
     Scene3D _scene;

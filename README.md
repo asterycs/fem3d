@@ -44,4 +44,4 @@ Programming remarks:
 
 TODO:
 * Instructions for building the WASM version
-* Send all events App -> Ui and create callbacks for actions in App. Now it is a mess.
+* Send all events App -> Ui and create callbacks for actions in App and clean upp the mess

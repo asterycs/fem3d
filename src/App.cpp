@@ -143,29 +143,46 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
 
 void App::viewportEvent(ViewportEvent& event)
 {
-    GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
-
-    _framebuffer.setViewport({{}, event.framebufferSize()});
-    _vertexId.setStorage(GL::RenderbufferFormat::R32I, event.framebufferSize());
-    _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, event.framebufferSize());
-
-    _color.setImage(0, GL::TextureFormat::RGBA8,
-                    ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::UnsignedByte, event.framebufferSize(), nullptr});
-    _transparencyAccumulation.setImage(0, GL::TextureFormat::RGBA16F,
-                                       ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::Float, event.framebufferSize(),
-                                                   nullptr});
-    _transparencyRevealage.setImage(0, GL::TextureFormat::R8,
-                                    ImageView2D{GL::PixelFormat::Red, GL::PixelType::UnsignedByte,
-                                                event.framebufferSize(), nullptr});
-
-    _camera->setProjectionMatrix(
-                    Matrix4::perspectiveProjection(35.0_degf, Vector2{event.framebufferSize()}.aspectRatio(), 0.001f,
-                                                   100.0f))
-            .setViewport(event.framebufferSize());
+    resizeFramebuffers(event.framebufferSize());
+    resizeRenderbuffers(event.framebufferSize());
+    resizeTextures(event.framebufferSize());
+    resizeCamera(event.framebufferSize());
 
     _ui.resize(event.windowSize());
 
     redraw();
+}
+
+void App::resizeCamera(const Vector2i& size)
+{
+    _camera->setProjectionMatrix(
+                    Matrix4::perspectiveProjection(35.0_degf, Vector2{size}.aspectRatio(), 0.001f,
+                                                   100.0f))
+            .setViewport(size);
+}
+
+void App::resizeTextures(const Vector2i& size)
+{
+    _color.setImage(0, GL::TextureFormat::RGBA8,
+                    ImageView2D{GL::PixelFormat::RGBA, PixelType::UnsignedByte, size, nullptr});
+    _transparencyAccumulation.setImage(0, GL::TextureFormat::RGBA16F,
+                                       ImageView2D{GL::PixelFormat::RGBA, PixelType::Float, size,
+                                                   nullptr});
+    _transparencyRevealage.setImage(0, GL::TextureFormat::R8,
+                                    ImageView2D{GL::PixelFormat::Red, PixelType::UnsignedByte,
+                                                size, nullptr});
+}
+
+void App::resizeRenderbuffers(const Vector2i& size)
+{
+    _vertexId.setStorage(GL::RenderbufferFormat::R32I, size);
+    _depth.setStorage(GL::RenderbufferFormat::DepthComponent24, size);
+}
+
+void App::resizeFramebuffers(const Vector2i& size)
+{
+    GL::defaultFramebuffer.setViewport({{}, size});
+    _framebuffer.setViewport({{}, size});
 }
 
 void App::drawEvent()
@@ -209,7 +226,7 @@ void App::drawEvent()
     _ui.draw();
 
     swapBuffers();
-    //redraw();
+    redraw();
 }
 
 void App::mouseScrollEvent(MouseScrollEvent& event)
@@ -260,6 +277,32 @@ void App::mousePressEvent(MouseEvent& event)
     }
 
     redraw();
+}
+
+void App::toggleVertices(const UI::Lasso& lasso)
+{
+    Vector2i min = {std::numeric_limits<Int>::max(), std::numeric_limits<Int>::max()};
+    Vector2i max = {std::numeric_limits<Int>::min(), std::numeric_limits<Int>::min()};
+
+    for (auto pixel : lasso.pixels)
+    {
+        min = Math::min(min, pixel);
+        max = Math::max(max, pixel);
+    }
+
+    _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput});
+    Image2D data = _framebuffer.read(
+            Range2Di({min.x(), _framebuffer.viewport().sizeY() - max.y() - 1},
+                               {max.x(), _framebuffer.viewport().sizeY() - min.y() - 1}), {PixelFormat::R32I});
+
+    std::set<Int> seenIndices;
+
+    const Vector2i size = max - min;
+    for (Int i = 0; i < size.x()*size.y(); ++i)
+        seenIndices.insert(data.data<Int>()[i]);
+
+    for (Int index : seenIndices)
+        _objects[_currentGeom]->setPinnedVertex(index, true);
 }
 
 void App::mouseMoveEvent(MouseMoveEvent& event)

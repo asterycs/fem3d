@@ -155,7 +155,6 @@ void FEMObject3D::togglePinnedVertex(const UnsignedInt vertexId)
         _pinnedVertexIds.erase(pos);
     else
         _pinnedVertexIds.insert(vertexId);
-
 }
 
 void FEMObject3D::clearPinnedVertices()
@@ -179,5 +178,21 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
         return task.evaluateSolution(solution);
     }
     else
+
         return std::make_pair<std::vector<Float>, std::vector<Eigen::Vector3f>>({}, {});
 }
+
+void FEMObject3D::setPinnedVertex(const UnsignedInt vertexId, const bool pinned)
+{
+    const auto pos = _pinnedVertexIds.find(vertexId);
+    if (!pinned)
+    {
+        if (pos != _pinnedVertexIds.end())
+            _pinnedVertexIds.erase(pos);
+    }
+    else
+    {
+        _pinnedVertexIds.insert(vertexId);
+    }
+}
+

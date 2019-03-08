@@ -43,50 +43,7 @@ void UI::draw()
     GL::Renderer::enable(GL::Renderer::Feature::ScissorTest);
 
     _imgui.newFrame();
-
-    {
-        ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-
-        //ImGui::SliderFloat("Float", &_floatValue, 0.0f, 1.0f);
-        ImGui::Text("%.3f ms/frame (%.1f FPS)",
-                    1000.0 / Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
-
-        if (ImGui::Button(_showGradient ? "dU" : "U", ImVec2(110, 20)))
-            _showGradient = !_showGradient;
-
-        ImGui::SameLine();
-        if (ImGui::Button("Solve", ImVec2(110, 20)))
-            _app->solveCurrent(_showGradient);
-
-        if (ImGui::Button(_showVertexMarkers ? "Markers on" : "Markers off", ImVec2(110, 20)))
-        {
-            _showVertexMarkers = !_showVertexMarkers;
-            _app->setVertexMarkersVisibility(_showVertexMarkers);
-        }
-
-        if (ImGui::Button("Clear pinned", ImVec2(110, 20)))
-        {
-            _app->clearPinnedVertices();
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button(_inPinnedVertexLassoMode ? "Lasso on" : "Lasso off", ImVec2(110, 20)))
-        {
-            _inPinnedVertexLassoMode = !_inPinnedVertexLassoMode;
-        }
-
-
-        std::string sceneButtonLabel{"Scene " + std::to_string(_currentScene)};
-        if (ImGui::Button(sceneButtonLabel.c_str(), ImVec2(110, 20)))
-        {
-            ++_currentScene %= _nScenes;
-            _app->setCurrentGeometry(_currentScene);
-            _app->setVertexMarkersVisibility(_showVertexMarkers);
-        }
-
-        ImGui::End();
-    }
-
+    drawOptions();
     _imgui.drawFrame();
 
     GL::Renderer::disable(GL::Renderer::Feature::ScissorTest);
@@ -96,21 +53,67 @@ void UI::draw()
 
     GL::Context::current().resetState(GL::Context::State::ExitExternal);
 
+    drawLasso();
+}
+
+void UI::drawOptions()
+{
+    ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+    //ImGui::SliderFloat("Float", &_floatValue, 0.0f, 1.0f);
+    ImGui::Text("%.3f ms/frame (%.1f FPS)",
+                1000.0 / Double(ImGui::GetIO().Framerate), Double(ImGui::GetIO().Framerate));
+
+    if (ImGui::Button(_showGradient ? "dU" : "U", ImVec2(110, 20)))
+        _showGradient = !_showGradient;
+
+    ImGui::SameLine();
+    if (ImGui::Button("Solve", ImVec2(110, 20)))
+        _app->solveCurrent(_showGradient);
+
+    if (ImGui::Button(_showVertexMarkers ? "Markers on" : "Markers off", ImVec2(110, 20)))
     {
-        GL::Buffer vertices;
-        vertices.setData(_currentLasso, GL::BufferUsage::StaticDraw);
-
-        GL::Mesh mesh;
-        mesh.setPrimitive(GL::MeshPrimitive::Points)
-                .addVertexBuffer(vertices, 0, Shaders::Flat2D::Position{})
-                .setCount(_currentLasso.size());
-
-        Shaders::Flat2D shader;
-        shader.setColor(0x2f83cc_rgbf)
-                .setTransformationProjectionMatrix(Matrix3());
-
-        mesh.draw(shader);
+        _showVertexMarkers = !_showVertexMarkers;
+        _app->setVertexMarkersVisibility(_showVertexMarkers);
     }
+
+    if (ImGui::Button("Clear pinned", ImVec2(110, 20)))
+    {
+        _app->clearPinnedVertices();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button(_inPinnedVertexLassoMode ? "Lasso on" : "Lasso off", ImVec2(110, 20)))
+    {
+        _inPinnedVertexLassoMode = !_inPinnedVertexLassoMode;
+    }
+
+    std::string sceneButtonLabel{"Scene " + std::to_string(_currentScene)};
+    if (ImGui::Button(sceneButtonLabel.c_str(), ImVec2(110, 20)))
+    {
+        ++_currentScene %= _nScenes;
+        _app->setCurrentGeometry(_currentScene);
+        _app->setVertexMarkersVisibility(_showVertexMarkers);
+    }
+
+    ImGui::End();
+}
+
+void UI::drawLasso()
+{
+    GL::Buffer vertices;
+    vertices.setData(_currentLasso.screenCoord, GL::BufferUsage::StaticDraw);
+
+    GL::Mesh mesh;
+    mesh.setPrimitive(GL::MeshPrimitive::Points)
+            .addVertexBuffer(vertices, 0, Shaders::Flat2D::Position{})
+            .setCount(_currentLasso.screenCoord.size());
+
+    Shaders::Flat2D shader;
+    shader.setColor(0x2f83cc_rgbf)
+            .setTransformationProjectionMatrix(Matrix3());
+
+    mesh.draw(shader);
 }
 
 bool UI::wantsTextInput()
@@ -147,6 +150,7 @@ bool UI::handleMouseReleaseEvent(Platform::Application::MouseEvent& event)
 {
     if (_inPinnedVertexLassoMode)
     {
+        _app->toggleVertices(_currentLasso);
         _currentLasso.clear();
     }
 
@@ -158,58 +162,86 @@ std::vector<Vector2> UI::toScreenCoordinates(const std::vector<Vector2i>& pixels
     std::vector<Vector2> output;
 
     std::transform(pixels.begin(), pixels.end(), std::back_inserter(output),
-            [=](const Vector2i p) -> Vector2 { return {static_cast<Float>(p.x())*2.0f/_currentSize.x() - 1.f, static_cast<Float>(_currentSize.y() - p.y())*2.0f/_currentSize.y() - 1.f}; });
+                   [=](const Vector2i p) -> Vector2
+                   {
+                     return {static_cast<Float>(p.x()) * 2.0f / _currentSize.x() - 1.f,
+                             static_cast<Float>(_currentSize.y() - p.y()) * 2.0f / _currentSize.y() - 1.f};
+                   });
+
+    return output;
+}
+
+std::vector<Vector2i> bresenhamL(const Vector2i a, const Vector2i b);
+std::vector<Vector2i> bresenhamL(const Vector2i a, const Vector2i b)
+{
+    std::vector<Vector2i> output;
+
+    Vector2i delta = b - a;
+    Int ys = Math::sign(delta.y());
+    delta.y() = abs(delta.y());
+
+    Int err = 2 * delta.y() - delta.x();
+    Int y = a.y();
+
+    for (Int x = a.x(); x <= b.x(); ++x)
+    {
+        output.push_back({x, y});
+
+        if (err > 0)
+        {
+            y += ys;
+            err -= 2 * delta.x();
+        }
+        err += 2 * delta.y();
+    }
+
+    return output;
+}
+
+std::vector<Vector2i> bresenhamH(const Vector2i a, const Vector2i b);
+std::vector<Vector2i> bresenhamH(const Vector2i a, const Vector2i b)
+{
+    std::vector<Vector2i> output;
+
+    Vector2i delta = b - a;
+    Int xs = Math::sign(delta.x());
+    delta.x() = abs(delta.x());
+
+    Int err = 2 * delta.x() - delta.y();
+    Int x = a.x();
+
+    for (Int y = a.y(); y <= b.y(); ++y)
+    {
+        output.push_back({x, y});
+
+        if (err > 0)
+        {
+            x += xs;
+            err -= 2 * delta.y();
+        }
+        err += 2 * delta.x();
+    }
 
     return output;
 }
 
 std::vector<Vector2i> bresenham(const Vector2i a, const Vector2i b);
-std::vector<Vector2i> bresenham(const Vector2i a_, const Vector2i b_)
+std::vector<Vector2i> bresenham(const Vector2i a, const Vector2i b)
 {
-    std::vector<Vector2i> output;
-
-    const Vector2i a = Math::min(a_,b_);
-    const Vector2i b = Math::max(a_,b_);
-    const Vector2i delta = b - a;
-
-    if (delta.x() == 0 || delta.y() == 0)
+    if (abs(b.y() - a.y()) < abs(b.x() - a.x()))
     {
-        if (delta.x() == 0)
-        {
-            for (Int y = a.y(); y < b.y(); ++y)
-            {
-                output.push_back({a.x(), y});
-            }
-
-        }
-        else if (delta.y() == 0)
-        {
-            for (Int x = a.x(); x < b.x(); ++x)
-            {
-                output.push_back({x, a.y()});
-            }
-        }
-        return output;
+        if (a.x() > b.x())
+            return bresenhamL(b, a);
+        else
+            return bresenhamL(a, b);
     }
-
-    const Float deltaErr = abs(static_cast<Float>(delta.y()) / delta.x());
-    Float err = 0.f;
-
-    Int y = a.y();
-
-    for (Int x = a.x(); x <= b.x(); ++x)
+    else
     {
-        output.push_back({x,y});
-        err += deltaErr;
-
-        if (err >= 0.5f)
-        {
-            y += Math::sign(delta.y());
-            err -= 1.f;
-        }
+        if (a.y() > b.y())
+            return bresenhamH(b, a);
+        else
+            return bresenhamH(a, b);
     }
-
-    return output;
 }
 
 bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
@@ -217,17 +249,14 @@ bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
     if (_imgui.handleMouseMoveEvent(event))
         return true;
 
-    if (_inPinnedVertexLassoMode && event.relativePosition() != Vector2i{0, 0} && event.buttons() & Platform::Application::MouseMoveEvent::Button::Left)
+    if (_inPinnedVertexLassoMode && event.relativePosition() != Vector2i{0, 0}
+            && event.buttons() & Platform::Application::MouseMoveEvent::Button::Left)
     {
         const auto pixels = bresenham(_lassoPreviousPosition, event.position());
 
-        Debug{} << " ";
-        Debug{} << _lassoPreviousPosition << " " << event.position();
-        for (auto p : pixels)
-            Debug{} << p;
-
         const auto screenCoord = toScreenCoordinates(pixels);
-        _currentLasso.insert(_currentLasso.end(), screenCoord.begin(), screenCoord.end());
+        _currentLasso.screenCoord.insert(_currentLasso.screenCoord.end(), screenCoord.begin(), screenCoord.end());
+        _currentLasso.pixels.insert(_currentLasso.pixels.end(), pixels.begin(), pixels.end());
 
         _lassoPreviousPosition = event.position();
 

@@ -15,6 +15,18 @@ class App;
 
 class UI {
 public:
+    struct Lasso
+    {
+      std::vector<Vector2i> pixels;
+      std::vector<Vector2> screenCoord;
+
+      void clear()
+      {
+          pixels.clear();
+          screenCoord.clear();
+      }
+    };
+
     explicit UI(App& app, const Vector2i& size, const UnsignedInt nScenes);
 
     void resize(const Vector2i& size);
@@ -32,6 +44,8 @@ public:
     bool handleTextInputEvent(Platform::Application::TextInputEvent& event);
 
 private:
+    void drawOptions();
+    void drawLasso();
     std::vector<Vector2> toScreenCoordinates(const std::vector<Vector2i>& pixels);
 
     ImGuiIntegration::Context _imgui{NoCreate};
@@ -44,7 +58,7 @@ private:
 
     bool _inPinnedVertexLassoMode;
     //bool _inLoadVertexEditMode;
-    std::vector<Vector2> _currentLasso;
+    Lasso _currentLasso;
     Vector2i _lassoPreviousPosition;
 
     App* _app;

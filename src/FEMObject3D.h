@@ -31,6 +31,7 @@ public:
                          SceneGraph::DrawableGroup3D& drawables);
 
     void togglePinnedVertex(const UnsignedInt vertexId);
+    void setPinnedVertex(const UnsignedInt vertexId, const bool pinned);
     void clearPinnedVertices();
 
     void drawVertexMarkers(const bool);
