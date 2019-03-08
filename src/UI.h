@@ -15,15 +15,10 @@ class App;
 
 class UI {
 public:
-    explicit UI(const Vector2i& size, const UnsignedInt nScenes);
+    explicit UI(App& app, const Vector2i& size, const UnsignedInt nScenes);
 
     void resize(const Vector2i& size);
     void draw();
-
-    void setSolveButtonCallback(std::function<void(bool)> function);
-    void setShowVertexMarkersButtonCallback(std::function<void(bool)> function);
-    void setChangeGeometryButtonCallback(std::function<void(unsigned int)> function);
-    void setClearPinnedVerticesButtonCallback(std::function<void()> function);
 
     bool wantsTextInput();
 
@@ -37,20 +32,22 @@ public:
     bool handleTextInputEvent(Platform::Application::TextInputEvent& event);
 
 private:
+    std::vector<Vector2> toScreenCoordinates(const std::vector<Vector2i>& pixels);
+
     ImGuiIntegration::Context _imgui{NoCreate};
+    Vector2i _currentSize;
 
     unsigned int _nScenes;
     unsigned int _currentScene;
     bool _showGradient;
     bool _showVertexMarkers;
 
-    //bool _inPinnedVertexEditMode;
+    bool _inPinnedVertexLassoMode;
     //bool _inLoadVertexEditMode;
+    std::vector<Vector2> _currentLasso;
+    Vector2i _lassoPreviousPosition;
 
-    std::function<void(bool)> _solveButtonCallback;
-    std::function<void(bool)> _showVertexMarkersButtonCallback;
-    std::function<void(UnsignedInt)> _changeGeometryButtonCallback;
-    std::function<void()> _clearPinnedVerticesCallback;
+    App* _app;
 };
 
 #endif //FEM3D_UI_H

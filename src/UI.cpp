@@ -3,11 +3,15 @@
 #include <Magnum/GL/Renderer.h>
 #include <Magnum/GL/Context.h>
 
+#include <Magnum/Shaders/Flat.h>
+
+#include "App.h"
+
 using namespace Magnum::Math::Literals;
 
-UI::UI(const Vector2i& size, const UnsignedInt nScenes)
-        :_imgui{NoCreate}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
-         _showVertexMarkers{true}
+UI::UI(App& app, const Vector2i& size, const UnsignedInt nScenes)
+        :_imgui{NoCreate}, _currentSize{size}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
+         _showVertexMarkers{true}, _inPinnedVertexLassoMode{false}, _app{&app}
 {
     GL::Context::current().resetState(GL::Context::State::EnterExternal);
 
@@ -22,6 +26,7 @@ UI::UI(const Vector2i& size, const UnsignedInt nScenes)
 void UI::resize(const Vector2i& size)
 {
     _imgui.relayout(Vector2{size}, size, size);
+    _currentSize = size;
 }
 
 void UI::draw()
@@ -51,25 +56,32 @@ void UI::draw()
 
         ImGui::SameLine();
         if (ImGui::Button("Solve", ImVec2(110, 20)))
-            _solveButtonCallback(_showGradient);
+            _app->solveCurrent(_showGradient);
 
         if (ImGui::Button(_showVertexMarkers ? "Markers on" : "Markers off", ImVec2(110, 20)))
         {
             _showVertexMarkers = !_showVertexMarkers;
-            _showVertexMarkersButtonCallback(_showVertexMarkers);
+            _app->setVertexMarkersVisibility(_showVertexMarkers);
         }
 
         if (ImGui::Button("Clear pinned", ImVec2(110, 20)))
         {
-            _clearPinnedVerticesCallback();
+            _app->clearPinnedVertices();
         }
+
+        ImGui::SameLine();
+        if (ImGui::Button(_inPinnedVertexLassoMode ? "Lasso on" : "Lasso off", ImVec2(110, 20)))
+        {
+            _inPinnedVertexLassoMode = !_inPinnedVertexLassoMode;
+        }
+
 
         std::string sceneButtonLabel{"Scene " + std::to_string(_currentScene)};
         if (ImGui::Button(sceneButtonLabel.c_str(), ImVec2(110, 20)))
         {
             ++_currentScene %= _nScenes;
-            _changeGeometryButtonCallback(_currentScene);
-            _showVertexMarkersButtonCallback(_showVertexMarkers);
+            _app->setCurrentGeometry(_currentScene);
+            _app->setVertexMarkersVisibility(_showVertexMarkers);
         }
 
         ImGui::End();
@@ -83,6 +95,22 @@ void UI::draw()
     GL::Renderer::disable(GL::Renderer::Feature::Blending);
 
     GL::Context::current().resetState(GL::Context::State::ExitExternal);
+
+    {
+        GL::Buffer vertices;
+        vertices.setData(_currentLasso, GL::BufferUsage::StaticDraw);
+
+        GL::Mesh mesh;
+        mesh.setPrimitive(GL::MeshPrimitive::Points)
+                .addVertexBuffer(vertices, 0, Shaders::Flat2D::Position{})
+                .setCount(_currentLasso.size());
+
+        Shaders::Flat2D shader;
+        shader.setColor(0x2f83cc_rgbf)
+                .setTransformationProjectionMatrix(Matrix3());
+
+        mesh.draw(shader);
+    }
 }
 
 bool UI::wantsTextInput()
@@ -102,17 +130,111 @@ bool UI::handleKeyReleaseEvent(Platform::Application::KeyEvent& event)
 
 bool UI::handleMousePressEvent(Platform::Application::MouseEvent& event)
 {
-    return _imgui.handleMousePressEvent(event);
+    if (!_imgui.handleMousePressEvent(event))
+    {
+        if (_inPinnedVertexLassoMode)
+        {
+            _lassoPreviousPosition = event.position();
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool UI::handleMouseReleaseEvent(Platform::Application::MouseEvent& event)
 {
+    if (_inPinnedVertexLassoMode)
+    {
+        _currentLasso.clear();
+    }
+
     return _imgui.handleMouseReleaseEvent(event);
+}
+
+std::vector<Vector2> UI::toScreenCoordinates(const std::vector<Vector2i>& pixels)
+{
+    std::vector<Vector2> output;
+
+    std::transform(pixels.begin(), pixels.end(), std::back_inserter(output),
+            [=](const Vector2i p) -> Vector2 { return {static_cast<Float>(p.x())*2.0f/_currentSize.x() - 1.f, static_cast<Float>(_currentSize.y() - p.y())*2.0f/_currentSize.y() - 1.f}; });
+
+    return output;
+}
+
+std::vector<Vector2i> bresenham(const Vector2i a, const Vector2i b);
+std::vector<Vector2i> bresenham(const Vector2i a_, const Vector2i b_)
+{
+    std::vector<Vector2i> output;
+
+    const Vector2i a = Math::min(a_,b_);
+    const Vector2i b = Math::max(a_,b_);
+    const Vector2i delta = b - a;
+
+    if (delta.x() == 0 || delta.y() == 0)
+    {
+        if (delta.x() == 0)
+        {
+            for (Int y = a.y(); y < b.y(); ++y)
+            {
+                output.push_back({a.x(), y});
+            }
+
+        }
+        else if (delta.y() == 0)
+        {
+            for (Int x = a.x(); x < b.x(); ++x)
+            {
+                output.push_back({x, a.y()});
+            }
+        }
+        return output;
+    }
+
+    const Float deltaErr = abs(static_cast<Float>(delta.y()) / delta.x());
+    Float err = 0.f;
+
+    Int y = a.y();
+
+    for (Int x = a.x(); x <= b.x(); ++x)
+    {
+        output.push_back({x,y});
+        err += deltaErr;
+
+        if (err >= 0.5f)
+        {
+            y += Math::sign(delta.y());
+            err -= 1.f;
+        }
+    }
+
+    return output;
 }
 
 bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
 {
-    return _imgui.handleMouseMoveEvent(event);
+    if (_imgui.handleMouseMoveEvent(event))
+        return true;
+
+    if (_inPinnedVertexLassoMode && event.relativePosition() != Vector2i{0, 0} && event.buttons() & Platform::Application::MouseMoveEvent::Button::Left)
+    {
+        const auto pixels = bresenham(_lassoPreviousPosition, event.position());
+
+        Debug{} << " ";
+        Debug{} << _lassoPreviousPosition << " " << event.position();
+        for (auto p : pixels)
+            Debug{} << p;
+
+        const auto screenCoord = toScreenCoordinates(pixels);
+        _currentLasso.insert(_currentLasso.end(), screenCoord.begin(), screenCoord.end());
+
+        _lassoPreviousPosition = event.position();
+
+        return true;
+    }
+
+    return false;
 }
 
 bool UI::handleMouseScrollEvent(Platform::Application::MouseScrollEvent& event)
@@ -123,24 +245,4 @@ bool UI::handleMouseScrollEvent(Platform::Application::MouseScrollEvent& event)
 bool UI::handleTextInputEvent(Platform::Application::TextInputEvent& event)
 {
     return _imgui.handleTextInputEvent(event);
-}
-
-void UI::setSolveButtonCallback(std::function<void(bool)> function)
-{
-    _solveButtonCallback = function;
-}
-
-void UI::setShowVertexMarkersButtonCallback(std::function<void(bool)> function)
-{
-    _showVertexMarkersButtonCallback = function;
-}
-
-void UI::setChangeGeometryButtonCallback(std::function<void(unsigned int)> function)
-{
-    _changeGeometryButtonCallback = function;
-}
-
-void UI::setClearPinnedVerticesButtonCallback(std::function<void()> function)
-{
-    _clearPinnedVerticesCallback = function;
 }

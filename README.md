@@ -5,9 +5,6 @@ This project is an effort to demonstrate the capabilities of the finite element 
 ![](screenshot.png)
 
 To build the project you need Magnum installed on your system. Magnum is split into a number of separate modules. Magnum also supports WebGL as the rendering backend and WASM via Emscripten.  
-TODO:
-Instructions for building the WASM version
-
 Here is what is needed for the desktop build:
 
 SDL2 (prebuilt or from source)  
@@ -44,3 +41,7 @@ Programming remarks:
 - GLSL shaders are written in separate "\*.vert" and "\*.frag" files and are bundled in the executable. There are also a number of html files in src that can be used for the WASM build.
 - Magnum examples [here](https://github.com/mosra/magnum-examples)
 - Magnum doc [here](https://doc.magnum.graphics/magnum/getting-started.html).
+
+TODO:
+* Instructions for building the WASM version
+* Send all events App -> Ui and create callbacks for actions in App. Now it is a mess.

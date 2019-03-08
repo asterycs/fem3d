@@ -29,6 +29,11 @@ class App : public Platform::Application {
 public:
     explicit App(const Arguments& arguments);
 
+    void setVertexMarkersVisibility(bool show);
+    void solveCurrent(bool showGradient);
+    void setCurrentGeometry(UnsignedInt geometry);
+    void clearPinnedVertices();
+
 private:
     void viewportEvent(ViewportEvent& event) override;
     void drawEvent() override;
@@ -36,11 +41,6 @@ private:
     void mouseMoveEvent(MouseMoveEvent& event) override;
     void mouseReleaseEvent(MouseEvent& event) override;
     void mouseScrollEvent(MouseScrollEvent& event) override;
-
-    void showVertexMarkersButtonCallback(bool show);
-    void solveButtonCallback(bool showGradient);
-    void geomButtonCallback(UnsignedInt geometry);
-    void clearPinnedVerticesCallback();
 
     void readMeshFiles(const std::vector<std::string>& fnames);
     void initUi();
