@@ -184,6 +184,8 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 
 void FEMObject3D::setPinnedVertex(const UnsignedInt vertexId, const bool pinned)
 {
+    Debug{} << _pinnedVertexIds.size();
+
     const auto pos = _pinnedVertexIds.find(vertexId);
     if (!pinned)
     {
