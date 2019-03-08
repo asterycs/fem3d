@@ -20,6 +20,22 @@ Vector3 valToColor(const Float val);
 std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals);
 std::vector<Float> computeNorm(const std::vector<Eigen::Vector3f>& input);
 
+// TODO: Working templatized size
+template <typename T>
+std::pair<Math::Vector2<T>, Math::Vector2<T>> getBbox(const std::vector<Math::Vector2<T>>& pixels)
+{
+    Math::Vector2<T> min = {std::numeric_limits<Int>::max(), std::numeric_limits<Int>::max()};
+    Math::Vector2<T> max = {std::numeric_limits<Int>::min(), std::numeric_limits<Int>::min()};
+
+    for (auto pixel : pixels)
+    {
+        min = Math::min(min, pixel);
+        max = Math::max(max, pixel);
+    }
+
+    return std::make_pair(min, max);
+}
+
 template<typename T>
 std::vector<T> repeat(const std::vector<T> &values, const UnsignedInt times)
 {

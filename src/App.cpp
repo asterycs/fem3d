@@ -281,27 +281,28 @@ void App::mousePressEvent(MouseEvent& event)
 
 void App::toggleVertices(const UI::Lasso& lasso)
 {
-    Vector2i min = {std::numeric_limits<Int>::max(), std::numeric_limits<Int>::max()};
-    Vector2i max = {std::numeric_limits<Int>::min(), std::numeric_limits<Int>::min()};
-
-    for (auto pixel : lasso.pixels)
-    {
-        min = Math::min(min, pixel);
-        max = Math::max(max, pixel);
-    }
+    const auto [min, max] = getBbox(lasso.pixels);
 
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput});
     Image2D data = _framebuffer.read(
             Range2Di({min.x(), _framebuffer.viewport().sizeY() - max.y() - 1},
                                {max.x(), _framebuffer.viewport().sizeY() - min.y() - 1}), {PixelFormat::R32I});
 
-    std::set<Int> seenIndices;
+    std::set<UnsignedInt> seenIndices;
 
     const Vector2i size = max - min;
     for (Int i = 0; i < size.x()*size.y(); ++i)
-        seenIndices.insert(data.data<Int>()[i]);
+    {
+        const Int index = data.data<Int>()[i];
 
-    for (Int index : seenIndices)
+        // -1 contains no vertex
+        if (index > -1)
+        {
+            seenIndices.insert(static_cast<UnsignedInt>(index));
+        }
+    }
+
+    for (UnsignedInt index : seenIndices)
         _objects[_currentGeom]->setPinnedVertex(index, true);
 }
 
