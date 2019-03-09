@@ -110,6 +110,36 @@ const std::vector<Vector3>& FEMObject3D::getVertices() const
 
 void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera)
 {
+    drawMesh(transformationMatrix, camera);
+
+    if (_drawVertexMarkers)
+    {
+        drawVertexMarkers(transformationMatrix, camera);
+    }
+
+}
+
+void FEMObject3D::drawVertexMarkers(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera)
+{
+    _vertexShader.setTransformationMatrix(
+                        transformationMatrix * Matrix4::translation(transformationMatrix.inverted().backward() * 0.01f))
+                .setProjectionMatrix(camera.projectionMatrix());
+
+    for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i)
+    {
+        if (_pinnedVertexIds.find(i) != _pinnedVertexIds.end())
+            _vertexShader.setColor({1.f, 0.f, 0.f});
+        else
+            _vertexShader.setColor({1.f, 1.f, 1.f});
+
+        _vertexShader.setObjectId(static_cast<Int>(i));
+
+        _vertexMarkerMesh[i].draw(_vertexShader);
+    }
+}
+
+void FEMObject3D::drawMesh(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera)
+{
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
     GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
@@ -126,26 +156,7 @@ void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D
 
     _triangles.draw(_phongShader);
 
-    _vertexShader.setTransformationMatrix(
-                    transformationMatrix * Matrix4::translation(transformationMatrix.inverted().backward() * 0.01f))
-            .setProjectionMatrix(camera.projectionMatrix());
-
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
-    if (_drawVertexMarkers)
-    {
-        for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i)
-        {
-            if (_pinnedVertexIds.find(i) != _pinnedVertexIds.end())
-                _vertexShader.setColor({1.f, 0.f, 0.f});
-            else
-                _vertexShader.setColor({1.f, 1.f, 1.f});
-
-            _vertexShader.setObjectId(static_cast<Int>(i));
-
-            _vertexMarkerMesh[i].draw(_vertexShader);
-        }
-    }
-
 }
 
 void FEMObject3D::togglePinnedVertex(const UnsignedInt vertexId)
@@ -184,8 +195,6 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 
 void FEMObject3D::setPinnedVertex(const UnsignedInt vertexId, const bool pinned)
 {
-    Debug{} << _pinnedVertexIds.size();
-
     const auto pos = _pinnedVertexIds.find(vertexId);
     if (!pinned)
     {

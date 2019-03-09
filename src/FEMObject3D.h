@@ -45,6 +45,8 @@ public:
 
 private:
     void draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) override;
+    void drawMesh(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera);
+    void drawVertexMarkers(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera);
 
     bool _drawVertexMarkers;
     std::set<UnsignedInt> _pinnedVertexIds;
