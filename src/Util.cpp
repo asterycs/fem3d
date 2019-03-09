@@ -125,9 +125,10 @@ bool createUVIndices(const std::vector<UnsignedInt>& triangleIndices,
     return true;
 }
 
-bool extractTriangleIndices(const std::vector<std::vector<UnsignedInt>>& tetrahedronIndices,
-                            std::vector<UnsignedInt>& triangleIndices)
+std::vector<UnsignedInt> extractTriangleIndices(const std::vector<std::vector<UnsignedInt>>& tetrahedronIndices)
 {
+    std::vector<UnsignedInt> triangleIndices;
+
     for (auto& currentIndices : tetrahedronIndices)
     {
         const UnsignedInt i0 = currentIndices[0];
@@ -152,23 +153,7 @@ bool extractTriangleIndices(const std::vector<std::vector<UnsignedInt>>& tetrahe
         triangleIndices.push_back(i1);
     }
 
-    return true;
-}
-
-void computeAABB(const std::vector<Vector3>& vertices, Vector3& origin, Vector3& extent)
-{
-    Vector3 min{std::numeric_limits<Float>::max()};
-    Vector3 max{std::numeric_limits<Float>::min()};
-
-    for (const auto v : vertices)
-    {
-        min = Math::min(v, min);
-        max = Math::max(v, max);
-    }
-
-    const Vector3 diff = max - min;
-    origin = min + 0.5 * diff;
-    extent = 0.5 * diff;
+    return triangleIndices;
 }
 
 Eigen::Vector3f toEigen(const Vector3& v)
@@ -214,4 +199,76 @@ std::vector<Float> computeNorm(const std::vector<Eigen::Vector3f>& input)
     }
 
     return norms;
+}
+
+std::vector<Vector2i> bresenhamL(const Vector2i a, const Vector2i b);
+std::vector<Vector2i> bresenhamL(const Vector2i a, const Vector2i b)
+{
+    std::vector<Vector2i> output;
+
+    Vector2i delta = b - a;
+    Int ys = Math::sign(delta.y());
+    delta.y() = abs(delta.y());
+
+    Int err = 2 * delta.y() - delta.x();
+    Int y = a.y();
+
+    for (Int x = a.x(); x <= b.x(); ++x)
+    {
+        output.push_back({x, y});
+
+        if (err > 0)
+        {
+            y += ys;
+            err -= 2 * delta.x();
+        }
+        err += 2 * delta.y();
+    }
+
+    return output;
+}
+
+std::vector<Vector2i> bresenhamH(const Vector2i a, const Vector2i b);
+std::vector<Vector2i> bresenhamH(const Vector2i a, const Vector2i b)
+{
+    std::vector<Vector2i> output;
+
+    Vector2i delta = b - a;
+    Int xs = Math::sign(delta.x());
+    delta.x() = abs(delta.x());
+
+    Int err = 2 * delta.x() - delta.y();
+    Int x = a.x();
+
+    for (Int y = a.y(); y <= b.y(); ++y)
+    {
+        output.push_back({x, y});
+
+        if (err > 0)
+        {
+            x += xs;
+            err -= 2 * delta.y();
+        }
+        err += 2 * delta.x();
+    }
+
+    return output;
+}
+
+std::vector<Vector2i> bresenham(const Vector2i a, const Vector2i b)
+{
+    if (abs(b.y() - a.y()) < abs(b.x() - a.x()))
+    {
+        if (a.x() > b.x())
+            return bresenhamL(b, a);
+        else
+            return bresenhamL(a, b);
+    }
+    else
+    {
+        if (a.y() > b.y())
+            return bresenhamH(b, a);
+        else
+            return bresenhamH(a, b);
+    }
 }

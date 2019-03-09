@@ -17,12 +17,9 @@ using namespace Math::Literals;
 
 FEMObject3D::FEMObject3D(PhongIdShader& phongShader,
                          VertexShader& vertexShader,
-                         std::vector<Vector3> vertices,
-                         std::vector<UnsignedInt> triangleIndices,
-                         std::vector<UnsignedInt> boundaryIndices,
-                         std::vector<Vector2> uv,
-                         std::vector<UnsignedInt> uvIndices,
-                         std::vector<std::vector<UnsignedInt>> tetrahedronIndices,
+                         const std::vector<Vector3>& vertices,
+                         const std::vector<UnsignedInt>& boundaryIndices,
+                         const std::vector<std::vector<UnsignedInt>>& tetrahedronIndices,
                          Object3D& parent,
                          SceneGraph::DrawableGroup3D& drawables)
         :Object3D{&parent},
@@ -35,24 +32,55 @@ FEMObject3D::FEMObject3D(PhongIdShader& phongShader,
          _indexBuffer{GL::Buffer::TargetHint::ElementArray},
          _colorBuffer{GL::Buffer::TargetHint::Array},
          _meshVertices{vertices},
-         _triangleIndices{triangleIndices},
          _tetrahedronIndices{tetrahedronIndices},
          _boundaryIndices{boundaryIndices}
+{
+    // Expand tetrahedrons to triangles for visualization
+    const auto triangleIndices = extractTriangleIndices(tetrahedronIndices);
+
+    initVertexMarkers(vertices);
+    initTriangles(vertices, triangleIndices);
+}
+
+void FEMObject3D::initTriangles(std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices)
+{
+    _triangleIndices = triangleIndices;
+
+    auto [normalIndices, normals] = MeshTools::generateFlatNormals(triangleIndices, vertices);
+
+    vertices = expand(vertices, triangleIndices);
+    normals = expand(normals, normalIndices);
+
+    std::vector<Vector3> colors(triangleIndices.size(), Vector3{0.f, 0.f, 1.f});
+
+    _triangleBuffer.setData(MeshTools::interleave(vertices, normals), GL::BufferUsage::StaticDraw);
+    _colorBuffer.setData(colors, GL::BufferUsage::StaticDraw);
+
+    // Using a vertex buffer would be beneficial but that makes updating colors later much more difficult
+    _triangles.setPrimitive(GL::MeshPrimitive::Triangles)
+            .addVertexBuffer(_triangleBuffer, 0, PhongIdShader::Position{}, PhongIdShader::Normal{})
+            .addVertexBuffer(_colorBuffer, 0, PhongIdShader::VertexColor{})
+            .setCount(static_cast<Int>(triangleIndices.size()));
+}
+
+void FEMObject3D::initVertexMarkers(const std::vector<Vector3>& vertices)
 {
     _vertexMarkerVertexBuffer.resize(vertices.size());
     _vertexMarkerIndexBuffer.resize(vertices.size());
     _vertexMarkerMesh.resize(vertices.size());
 
+    const Trade::MeshData3D data = Primitives::uvSphereSolid(16, 32);
+
     for (UnsignedInt i = 0; i < vertices.size(); ++i)
     {
         const Vector3 center = vertices[i];
-        Trade::MeshData3D data = Primitives::uvSphereSolid(16, 32);
-        MeshTools::transformPointsInPlace(Matrix4::translation(center) * Matrix4::scaling({0.03f, 0.03f, 0.03f}),
-                                          data.positions(0));
-        MeshTools::transformVectorsInPlace(Matrix4::translation(center), data.normals(0));
+
+        const auto pointsTformed = MeshTools::transformPoints(
+                Matrix4::translation(center) * Matrix4::scaling({0.03f, 0.03f, 0.03f}), data.positions(0));
+        const auto normalsTformed = MeshTools::transformVectors(Matrix4::translation(center), data.normals(0));
 
         _vertexMarkerVertexBuffer[i].setTargetHint(GL::Buffer::TargetHint::Array);
-        _vertexMarkerVertexBuffer[i].setData(MeshTools::interleave(data.positions(0), data.normals(0)),
+        _vertexMarkerVertexBuffer[i].setData(MeshTools::interleave(pointsTformed, normalsTformed),
                                              GL::BufferUsage::StaticDraw);
 
         _vertexMarkerIndexBuffer[i].setTargetHint(GL::Buffer::TargetHint::ElementArray);
@@ -64,26 +92,6 @@ FEMObject3D::FEMObject3D(PhongIdShader& phongShader,
                 .addVertexBuffer(_vertexMarkerVertexBuffer[i], 0, PhongIdShader::Position{}, PhongIdShader::Normal{})
                 .setIndexBuffer(_vertexMarkerIndexBuffer[i], 0, MeshIndexType::UnsignedShort);
     }
-
-    std::vector<UnsignedInt> normalIndices;
-    std::vector<Vector3> normals;
-    std::tie(normalIndices, normals) = MeshTools::generateFlatNormals(triangleIndices, vertices);
-
-    vertices = expand(vertices, triangleIndices);
-    normals = expand(normals, normalIndices);
-    uv = expand(uv, uvIndices);
-
-    std::vector<Vector3> colors(triangleIndices.size(), Vector3{0.f, 0.f, 1.f});
-
-    _triangleBuffer.setData(MeshTools::interleave(vertices, normals, uv), GL::BufferUsage::StaticDraw);
-    _colorBuffer.setData(colors, GL::BufferUsage::StaticDraw);
-
-    // Using a vertex buffer would be beneficial but that makes updating colors later much more difficult
-    _triangles.setPrimitive(GL::MeshPrimitive::Triangles)
-            .addVertexBuffer(_triangleBuffer, 0, PhongIdShader::Position{}, PhongIdShader::Normal{},
-                             PhongIdShader::UV{})
-            .addVertexBuffer(_colorBuffer, 0, PhongIdShader::VertexColor{})
-            .setCount(static_cast<Int>(triangleIndices.size()));
 }
 
 void FEMObject3D::setTetrahedronColors(const std::vector<Vector3>& colors)
@@ -122,8 +130,8 @@ void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D
 void FEMObject3D::drawVertexMarkers(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera)
 {
     _vertexShader.setTransformationMatrix(
-                        transformationMatrix * Matrix4::translation(transformationMatrix.inverted().backward() * 0.01f))
-                .setProjectionMatrix(camera.projectionMatrix());
+                    transformationMatrix * Matrix4::translation(transformationMatrix.inverted().backward() * 0.01f))
+            .setProjectionMatrix(camera.projectionMatrix());
 
     for (UnsignedInt i = 0; i < _vertexMarkerMesh.size(); ++i)
     {

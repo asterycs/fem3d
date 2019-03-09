@@ -14,8 +14,7 @@ class PhongIdShader: public GL::AbstractShaderProgram {
 public:
     typedef GL::Attribute<0, Vector3> Position;
     typedef GL::Attribute<1, Vector3> Normal;
-    typedef GL::Attribute<2, Vector2> UV;
-    typedef GL::Attribute<3, Vector3> VertexColor;
+    typedef GL::Attribute<2, Vector3> VertexColor;
 
     enum: UnsignedInt {
         ColorOutput = 0,

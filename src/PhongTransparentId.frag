@@ -5,7 +5,6 @@ in highp vec3 transformedNormal;
 in highp vec3 lightDirection;
 in highp vec3 cameraDirection;
 in highp vec3 vFragColor;
-in highp vec2 uvFrag;
 
 layout(location = 1) out highp int outObjectId;
 layout(location = 2) out highp vec4 outSumColor;

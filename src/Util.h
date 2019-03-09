@@ -3,6 +3,7 @@
 
 #include <Magnum/Magnum.h>
 #include <Magnum/Math/Color.h>
+#include <Magnum/Math/Vector.h>
 
 #include "Eigen/Dense"
 
@@ -11,33 +12,45 @@
 
 using namespace Magnum;
 
-bool parseTtg(const std::string &input, std::vector<Vector3> &outVertices, std::vector<std::vector<UnsignedInt>> &outMeshElementIndices,std::vector<UnsignedInt> &outboundaryIndices,  UnsignedInt& outDim);
-void computeAABB(const std::vector<Vector3> &vertices, Vector3 &origin, Vector3 &extent);
-bool createUVIndices(const std::vector<UnsignedInt>& triangleIndices, std::vector<Vector2>& outUv, std::vector<UnsignedInt>& outUvIndices);
-bool extractTriangleIndices(const std::vector<std::vector<UnsignedInt>> &tetrahedronIndices, std::vector<UnsignedInt> &triangleIndices);
+template <typename V>
+struct AABB
+{
+  V min;
+  V max;
+};
+
+bool parseTtg(const std::string& input, std::vector<Vector3>& outVertices,
+              std::vector<std::vector<UnsignedInt>>& outMeshElementIndices,
+              std::vector<UnsignedInt>& outboundaryIndices, UnsignedInt& outDim);
+bool createUVIndices(const std::vector<UnsignedInt>& triangleIndices, std::vector<Vector2>& outUv,
+                     std::vector<UnsignedInt>& outUvIndices);
+
+std::vector<UnsignedInt> extractTriangleIndices(const std::vector<std::vector<UnsignedInt>>& tetrahedronIndices);
+
+std::vector<Vector2i> bresenham(const Vector2i a, const Vector2i b);
+
 
 Vector3 valToColor(const Float val);
 std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals);
 std::vector<Float> computeNorm(const std::vector<Eigen::Vector3f>& input);
 
-// TODO: Working templatized size
-template <typename T>
-std::pair<Math::Vector2<T>, Math::Vector2<T>> getBbox(const std::vector<Math::Vector2<T>>& pixels)
+template <template<typename> class V, typename T>
+AABB<V<T>> computeAABB(const std::vector<V<T>>& elements)
 {
-    Math::Vector2<T> min = {std::numeric_limits<Int>::max(), std::numeric_limits<Int>::max()};
-    Math::Vector2<T> max = {std::numeric_limits<Int>::min(), std::numeric_limits<Int>::min()};
+    V<T> min {std::numeric_limits<T>::max()};
+    V<T> max {std::numeric_limits<T>::min()};
 
-    for (auto pixel : pixels)
+    for (auto element : elements)
     {
-        min = Math::min(min, pixel);
-        max = Math::max(max, pixel);
+        min = Math::min(min, element);
+        max = Math::max(max, element);
     }
 
-    return std::make_pair(min, max);
+    return AABB<V<T>>{min, max};
 }
 
 template<typename T>
-std::vector<T> repeat(const std::vector<T> &values, const UnsignedInt times)
+std::vector<T> repeat(const std::vector<T>& values, const UnsignedInt times)
 {
     std::vector<T> res;
     res.reserve(values.size() * times);
@@ -52,7 +65,7 @@ std::vector<T> repeat(const std::vector<T> &values, const UnsignedInt times)
 }
 
 template<typename T>
-std::vector<T> reorder(const std::vector<T> &attribute, std::vector<UnsignedInt> &indices)
+std::vector<T> reorder(const std::vector<T>& attribute, std::vector<UnsignedInt>& indices)
 {
     std::vector<T> out(indices.size());
 
@@ -63,19 +76,19 @@ std::vector<T> reorder(const std::vector<T> &attribute, std::vector<UnsignedInt>
 }
 
 template<typename T>
-std::vector<T> expand(const std::vector<T> &values, std::vector<UnsignedInt> &indices)
+std::vector<T> expand(const std::vector<T>& values, std::vector<UnsignedInt>& indices)
 {
     std::vector<T> res;
 
     for (UnsignedInt i = 0; i < indices.size(); ++i)
     {
-        const auto &val = values[indices[i]];
+        const auto& val = values[indices[i]];
         res.push_back(val);
     }
 
     return res;
 }
 
-Eigen::Vector3f toEigen(const Vector3 &v);
+Eigen::Vector3f toEigen(const Vector3& v);
 
 #endif //FEM3D_UTIL_H

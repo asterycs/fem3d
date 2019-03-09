@@ -36,6 +36,10 @@ public:
 
     void toggleVertices(const UI::Lasso& lasso);
 
+    void zoomCamera(const Float offset);
+    void handleViewportClick(const Vector2i position);
+    void rotateCamera(const Vector2i offset);
+
 private:
     void viewportEvent(ViewportEvent& event) override;
     void drawEvent() override;

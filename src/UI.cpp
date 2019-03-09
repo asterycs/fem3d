@@ -6,6 +6,7 @@
 #include <Magnum/Shaders/Flat.h>
 
 #include "App.h"
+#include "Util.h"
 
 using namespace Magnum::Math::Literals;
 
@@ -154,7 +155,13 @@ bool UI::handleMousePressEvent(Platform::Application::MouseEvent& event)
         if (_inPinnedVertexLassoMode)
         {
             _lassoPreviousPosition = event.position();
-
+            event.setAccepted();
+            return true;
+        }
+        else if (event.button() == Platform::Application::MouseEvent::Button::Left)
+        {
+            _app->handleViewportClick(event.position());
+            event.setAccepted();
             return true;
         }
     }
@@ -168,9 +175,17 @@ bool UI::handleMouseReleaseEvent(Platform::Application::MouseEvent& event)
     {
         _app->toggleVertices(_currentLasso);
         _currentLasso.clear();
+        event.setAccepted();
+
+        return true;
+    }
+    else if (_imgui.handleMouseReleaseEvent(event))
+    {
+        event.setAccepted();
+        return true;
     }
 
-    return _imgui.handleMouseReleaseEvent(event);
+    return false;
 }
 
 std::vector<Vector2> UI::toScreenCoordinates(const std::vector<Vector2i>& pixels)
@@ -180,88 +195,16 @@ std::vector<Vector2> UI::toScreenCoordinates(const std::vector<Vector2i>& pixels
     std::transform(pixels.begin(), pixels.end(), std::back_inserter(output),
                    [=](const Vector2i p) -> Vector2
                    {
-                     return {static_cast<Float>(p.x()) * 2.0f / _currentSize.x() - 1.f,
-                             static_cast<Float>(_currentSize.y() - p.y()) * 2.0f / _currentSize.y() - 1.f};
+                     return {static_cast<Float>(p.x()) * 2.0f / static_cast<Float>(_currentSize.x()) - 1.f,
+                             static_cast<Float>(_currentSize.y() - p.y()) * 2.0f / static_cast<Float>(_currentSize.y()) - 1.f};
                    });
 
     return output;
 }
 
-std::vector<Vector2i> bresenhamL(const Vector2i a, const Vector2i b);
-std::vector<Vector2i> bresenhamL(const Vector2i a, const Vector2i b)
-{
-    std::vector<Vector2i> output;
-
-    Vector2i delta = b - a;
-    Int ys = Math::sign(delta.y());
-    delta.y() = abs(delta.y());
-
-    Int err = 2 * delta.y() - delta.x();
-    Int y = a.y();
-
-    for (Int x = a.x(); x <= b.x(); ++x)
-    {
-        output.push_back({x, y});
-
-        if (err > 0)
-        {
-            y += ys;
-            err -= 2 * delta.x();
-        }
-        err += 2 * delta.y();
-    }
-
-    return output;
-}
-
-std::vector<Vector2i> bresenhamH(const Vector2i a, const Vector2i b);
-std::vector<Vector2i> bresenhamH(const Vector2i a, const Vector2i b)
-{
-    std::vector<Vector2i> output;
-
-    Vector2i delta = b - a;
-    Int xs = Math::sign(delta.x());
-    delta.x() = abs(delta.x());
-
-    Int err = 2 * delta.x() - delta.y();
-    Int x = a.x();
-
-    for (Int y = a.y(); y <= b.y(); ++y)
-    {
-        output.push_back({x, y});
-
-        if (err > 0)
-        {
-            x += xs;
-            err -= 2 * delta.y();
-        }
-        err += 2 * delta.x();
-    }
-
-    return output;
-}
-
-std::vector<Vector2i> bresenham(const Vector2i a, const Vector2i b);
-std::vector<Vector2i> bresenham(const Vector2i a, const Vector2i b)
-{
-    if (abs(b.y() - a.y()) < abs(b.x() - a.x()))
-    {
-        if (a.x() > b.x())
-            return bresenhamL(b, a);
-        else
-            return bresenhamL(a, b);
-    }
-    else
-    {
-        if (a.y() > b.y())
-            return bresenhamH(b, a);
-        else
-            return bresenhamH(a, b);
-    }
-}
-
 bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
 {
+    event.setAccepted();
     if (_imgui.handleMouseMoveEvent(event))
         return true;
 
@@ -277,14 +220,29 @@ bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
         _lassoPreviousPosition = event.position();
 
         return true;
+    }else if (event.buttons() & Platform::Application::MouseMoveEvent::Button::Left)
+    {
+        _app->rotateCamera(event.relativePosition());
+        return true;
     }
 
+    event.setAccepted(false);
     return false;
 }
 
 bool UI::handleMouseScrollEvent(Platform::Application::MouseScrollEvent& event)
 {
-    return _imgui.handleMouseScrollEvent(event);
+    if (!_imgui.handleMouseScrollEvent(event))
+    {
+        if (event.offset().y() != 0)
+        {
+            _app->zoomCamera(event.offset().y());
+            event.setAccepted();
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool UI::handleTextInputEvent(Platform::Application::TextInputEvent& event)

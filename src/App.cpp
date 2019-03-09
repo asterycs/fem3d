@@ -115,24 +115,13 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
 
         if (parseTtg(str, vertices, meshElementIndices, boundaryIndices, dim) && dim == 3)
         {
-            Vector3 origin, extent;
-            computeAABB(vertices, origin, extent);
+            const AABB<Vector3> aabb = computeAABB(vertices);
+            const Vector3 origin = 0.5f*(aabb.max - aabb.min) + aabb.min;
             MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
 
-            std::vector<Vector2> uv;
-            std::vector<UnsignedInt> triangleIndices;
-            std::vector<UnsignedInt> uvIndices;
-
-            // Expand tetrahedrons to triangles for visualization
-            extractTriangleIndices(meshElementIndices, triangleIndices);
-
-            // Create uv data. Not used atm.
-            createUVIndices(triangleIndices, uv, uvIndices);
-
             _objects.emplace_back(
-                    std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices, triangleIndices,
-                                                  boundaryIndices, uv,
-                                                  uvIndices, meshElementIndices, _scene, _drawableGroups[i]));
+                    std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices,
+                                                  boundaryIndices, meshElementIndices, _scene, _drawableGroups[i]));
         }
         else
         {
@@ -207,14 +196,14 @@ void App::drawEvent()
     // Compose into default framebuffer
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
 
-    GL::Mesh fullScreenTriangles;
-    fullScreenTriangles.setCount(3).setPrimitive(GL::MeshPrimitive::Triangles);
+    GL::Mesh fullScreenTriangle;
+    fullScreenTriangle.setCount(3).setPrimitive(GL::MeshPrimitive::Triangles);
 
     _compositionShader.setOpaqueTexture(_color);
     _compositionShader.setTransparencyAccumulationTexture(_transparencyAccumulation);
     _compositionShader.setTransparencyRevealageTexture(_transparencyRevealage);
     _compositionShader.setViewportSize(_framebuffer.viewport().size());
-    fullScreenTriangles.draw(_compositionShader);
+    fullScreenTriangle.draw(_compositionShader);
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
 
@@ -234,18 +223,17 @@ void App::mouseScrollEvent(MouseScrollEvent& event)
     if (_ui.handleMouseScrollEvent(event))
     {
         redraw();
-        return;
     }
+}
 
-    // This might be better as a callback called from UI
-    if (!event.offset().y()) return;
-
+void App::zoomCamera(const Float offset)
+{
     // Distance to origin
     const Float distance = _cameraObject->transformation().translation().z();
 
     // Move 15% of the distance back or forward
     _cameraObject->translate(-_camera->cameraMatrix().inverted().backward() * (
-            distance * (1.0f - (event.offset().y() > 0 ? 1 / 0.85f : 0.85f))));
+            distance * (1.0f - (offset > 0 ? 1 / 0.85f : 0.85f))));
 
     redraw();
 }
@@ -255,18 +243,14 @@ void App::mousePressEvent(MouseEvent& event)
     if (_ui.handleMousePressEvent(event))
     {
         redraw();
-        return;
     }
+}
 
-    if (event.button() != MouseEvent::Button::Left)
-        return;
-
-    event.setAccepted();
-
+void App::handleViewportClick(const Vector2i position)
+{
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput});
-    Image2D data = _framebuffer.read(
-            Range2Di::fromSize({event.position().x(), _framebuffer.viewport().sizeY() - event.position().y() - 1},
-                               {1, 1}), {PixelFormat::R32I});
+    Image2D data = _framebuffer.read(Range2Di::fromSize({position.x(), _framebuffer.viewport().sizeY() - position.y() - 1},
+                              {1, 1}), {PixelFormat::R32I});
 
     Int selectedVertexId = data.data<Int>()[0];
 
@@ -275,8 +259,6 @@ void App::mousePressEvent(MouseEvent& event)
         _objects[_currentGeom]->togglePinnedVertex(static_cast<UnsignedInt>(selectedVertexId));
         Debug{} << "Toggled vertex number " << selectedVertexId;
     }
-
-    redraw();
 }
 
 void App::toggleVertices(const UI::Lasso& lasso)
@@ -284,7 +266,7 @@ void App::toggleVertices(const UI::Lasso& lasso)
     if (lasso.pixels.size() == 0)
         return;
 
-    const auto [min, max] = getBbox(lasso.pixels);
+    const auto [min, max] = computeAABB(lasso.pixels);
 
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput});
     Image2D data = _framebuffer.read(
@@ -314,30 +296,25 @@ void App::mouseMoveEvent(MouseMoveEvent& event)
     if (_ui.handleMouseMoveEvent(event))
     {
         redraw();
-        return;
     }
+}
 
-    if (!(event.buttons() & MouseMoveEvent::Button::Left))
-        return;
-
+void App::rotateCamera(const Vector2i offset)
+{
     const Float cameraMovementSpeed = 0.005f;
-    const Vector2i posDiff = event.relativePosition();
-    _cameraTrackballAngles[0] += static_cast<Float>(posDiff[0]) * cameraMovementSpeed;
+    _cameraTrackballAngles[0] += static_cast<Float>(offset[0]) * cameraMovementSpeed;
 
     // Restrict the up-down angle
-    if ((_cameraTrackballAngles[1] < Constants::pi() * 0.5f && posDiff[1] > 0)
-            || (_cameraTrackballAngles[1] > -Constants::pi() * 0.5f && posDiff[1] < 0))
+    if ((_cameraTrackballAngles[1] < Constants::pi() * 0.5f && offset[1] > 0)
+            || (_cameraTrackballAngles[1] > -Constants::pi() * 0.5f && offset[1] < 0))
     {
 
-        _cameraTrackballAngles[1] += static_cast<Float>(posDiff[1]) * cameraMovementSpeed;
-        _cameraObject->rotate(Math::Rad(-static_cast<Float>(posDiff[1]) * cameraMovementSpeed),
+        _cameraTrackballAngles[1] += static_cast<Float>(offset[1]) * cameraMovementSpeed;
+        _cameraObject->rotate(Math::Rad(-static_cast<Float>(offset[1]) * cameraMovementSpeed),
                               _camera->cameraMatrix().inverted().right().normalized());
     }
 
-    _cameraObject->rotate(Math::Rad(-static_cast<Float>(posDiff[0]) * cameraMovementSpeed), Vector3(0.f, 0.f, 1.f));
-
-    event.setAccepted();
-    redraw();
+    _cameraObject->rotate(Math::Rad(-static_cast<Float>(offset[0]) * cameraMovementSpeed), Vector3(0.f, 0.f, 1.f));
 }
 
 void App::mouseReleaseEvent(MouseEvent& event)
@@ -345,14 +322,7 @@ void App::mouseReleaseEvent(MouseEvent& event)
     if (_ui.handleMouseReleaseEvent(event))
     {
         redraw();
-        return;
     }
-
-    if (event.button() != MouseEvent::Button::Left)
-        return;
-
-    event.setAccepted();
-    redraw();
 }
 
 void App::textInputEvent(TextInputEvent& event)

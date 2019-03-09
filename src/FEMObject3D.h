@@ -21,12 +21,9 @@ class FEMObject3D : public Object3D, SceneGraph::Drawable3D {
 public:
     explicit FEMObject3D(PhongIdShader& phongShader,
                          VertexShader& vertexShader,
-                         std::vector<Vector3> vertices,
-                         std::vector<UnsignedInt> triangleIndices,
-                         std::vector<UnsignedInt> boundaryIndices,
-                         std::vector<Vector2> uv,
-                         std::vector<UnsignedInt> uvIndices,
-                         std::vector<std::vector<UnsignedInt>> tetrahedronIndices,
+                         const std::vector<Vector3>& vertices,
+                         const std::vector<UnsignedInt>& boundaryIndices,
+                         const std::vector<std::vector<UnsignedInt>>& tetrahedronIndices,
                          Object3D& parent,
                          SceneGraph::DrawableGroup3D& drawables);
 
@@ -47,6 +44,9 @@ private:
     void draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) override;
     void drawMesh(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera);
     void drawVertexMarkers(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera);
+
+    void initVertexMarkers(const std::vector<Vector3>& vertices);
+    void initTriangles(std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices);
 
     bool _drawVertexMarkers;
     std::set<UnsignedInt> _pinnedVertexIds;

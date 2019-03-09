@@ -5,13 +5,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -Wall \
     -Wextra \
     -Werror \
-    -Wno-error=unused-parameter \
     -Wconversion \
     -Wno-error=conversion \
     -fasynchronous-unwind-tables \
     -fstack-protector-all \
     -Werror=format-security \
-    -Werror=implicit-function-declaration \
     -Wdisabled-optimization \
     -Wformat \
     -Wcast-align \
@@ -29,7 +27,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -Wunused-value \
     -Wunused-variable \
     -Wsign-conversion \
-    -Wno-error=sign-conversion")
+    -Wno-error=sign-conversion \
+    -Wno-error=missing-declarations")
 
 find_package(Magnum REQUIRED
         GL
