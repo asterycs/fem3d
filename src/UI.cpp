@@ -171,21 +171,24 @@ bool UI::handleMousePressEvent(Platform::Application::MouseEvent& event)
 
 bool UI::handleMouseReleaseEvent(Platform::Application::MouseEvent& event)
 {
+    bool accept {false};
+
     if (_inPinnedVertexLassoMode && _currentLasso.pixels.size() != 0)
     {
         _app->toggleVertices(_currentLasso);
         _currentLasso.clear();
         event.setAccepted();
 
-        return true;
-    }
-    else if (_imgui.handleMouseReleaseEvent(event))
-    {
-        event.setAccepted();
-        return true;
+        accept = true;
     }
 
-    return false;
+    if (_imgui.handleMouseReleaseEvent(event))
+    {
+        accept = true;
+    }
+
+    event.setAccepted(accept);
+    return accept;
 }
 
 std::vector<Vector2> UI::toScreenCoordinates(const std::vector<Vector2i>& pixels)
@@ -204,11 +207,12 @@ std::vector<Vector2> UI::toScreenCoordinates(const std::vector<Vector2i>& pixels
 
 bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
 {
-    event.setAccepted();
+    bool accept {false};
+    
     if (_imgui.handleMouseMoveEvent(event))
-        return true;
-
-    if (_inPinnedVertexLassoMode && event.relativePosition() != Vector2i{0, 0}
+    {
+        accept = true;
+    }else if (_inPinnedVertexLassoMode && event.relativePosition() != Vector2i{0, 0}
             && event.buttons() & Platform::Application::MouseMoveEvent::Button::Left)
     {
         const auto pixels = bresenham(_lassoPreviousPosition, event.position());
@@ -219,15 +223,15 @@ bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
 
         _lassoPreviousPosition = event.position();
 
-        return true;
+        accept = true;
     }else if (event.buttons() & Platform::Application::MouseMoveEvent::Button::Left)
     {
         _app->rotateCamera(event.relativePosition());
-        return true;
+        accept = true;
     }
 
-    event.setAccepted(false);
-    return false;
+    //event.setAccepted(accept);
+    return accept;
 }
 
 bool UI::handleMouseScrollEvent(Platform::Application::MouseScrollEvent& event)

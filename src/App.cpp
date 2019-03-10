@@ -220,10 +220,8 @@ void App::drawEvent()
 
 void App::mouseScrollEvent(MouseScrollEvent& event)
 {
-    if (_ui.handleMouseScrollEvent(event))
-    {
-        redraw();
-    }
+    _ui.handleMouseScrollEvent(event);
+    redraw();
 }
 
 void App::zoomCamera(const Float offset)
@@ -234,16 +232,12 @@ void App::zoomCamera(const Float offset)
     // Move 15% of the distance back or forward
     _cameraObject->translate(-_camera->cameraMatrix().inverted().backward() * (
             distance * (1.0f - (offset > 0 ? 1 / 0.85f : 0.85f))));
-
-    redraw();
 }
 
 void App::mousePressEvent(MouseEvent& event)
 {
     if (_ui.handleMousePressEvent(event))
-    {
         redraw();
-    }
 }
 
 void App::handleViewportClick(const Vector2i position)
@@ -294,9 +288,7 @@ void App::toggleVertices(const UI::Lasso& lasso)
 void App::mouseMoveEvent(MouseMoveEvent& event)
 {
     if (_ui.handleMouseMoveEvent(event))
-    {
         redraw();
-    }
 }
 
 void App::rotateCamera(const Vector2i offset)
@@ -320,9 +312,7 @@ void App::rotateCamera(const Vector2i offset)
 void App::mouseReleaseEvent(MouseEvent& event)
 {
     if (_ui.handleMouseReleaseEvent(event))
-    {
         redraw();
-    }
 }
 
 void App::textInputEvent(TextInputEvent& event)
