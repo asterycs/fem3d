@@ -34,11 +34,11 @@ Vector3 valToColor(const Float val);
 std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals);
 std::vector<Float> computeNorm(const std::vector<Eigen::Vector3f>& input);
 
-template <template<typename> class V, typename T>
-AABB<V<T>> computeAABB(const std::vector<V<T>>& elements)
+template <class V>
+AABB<V> computeAABB(const std::vector<V>& elements)
 {
-    V<T> min {std::numeric_limits<T>::max()};
-    V<T> max {std::numeric_limits<T>::min()};
+    V min {std::numeric_limits<typename V::Type>::max()};
+    V max {std::numeric_limits<typename V::Type>::min()};
 
     for (auto element : elements)
     {
@@ -46,7 +46,7 @@ AABB<V<T>> computeAABB(const std::vector<V<T>>& elements)
         max = Math::max(max, element);
     }
 
-    return AABB<V<T>>{min, max};
+    return AABB<V>{min, max};
 }
 
 template<typename T>
@@ -55,38 +55,27 @@ std::vector<T> repeat(const std::vector<T>& values, const UnsignedInt times)
     std::vector<T> res;
     res.reserve(values.size() * times);
 
-    for (UnsignedInt i = 0; i < values.size(); ++i)
+    for (const T value : values)
     {
         for (UnsignedInt j = 0; j < times; ++j)
-            res.push_back(values[i]);
+            res.push_back(value);
     }
 
     return res;
-}
-
-template<typename T>
-std::vector<T> reorder(const std::vector<T>& attribute, std::vector<UnsignedInt>& indices)
-{
-    std::vector<T> out(indices.size());
-
-    for (UnsignedInt i = 0; i < indices.size(); ++i)
-        out[i] = attribute[indices[i]];
-
-    return out;
 }
 
 template<typename T>
 std::vector<T> expand(const std::vector<T>& values, std::vector<UnsignedInt>& indices)
 {
-    std::vector<T> res;
+    std::vector<T> out;
 
-    for (UnsignedInt i = 0; i < indices.size(); ++i)
-    {
-        const auto& val = values[indices[i]];
-        res.push_back(val);
-    }
+    std::transform(indices.begin(), indices.end(), std::back_inserter(out),
+                   [&](const UnsignedInt index)
+                   {
+                     return values[index];
+                   });
 
-    return res;
+    return out;
 }
 
 Eigen::Vector3f toEigen(const Vector3& v);

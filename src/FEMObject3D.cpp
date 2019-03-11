@@ -39,10 +39,10 @@ FEMObject3D::FEMObject3D(PhongIdShader& phongShader,
     const auto triangleIndices = extractTriangleIndices(tetrahedronIndices);
 
     initVertexMarkers(vertices);
-    initTriangles(vertices, triangleIndices);
+    initMeshTriangles(vertices, triangleIndices);
 }
 
-void FEMObject3D::initTriangles(std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices)
+void FEMObject3D::initMeshTriangles(std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices)
 {
     _triangleIndices = triangleIndices;
 
@@ -197,7 +197,6 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
         return task.evaluateSolution(solution);
     }
     else
-
         return std::make_pair<std::vector<Float>, std::vector<Eigen::Vector3f>>({}, {});
 }
 

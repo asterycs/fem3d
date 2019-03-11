@@ -220,8 +220,8 @@ void App::drawEvent()
 
 void App::mouseScrollEvent(MouseScrollEvent& event)
 {
-    _ui.handleMouseScrollEvent(event);
-    redraw();
+    if (_ui.handleMouseScrollEvent(event))
+        redraw();
 }
 
 void App::zoomCamera(const Float offset)
@@ -255,7 +255,7 @@ void App::handleViewportClick(const Vector2i position)
     }
 }
 
-void App::toggleVertices(const UI::Lasso& lasso)
+void App::setVertices(const UI::Lasso& lasso, const bool pinned)
 {
     if (lasso.pixels.size() == 0)
         return;
@@ -263,9 +263,9 @@ void App::toggleVertices(const UI::Lasso& lasso)
     const auto [min, max] = computeAABB(lasso.pixels);
 
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput});
-    Image2D data = _framebuffer.read(
+    const Image2D data = _framebuffer.read(
             Range2Di({min.x(), _framebuffer.viewport().sizeY() - max.y() - 1},
-                               {max.x(), _framebuffer.viewport().sizeY() - min.y() - 1}), {PixelFormat::R32I});
+                               {max.x(), _framebuffer.viewport().sizeY() - min.y() - 1}), {GL::PixelFormat::RedInteger, GL::PixelType::Int});
 
     std::set<UnsignedInt> seenIndices;
 
@@ -282,7 +282,7 @@ void App::toggleVertices(const UI::Lasso& lasso)
     }
 
     for (UnsignedInt index : seenIndices)
-        _objects[_currentGeom]->setPinnedVertex(index, true);
+        _objects[_currentGeom]->setPinnedVertex(index, pinned);
 }
 
 void App::mouseMoveEvent(MouseMoveEvent& event)

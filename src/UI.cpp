@@ -107,6 +107,7 @@ void UI::drawOptions()
         ImGui::Text("Made using:");
         ImGui::Text("Magnum: https://magnum.graphics/");
         ImGui::Text("SDL2: https://www.libsdl.org/");
+        ImGui::Text("ImGui: https://github.com/ocornut/imgui/");
         ImGui::Text("Eigen: http://eigen.tuxfamily.org/");
         ImGui::Text("Source: https://github.com/asterycs/fem3d/");
 
@@ -173,17 +174,17 @@ bool UI::handleMouseReleaseEvent(Platform::Application::MouseEvent& event)
 {
     bool accept {false};
 
-    if (_inPinnedVertexLassoMode && _currentLasso.pixels.size() != 0)
+    if (_imgui.handleMouseReleaseEvent(event))
     {
-        _app->toggleVertices(_currentLasso);
+        accept = true;
+    }else if (_inPinnedVertexLassoMode && _currentLasso.pixels.size() != 0)
+    {
+        _inPinnedVertexLassoMode = false;
+        
+        _app->setVertices(_currentLasso, true);
         _currentLasso.clear();
         event.setAccepted();
 
-        accept = true;
-    }
-
-    if (_imgui.handleMouseReleaseEvent(event))
-    {
         accept = true;
     }
 
@@ -212,7 +213,8 @@ bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
     if (_imgui.handleMouseMoveEvent(event))
     {
         accept = true;
-    }else if (_inPinnedVertexLassoMode && event.relativePosition() != Vector2i{0, 0}
+    }
+    else if (_inPinnedVertexLassoMode && event.relativePosition() != Vector2i{0, 0}
             && event.buttons() & Platform::Application::MouseMoveEvent::Button::Left)
     {
         const auto pixels = bresenham(_lassoPreviousPosition, event.position());
@@ -230,7 +232,7 @@ bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
         accept = true;
     }
 
-    //event.setAccepted(accept);
+    event.setAccepted(accept);
     return accept;
 }
 

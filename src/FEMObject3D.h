@@ -46,7 +46,7 @@ private:
     void drawVertexMarkers(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera);
 
     void initVertexMarkers(const std::vector<Vector3>& vertices);
-    void initTriangles(std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices);
+    void initMeshTriangles(std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices);
 
     bool _drawVertexMarkers;
     std::set<UnsignedInt> _pinnedVertexIds;

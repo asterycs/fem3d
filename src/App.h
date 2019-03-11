@@ -34,7 +34,7 @@ public:
     void setCurrentGeometry(UnsignedInt geometry);
     void clearPinnedVertices();
 
-    void toggleVertices(const UI::Lasso& lasso);
+    void setVertices(const UI::Lasso& lasso, const bool pinned);
 
     void zoomCamera(const Float offset);
     void handleViewportClick(const Vector2i position);
