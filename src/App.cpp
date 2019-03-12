@@ -119,7 +119,7 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
             const Vector3 origin = 0.5f*(aabb.max - aabb.min) + aabb.min;
             MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
 
-            _objects.emplace_back(
+            _objects.push_back(
                     std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices,
                                                   boundaryIndices, meshElementIndices, _scene, _drawableGroups[i]));
         }

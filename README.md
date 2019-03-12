@@ -1,6 +1,7 @@
 ## The Finite Element Experience
 
-This project is an effort to demonstrate the capabilities of the finite element method in 3D. The project is written mainly in C++ and OpenGL trough Magnum.
+This project is an effort to demonstrate the capabilities of the finite element method in 3D. The project is written mainly in C++ and OpenGL trough Magnum.  
+Try it online here: http://envall.xyz/fem3d/  
 
 ![](screenshot.png)
 
