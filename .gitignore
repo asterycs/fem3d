@@ -6,3 +6,7 @@ release
 .*
 *.ttg
 *.data
+*.aux
+*.log
+*.pdf
+*.synctex.gz
