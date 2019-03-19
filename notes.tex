@@ -130,7 +130,8 @@ Consider the strong form equivalent of the weak form presented above:
 
 \begin{equation*}
 a\left(\|\nabla u \|_2^2\right)\Delta u = -f 
-\end{equation*}
+\end{equation*},
+where $a(x)=x^n$
 letting
 \begin{equation*}
 	f = \sqrt{8}\pi \sin(\pi x)\sin(\pi y)  
@@ -139,8 +140,24 @@ yields the solution
 \begin{equation*}
 	u = \frac{\sqrt{2}}{\pi} \sin(\pi x)\sin(\pi y)
 \end{equation*}
-
 Our solver should be able to reach this solution with a good enough initial guess.
+One can also use a sigmoid function for $a$.
+\begin{equation*}
+	a(x)=\frac{1}{e^{-x}+1}
+\end{equation*}
+
+
+letting
+\begin{equation*}
+	f = \frac{e^{-1}+1}{1}\sqrt{8}\pi \sin(\pi x)\sin(\pi y)  
+\end{equation*}
+yields the solution
+\begin{equation*}
+	u = \frac{\sqrt{2}}{\pi} \sin(\pi x)\sin(\pi y)
+\end{equation*}
+
+
+
 
 \clearpage
 %\section*{Appendix A}
