@@ -14,7 +14,7 @@ iind = setdiff(1:size(mesh.p,2),bind);
 
 x = zeros( size(mesh.p,2),1);
 x(iind) = A(iind,iind)\b(iind);
-x(iind) = x(iind) + 0.1*rand(size(iind,1),1);
+x(iind) = zeros(size(iind));
 
 % Set up
 gamma = 1;
@@ -25,7 +25,7 @@ energies = zeros(maxiter,1);
 
 % a = @(x) 1./(1+exp(-x));
 % da = @(x) exp(-x)./(exp(-x)+1).^2;
-a = @(x) x.^2;
+a = @(x) 1+x.^2;
 da = @(x) 2*x;
 bilin_eps_wrapped = @(E,V,dE,dV,gX,dU,dUNorm2) bilin_eps(E,V,dE,dV,gX,dU,dUNorm2,a,da);
 G = @(U,V,dU,dV,gX,dUNorm2) G_eps(U,V,dU,dV,gX,dUNorm2,a,da);

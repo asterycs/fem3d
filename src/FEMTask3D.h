@@ -6,10 +6,10 @@
 
 #include "Eigen/SparseCore"
 
+#include "Typedefs.h"
+
 #include <set>
 #include <vector>
-
-using namespace Magnum;
 
 // This class handles matrix assembling and solving of the resulting system
 class FEMTask3D

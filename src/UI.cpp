@@ -9,6 +9,7 @@
 #include "Util.h"
 
 using namespace Magnum::Math::Literals;
+using namespace Magnum;
 
 UI::UI(App& app, const Vector2i& size, const UnsignedInt nScenes)
         :_imgui{NoCreate}, _currentSize{size}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},

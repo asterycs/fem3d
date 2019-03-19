@@ -8,13 +8,12 @@
 #include <Magnum/GL/Version.h>
 #include <Magnum/GL/RenderbufferFormat.h>
 
-#include <Magnum/MeshTools/Transform.h>
-
 #include <random>
 
 #include "Util.h"
 
-using namespace Math::Literals;
+using namespace Magnum::Math::Literals;
+using namespace Magnum;
 
 App::App(const Arguments& arguments)
         :
@@ -108,13 +107,11 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
     {
         const auto fname = fnames[i];
         const auto str = rs.get(fname);
-        Mesh3D mesh;
+        MeshData mesh;
 
-        if (parseTtg(str, mesh))
+        if (parseTtg(str, mesh) && mesh.getDimensions() == 3)
         {
-            const AABB<Vector3> aabb = computeAABB(mesh.vertices);
-            const Vector3 origin = 0.5f*(aabb.max - aabb.min) + aabb.min;
-            MeshTools::transformPointsInPlace(Matrix4::translation(-origin), mesh.vertices);
+            mesh.center();
 
             _objects.push_back(
                     std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));

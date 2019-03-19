@@ -13,47 +13,51 @@
 
 #include "Util.h"
 
-using namespace Math::Literals;
+#include <cassert>
+
+using namespace Magnum::Math::Literals;
 
 FEMObject3D::FEMObject3D(PhongIdShader& phongShader,
                          VertexShader& vertexShader,
-                         const Mesh3D& mesh,
+                         const MeshData& mesh,
                          Object3D& parent,
-                         SceneGraph::DrawableGroup3D& drawables)
+                         Magnum::SceneGraph::DrawableGroup3D& drawables)
         :Object3D{&parent},
-         SceneGraph::Drawable3D{*this, &drawables},
+         Magnum::SceneGraph::Drawable3D{*this, &drawables},
          _drawVertexMarkers{true},
-         _pinnedVertexIds{mesh.boundaryIndices.begin(), mesh.boundaryIndices.end()},
+         _pinnedVertexIds{mesh.getBoundaryIndices().begin(), mesh.getBoundaryIndices().end()},
          _phongShader(phongShader),
          _vertexShader(vertexShader),
-         _triangleBuffer{GL::Buffer::TargetHint::Array},
-         _indexBuffer{GL::Buffer::TargetHint::ElementArray},
-         _colorBuffer{GL::Buffer::TargetHint::Array},
+         _triangleBuffer{Magnum::GL::Buffer::TargetHint::Array},
+         _indexBuffer{Magnum::GL::Buffer::TargetHint::ElementArray},
+         _colorBuffer{Magnum::GL::Buffer::TargetHint::Array},
          _mesh{mesh}
 {
-    // Expand tetrahedrons to triangles for visualization
-    const auto triangleIndices = extractTriangleIndices(mesh.elementIndices);
+    assert(mesh.getDimensions() == 3);
 
-    initVertexMarkers(mesh.vertices);
-    initMeshTriangles(mesh.vertices, triangleIndices);
+    // Expand tetrahedrons to triangles for visualization
+    const auto triangleIndices = extractTriangleIndices(mesh.getElementIndices());
+
+    initVertexMarkers(mesh.getVertices());
+    initMeshTriangles(mesh.getVertices(), triangleIndices);
 }
 
 void FEMObject3D::initMeshTriangles(std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices)
 {
     _triangleIndices = triangleIndices;
 
-    auto [normalIndices, normals] = MeshTools::generateFlatNormals(triangleIndices, vertices);
+    auto [normalIndices, normals] = Magnum::MeshTools::generateFlatNormals(triangleIndices, vertices);
 
     vertices = expand(vertices, triangleIndices);
     normals = expand(normals, normalIndices);
 
     std::vector<Vector3> colors(triangleIndices.size(), Vector3{0.f, 0.f, 1.f});
 
-    _triangleBuffer.setData(MeshTools::interleave(vertices, normals), GL::BufferUsage::StaticDraw);
-    _colorBuffer.setData(colors, GL::BufferUsage::StaticDraw);
+    _triangleBuffer.setData(Magnum::MeshTools::interleave(vertices, normals), Magnum::GL::BufferUsage::StaticDraw);
+    _colorBuffer.setData(colors, Magnum::GL::BufferUsage::StaticDraw);
 
     // Using a vertex buffer would be beneficial but that makes updating colors later much more difficult
-    _triangles.setPrimitive(GL::MeshPrimitive::Triangles)
+    _triangles.setPrimitive(Magnum::GL::MeshPrimitive::Triangles)
             .addVertexBuffer(_triangleBuffer, 0, PhongIdShader::Position{}, PhongIdShader::Normal{})
             .addVertexBuffer(_colorBuffer, 0, PhongIdShader::VertexColor{})
             .setCount(static_cast<Int>(triangleIndices.size()));
@@ -65,44 +69,44 @@ void FEMObject3D::initVertexMarkers(const std::vector<Vector3>& vertices)
     _vertexMarkerIndexBuffer.resize(vertices.size());
     _vertexMarkerMesh.resize(vertices.size());
 
-    const Trade::MeshData3D data = Primitives::uvSphereSolid(16, 32);
+    const Magnum::Trade::MeshData3D data = Magnum::Primitives::uvSphereSolid(16, 32);
 
     for (UnsignedInt i = 0; i < vertices.size(); ++i)
     {
         const Vector3 center = vertices[i];
 
-        const auto pointsTformed = MeshTools::transformPoints(
+        const auto pointsTformed = Magnum::MeshTools::transformPoints(
                 Matrix4::translation(center) * Matrix4::scaling({0.03f, 0.03f, 0.03f}), data.positions(0));
-        const auto normalsTformed = MeshTools::transformVectors(Matrix4::translation(center), data.normals(0));
+        const auto normalsTformed = Magnum::MeshTools::transformVectors(Matrix4::translation(center), data.normals(0));
 
-        _vertexMarkerVertexBuffer[i].setTargetHint(GL::Buffer::TargetHint::Array);
-        _vertexMarkerVertexBuffer[i].setData(MeshTools::interleave(pointsTformed, normalsTformed),
-                                             GL::BufferUsage::StaticDraw);
+        _vertexMarkerVertexBuffer[i].setTargetHint(Magnum::GL::Buffer::TargetHint::Array);
+        _vertexMarkerVertexBuffer[i].setData(Magnum::MeshTools::interleave(pointsTformed, normalsTformed),
+                                             Magnum::GL::BufferUsage::StaticDraw);
 
-        _vertexMarkerIndexBuffer[i].setTargetHint(GL::Buffer::TargetHint::ElementArray);
-        _vertexMarkerIndexBuffer[i].setData(MeshTools::compressIndicesAs<UnsignedShort>(data.indices()),
-                                            GL::BufferUsage::StaticDraw);
+        _vertexMarkerIndexBuffer[i].setTargetHint(Magnum::GL::Buffer::TargetHint::ElementArray);
+        _vertexMarkerIndexBuffer[i].setData(Magnum::MeshTools::compressIndicesAs<UnsignedShort>(data.indices()),
+                                            Magnum::GL::BufferUsage::StaticDraw);
 
         _vertexMarkerMesh[i].setCount(static_cast<Int>(data.indices().size()))
                 .setPrimitive(data.primitive())
                 .addVertexBuffer(_vertexMarkerVertexBuffer[i], 0, PhongIdShader::Position{}, PhongIdShader::Normal{})
-                .setIndexBuffer(_vertexMarkerIndexBuffer[i], 0, MeshIndexType::UnsignedShort);
+                .setIndexBuffer(_vertexMarkerIndexBuffer[i], 0, Magnum::MeshIndexType::UnsignedShort);
     }
 }
 
 void FEMObject3D::setTetrahedronColors(const std::vector<Vector3>& colors)
 {
     std::vector<Vector3> expandedColor = repeat(colors, 12);
-    _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
+    _colorBuffer.setData(expandedColor, Magnum::GL::BufferUsage::StaticDraw);
 }
 
 void FEMObject3D::setVertexColors(const std::vector<Vector3>& colors)
 {
     std::vector<Vector3> expandedColor = expand(colors, _triangleIndices);
-    _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
+    _colorBuffer.setData(expandedColor, Magnum::GL::BufferUsage::StaticDraw);
 }
 
-void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera)
+void FEMObject3D::draw(const Matrix4& transformationMatrix, Magnum::SceneGraph::Camera3D& camera)
 {
     drawMesh(transformationMatrix, camera);
 
@@ -113,7 +117,7 @@ void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D
 
 }
 
-void FEMObject3D::drawVertexMarkers(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera)
+void FEMObject3D::drawVertexMarkers(const Matrix4& transformationMatrix, const Magnum::SceneGraph::Camera3D& camera)
 {
     _vertexShader.setTransformationMatrix(
                     transformationMatrix * Matrix4::translation(transformationMatrix.inverted().backward() * 0.01f))
@@ -132,14 +136,14 @@ void FEMObject3D::drawVertexMarkers(const Matrix4& transformationMatrix, const S
     }
 }
 
-void FEMObject3D::drawMesh(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera)
+void FEMObject3D::drawMesh(const Matrix4& transformationMatrix, const Magnum::SceneGraph::Camera3D& camera)
 {
-    GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
-    GL::Renderer::enable(GL::Renderer::Feature::Blending);
-    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
-    GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,
-                                   GL::Renderer::BlendFunction::OneMinusSourceAlpha);
-    GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
+    Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::DepthTest);
+    Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::Blending);
+    Magnum::GL::Renderer::setBlendEquation(Magnum::GL::Renderer::BlendEquation::Add, Magnum::GL::Renderer::BlendEquation::Add);
+    Magnum::GL::Renderer::setBlendFunction(Magnum::GL::Renderer::BlendFunction::SourceAlpha,
+                                           Magnum::GL::Renderer::BlendFunction::OneMinusSourceAlpha);
+    Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::FaceCulling);
 
     _phongShader.setTransformationMatrix(transformationMatrix)
             .setNormalMatrix(transformationMatrix.rotationScaling())
@@ -150,7 +154,7 @@ void FEMObject3D::drawMesh(const Matrix4& transformationMatrix, const SceneGraph
 
     _triangles.draw(_phongShader);
 
-    GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
+    Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::DepthTest);
 }
 
 void FEMObject3D::togglePinnedVertex(const UnsignedInt vertexId)
@@ -174,7 +178,7 @@ void FEMObject3D::drawVertexMarkers(const bool draw)
 
 std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 {
-    FEMTask3D task(_mesh.vertices, _mesh.elementIndices, _pinnedVertexIds);
+    FEMTask3D task(_mesh.getVertices(), _mesh.getElementIndices(), _pinnedVertexIds);
     task.initialize();
     Eigen::VectorXf solution = task.solve();
 

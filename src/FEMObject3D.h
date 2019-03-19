@@ -16,16 +16,16 @@
 #include "FEMTask3D.h"
 #include "Util.h"
 
-using Object3D = SceneGraph::Object<SceneGraph::MatrixTransformation3D>;
-using Scene3D = SceneGraph::Scene<SceneGraph::MatrixTransformation3D>;
+using Object3D = Magnum::SceneGraph::Object<Magnum::SceneGraph::MatrixTransformation3D>;
+using Scene3D = Magnum::SceneGraph::Scene<Magnum::SceneGraph::MatrixTransformation3D>;
 
-class FEMObject3D : public Object3D, SceneGraph::Drawable3D {
+class FEMObject3D : public Object3D, Magnum::SceneGraph::Drawable3D {
 public:
     explicit FEMObject3D(PhongIdShader& phongShader,
                          VertexShader& vertexShader,
-                         const Mesh3D& mesh,
+                         const MeshData& mesh,
                          Object3D& parent,
-                         SceneGraph::DrawableGroup3D& drawables);
+                         Magnum::SceneGraph::DrawableGroup3D& drawables);
 
     void togglePinnedVertex(const UnsignedInt vertexId);
     void setPinnedVertex(const UnsignedInt vertexId, const bool pinned);
@@ -39,9 +39,9 @@ public:
     void setVertexColors(const std::vector<Vector3>& colors);
 
 private:
-    void draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera) override;
-    void drawMesh(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera);
-    void drawVertexMarkers(const Matrix4& transformationMatrix, const SceneGraph::Camera3D& camera);
+    void draw(const Matrix4& transformationMatrix, Magnum::SceneGraph::Camera3D& camera) override;
+    void drawMesh(const Matrix4& transformationMatrix, const Magnum::SceneGraph::Camera3D& camera);
+    void drawVertexMarkers(const Matrix4& transformationMatrix, const Magnum::SceneGraph::Camera3D& camera);
 
     void initVertexMarkers(const std::vector<Vector3>& vertices);
     void initMeshTriangles(std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices);
@@ -52,14 +52,14 @@ private:
     PhongIdShader& _phongShader;
     VertexShader& _vertexShader;
 
-    GL::Buffer _triangleBuffer, _indexBuffer, _colorBuffer;
-    GL::Mesh _triangles;
+    Magnum::GL::Buffer _triangleBuffer, _indexBuffer, _colorBuffer;
+    Magnum::GL::Mesh _triangles;
 
-    std::vector<GL::Buffer> _vertexMarkerVertexBuffer;
-    std::vector<GL::Buffer> _vertexMarkerIndexBuffer;
-    std::vector<GL::Mesh> _vertexMarkerMesh;
+    std::vector<Magnum::GL::Buffer> _vertexMarkerVertexBuffer;
+    std::vector<Magnum::GL::Buffer> _vertexMarkerIndexBuffer;
+    std::vector<Magnum::GL::Mesh> _vertexMarkerMesh;
 
-    Mesh3D _mesh;
+    MeshData _mesh;
     std::vector<UnsignedInt> _triangleIndices;
 };
 

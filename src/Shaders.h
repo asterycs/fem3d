@@ -8,13 +8,13 @@
 #include <Magnum/GL/Texture.h>
 #include <Magnum/GL/Renderer.h>
 
-using namespace Magnum;
+#include "Typedefs.h"
 
-class PhongIdShader: public GL::AbstractShaderProgram {
+class PhongIdShader: public Magnum::GL::AbstractShaderProgram {
 public:
-    typedef GL::Attribute<0, Vector3> Position;
-    typedef GL::Attribute<1, Vector3> Normal;
-    typedef GL::Attribute<2, Vector3> VertexColor;
+    typedef Magnum::GL::Attribute<0, Vector3> Position;
+    typedef Magnum::GL::Attribute<1, Vector3> Normal;
+    typedef Magnum::GL::Attribute<2, Vector3> VertexColor;
 
     enum: UnsignedInt {
         ColorOutput = 0,
@@ -58,9 +58,9 @@ public:
 private:
 };
 
-class VertexShader: public GL::AbstractShaderProgram {
+class VertexShader: public Magnum::GL::AbstractShaderProgram {
 public:
-    typedef GL::Attribute<0, Vector3> Position;
+    typedef Magnum::GL::Attribute<0, Vector3> Position;
 
     enum: UnsignedInt {
         ColorOutput = 0,
@@ -96,9 +96,9 @@ private:
             _colorUniform;
 };
 
-class CompositionShader: public GL::AbstractShaderProgram {
+class CompositionShader: public Magnum::GL::AbstractShaderProgram {
 public:
-    typedef GL::Attribute<0, Vector3> Position;
+    typedef Magnum::GL::Attribute<0, Vector3> Position;
 
     enum: UnsignedInt {
         ColorOutput = 0
@@ -112,19 +112,19 @@ public:
 
     explicit CompositionShader();
 
-    CompositionShader& setOpaqueTexture(GL::Texture2D& texture) {
+    CompositionShader& setOpaqueTexture(Magnum::GL::Texture2D& texture) {
         setUniform(uniformLocation("Opaque"), Opaque);
         texture.bind(Opaque);
         return *this;
     }
 
-    CompositionShader& setTransparencyAccumulationTexture(GL::Texture2D& texture) {
+    CompositionShader& setTransparencyAccumulationTexture(Magnum::GL::Texture2D& texture) {
         setUniform(uniformLocation("TransparencyAccumulation"), TransparencyAccumulation);
         texture.bind(TransparencyAccumulation);
         return *this;
     }
     
-    CompositionShader& setTransparencyRevealageTexture(GL::Texture2D& texture) {
+    CompositionShader& setTransparencyRevealageTexture(Magnum::GL::Texture2D& texture) {
         setUniform(uniformLocation("TransparencyRevealage"), TransparencyRevealage);
         texture.bind(TransparencyRevealage);
         return *this;

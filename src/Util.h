@@ -7,45 +7,35 @@
 
 #include "Eigen/Dense"
 
+#include "MeshData.h"
+
 #include <string>
 #include <vector>
 
-template <typename V>
-struct AABB
-{
+template<typename V>
+struct AABB {
   V min;
   V max;
 };
 
-struct Mesh3D
-{
-  std::vector<Magnum::Vector3> vertices;
-  std::vector<std::vector<Magnum::UnsignedInt>> elementIndices;
-  std::vector<Magnum::UnsignedInt> boundaryIndices;
-
-  Mesh3D() = default;
-  Mesh3D(const std::vector<Magnum::Vector3>& vertices, const std::vector<std::vector<Magnum::UnsignedInt>>& elementIndices, const std::vector<Magnum::UnsignedInt>& boundaryIndices) : vertices{vertices}, elementIndices{elementIndices}, boundaryIndices{boundaryIndices} {};
-  Mesh3D(const std::vector<Magnum::Vector3>&& vertices, const std::vector<std::vector<Magnum::UnsignedInt>>&& elementIndices, const std::vector<Magnum::UnsignedInt>&& boundaryIndices) : vertices{vertices}, elementIndices{elementIndices}, boundaryIndices{boundaryIndices} {};
-};
-
-bool parseTtg(const std::string& input, Mesh3D& outMesh);
+bool parseTtg(const std::string& input, MeshData& outMesh);
 bool createUVIndices(const std::vector<Magnum::UnsignedInt>& triangleIndices, std::vector<Magnum::Vector2>& outUv,
                      std::vector<Magnum::UnsignedInt>& outUvIndices);
 
-std::vector<Magnum::UnsignedInt> extractTriangleIndices(const std::vector<std::vector<Magnum::UnsignedInt>>& tetrahedronIndices);
+std::vector<Magnum::UnsignedInt> extractTriangleIndices(
+        const std::vector<std::vector<Magnum::UnsignedInt>>& tetrahedronIndices);
 
 std::vector<Magnum::Vector2i> bresenham(const Magnum::Vector2i a, const Magnum::Vector2i b);
-
 
 Magnum::Vector3 valToColor(const Magnum::Float val);
 std::vector<Magnum::Vector3> valuesToHeatGradient(const std::vector<Magnum::Float>& vals);
 std::vector<Magnum::Float> computeNorm(const std::vector<Eigen::Vector3f>& input);
 
-template <class V>
+template<class V>
 AABB<V> computeAABB(const std::vector<V>& elements)
 {
-    V min {std::numeric_limits<typename V::Type>::max()};
-    V max {std::numeric_limits<typename V::Type>::min()};
+    V min{std::numeric_limits<typename V::Type>::max()};
+    V max{std::numeric_limits<typename V::Type>::min()};
 
     for (auto element : elements)
     {

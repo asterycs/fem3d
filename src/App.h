@@ -23,9 +23,7 @@
 #include "Typedefs.h"
 #include "UI.h"
 
-using namespace Magnum;
-
-class App : public Platform::Application {
+class App : public Magnum::Platform::Application {
 public:
     explicit App(const Arguments& arguments);
 
@@ -62,8 +60,8 @@ private:
     UnsignedInt _currentGeom;
     Scene3D _scene;
     std::unique_ptr<Object3D> _cameraObject;
-    std::unique_ptr<SceneGraph::Camera3D> _camera;
-    std::vector<SceneGraph::DrawableGroup3D> _drawableGroups;
+    std::unique_ptr<Magnum::SceneGraph::Camera3D> _camera;
+    std::vector<Magnum::SceneGraph::DrawableGroup3D> _drawableGroups;
 
     PhongIdShader _phongShader;
     VertexShader _vertexSelectionShader;
@@ -71,9 +69,9 @@ private:
 
     std::vector<std::unique_ptr<FEMObject3D>> _objects;
 
-    GL::Framebuffer _framebuffer;
-    GL::Renderbuffer _vertexId, _depth;
-    GL::Texture2D _color, _transparencyAccumulation, _transparencyRevealage;
+    Magnum::GL::Framebuffer _framebuffer;
+    Magnum::GL::Renderbuffer _vertexId, _depth;
+    Magnum::GL::Texture2D _color, _transparencyAccumulation, _transparencyRevealage;
 
     Vector2 _cameraTrackballAngles;
 

@@ -7,9 +7,9 @@
 #include <Magnum/Platform/Sdl2Application.h>
 #include <Magnum/Math/Color.h>
 
-#include <functional>
+#include "Typedefs.h"
 
-using namespace Magnum;
+#include <functional>
 
 class App;
 
@@ -34,21 +34,21 @@ public:
 
     bool wantsTextInput();
 
-    bool handleKeyPressEvent(Platform::Application::KeyEvent& event);
-    bool handleKeyReleaseEvent(Platform::Application::KeyEvent& event);
+    bool handleKeyPressEvent(Magnum::Platform::Application::KeyEvent& event);
+    bool handleKeyReleaseEvent(Magnum::Platform::Application::KeyEvent& event);
 
-    bool handleMousePressEvent(Platform::Application::MouseEvent& event);
-    bool handleMouseReleaseEvent(Platform::Application::MouseEvent& event);
-    bool handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event);
-    bool handleMouseScrollEvent(Platform::Application::MouseScrollEvent& event);
-    bool handleTextInputEvent(Platform::Application::TextInputEvent& event);
+    bool handleMousePressEvent(Magnum::Platform::Application::MouseEvent& event);
+    bool handleMouseReleaseEvent(Magnum::Platform::Application::MouseEvent& event);
+    bool handleMouseMoveEvent(Magnum::Platform::Application::MouseMoveEvent& event);
+    bool handleMouseScrollEvent(Magnum::Platform::Application::MouseScrollEvent& event);
+    bool handleTextInputEvent(Magnum::Platform::Application::TextInputEvent& event);
 
 private:
     void drawOptions();
     void drawLasso();
     std::vector<Vector2> toScreenCoordinates(const std::vector<Vector2i>& pixels);
 
-    ImGuiIntegration::Context _imgui{NoCreate};
+    Magnum::ImGuiIntegration::Context _imgui{Magnum::NoCreate};
     Vector2i _currentSize;
 
     unsigned int _nScenes;

@@ -162,7 +162,7 @@ Eigen::VectorXf FEMTask3D::solve() const
 
     if (solver.info() != Eigen::Success)
     {
-        Warning{} << "Could not solve linear system";
+        Magnum::Warning{} << "Could not solve linear system";
         return Eigen::VectorXf();
     }
 
@@ -170,7 +170,7 @@ Eigen::VectorXf FEMTask3D::solve() const
 
     if (solver.info() != Eigen::Success)
     {
-        Warning{} << "Could not solve linear system";
+        Magnum::Warning{} << "Could not solve linear system";
         return Eigen::VectorXf();
     }
 

@@ -6,7 +6,7 @@
 #include <sstream>
 
 bool parseTtg(const std::string& input,
-              Mesh3D& outMesh)
+              MeshData& outMesh)
 {
     std::vector<Vector3> vertices;
     std::vector<std::vector<UnsignedInt>> meshElementIndices;
@@ -26,10 +26,6 @@ bool parseTtg(const std::string& input,
         return false;
 
     stream >> dim;
-
-    // Only 3D meshes supported atm.
-    if (dim != 3)
-        return false;
 
     // Second line should have vertex count
     stream >> c;
@@ -96,7 +92,7 @@ bool parseTtg(const std::string& input,
         boundaryIndices.push_back(ei);
     }
 
-    outMesh = Mesh3D(std::move(vertices), std::move(meshElementIndices), std::move(boundaryIndices));
+    outMesh = MeshData(dim, std::move(vertices), std::move(meshElementIndices), std::move(boundaryIndices));
 
     return true;
 }
