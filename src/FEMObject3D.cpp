@@ -17,29 +17,25 @@ using namespace Math::Literals;
 
 FEMObject3D::FEMObject3D(PhongIdShader& phongShader,
                          VertexShader& vertexShader,
-                         const std::vector<Vector3>& vertices,
-                         const std::vector<UnsignedInt>& boundaryIndices,
-                         const std::vector<std::vector<UnsignedInt>>& tetrahedronIndices,
+                         const Mesh3D& mesh,
                          Object3D& parent,
                          SceneGraph::DrawableGroup3D& drawables)
         :Object3D{&parent},
          SceneGraph::Drawable3D{*this, &drawables},
          _drawVertexMarkers{true},
-         _pinnedVertexIds{boundaryIndices.begin(), boundaryIndices.end()},
+         _pinnedVertexIds{mesh.boundaryIndices.begin(), mesh.boundaryIndices.end()},
          _phongShader(phongShader),
          _vertexShader(vertexShader),
          _triangleBuffer{GL::Buffer::TargetHint::Array},
          _indexBuffer{GL::Buffer::TargetHint::ElementArray},
          _colorBuffer{GL::Buffer::TargetHint::Array},
-         _meshVertices{vertices},
-         _tetrahedronIndices{tetrahedronIndices},
-         _boundaryIndices{boundaryIndices}
+         _mesh{mesh}
 {
     // Expand tetrahedrons to triangles for visualization
-    const auto triangleIndices = extractTriangleIndices(tetrahedronIndices);
+    const auto triangleIndices = extractTriangleIndices(mesh.elementIndices);
 
-    initVertexMarkers(vertices);
-    initMeshTriangles(vertices, triangleIndices);
+    initVertexMarkers(mesh.vertices);
+    initMeshTriangles(mesh.vertices, triangleIndices);
 }
 
 void FEMObject3D::initMeshTriangles(std::vector<Vector3> vertices, std::vector<UnsignedInt> triangleIndices)
@@ -104,16 +100,6 @@ void FEMObject3D::setVertexColors(const std::vector<Vector3>& colors)
 {
     std::vector<Vector3> expandedColor = expand(colors, _triangleIndices);
     _colorBuffer.setData(expandedColor, GL::BufferUsage::StaticDraw);
-}
-
-const std::vector<std::vector<UnsignedInt>>& FEMObject3D::getTetrahedronIndices() const
-{
-    return _tetrahedronIndices;
-}
-
-const std::vector<Vector3>& FEMObject3D::getVertices() const
-{
-    return _meshVertices;
 }
 
 void FEMObject3D::draw(const Matrix4& transformationMatrix, SceneGraph::Camera3D& camera)
@@ -188,7 +174,7 @@ void FEMObject3D::drawVertexMarkers(const bool draw)
 
 std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 {
-    FEMTask3D task(_meshVertices, _tetrahedronIndices, _pinnedVertexIds);
+    FEMTask3D task(_mesh.vertices, _mesh.elementIndices, _pinnedVertexIds);
     task.initialize();
     Eigen::VectorXf solution = task.solve();
 

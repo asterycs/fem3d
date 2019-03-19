@@ -12,7 +12,7 @@ using namespace Magnum::Math::Literals;
 
 UI::UI(App& app, const Vector2i& size, const UnsignedInt nScenes)
         :_imgui{NoCreate}, _currentSize{size}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
-         _showVertexMarkers{true}, _inPinnedVertexLassoMode{false}, _app{&app}
+         _showVertexMarkers{true}, _showAbout{false}, _inPinnedVertexLassoMode{false}, _app{&app}
 {
     GL::Context::current().resetState(GL::Context::State::EnterExternal);
 
@@ -97,21 +97,41 @@ void UI::drawOptions()
         _app->setVertexMarkersVisibility(_showVertexMarkers);
     }
 
-    const bool showAbout = ImGui::Button("About", ImVec2(110, 20));
-    if (showAbout)
+    if (ImGui::Button("About", ImVec2(110, 20)))
+        _showAbout = !_showAbout;
+
+    if (_showAbout)
     {
-        ImGui::OpenPopup("About");
-    }
-    if (ImGui::BeginPopup("About"))
-    {
+        ImGui::SetNextWindowPos(ImVec2(_currentSize.x()/2,_currentSize.y()/2), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Licenses", &_showAbout, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
+        std::string buffer;
+
+        for (UnsignedInt i = 0; i < 10; ++i)
+        {
+            buffer.append("The quick brown fox jumps over the lazy dog\n");
+        }
+
+        ImGui::TextUnformatted(&(*buffer.begin()), &(*buffer.end()));
+        ImGui::End();
+
+        /*ImGui::BeginPopup();
         ImGui::Text("Made using:");
         ImGui::Text("Magnum: https://magnum.graphics/");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("magnum license");
+            ImGui::EndTooltip();
+        }
+
+
         ImGui::Text("SDL2: https://www.libsdl.org/");
         ImGui::Text("ImGui: https://github.com/ocornut/imgui/");
         ImGui::Text("Eigen: http://eigen.tuxfamily.org/");
         ImGui::Text("Source: https://github.com/asterycs/fem3d/");
 
-        ImGui::EndPopup();
+        ImGui::EndPopup();*/
     }
 
     ImGui::End();

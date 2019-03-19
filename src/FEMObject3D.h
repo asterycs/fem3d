@@ -14,16 +14,16 @@
 #include "Shaders.h"
 #include "Typedefs.h"
 #include "FEMTask3D.h"
+#include "Util.h"
 
-using namespace Magnum;
+using Object3D = SceneGraph::Object<SceneGraph::MatrixTransformation3D>;
+using Scene3D = SceneGraph::Scene<SceneGraph::MatrixTransformation3D>;
 
 class FEMObject3D : public Object3D, SceneGraph::Drawable3D {
 public:
     explicit FEMObject3D(PhongIdShader& phongShader,
                          VertexShader& vertexShader,
-                         const std::vector<Vector3>& vertices,
-                         const std::vector<UnsignedInt>& boundaryIndices,
-                         const std::vector<std::vector<UnsignedInt>>& tetrahedronIndices,
+                         const Mesh3D& mesh,
                          Object3D& parent,
                          SceneGraph::DrawableGroup3D& drawables);
 
@@ -35,8 +35,6 @@ public:
 
     std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> solve();
 
-    const std::vector<std::vector<UnsignedInt>>& getTetrahedronIndices() const;
-    const std::vector<Vector3>& getVertices() const;
     void setTetrahedronColors(const std::vector<Vector3>& colors);
     void setVertexColors(const std::vector<Vector3>& colors);
 
@@ -61,10 +59,8 @@ private:
     std::vector<GL::Buffer> _vertexMarkerIndexBuffer;
     std::vector<GL::Mesh> _vertexMarkerMesh;
 
-    std::vector<Vector3> _meshVertices;
+    Mesh3D _mesh;
     std::vector<UnsignedInt> _triangleIndices;
-    std::vector<std::vector<UnsignedInt>> _tetrahedronIndices;
-    std::vector<UnsignedInt> _boundaryIndices;
 };
 
 #endif //FEM3D_FEMOBJECT_H

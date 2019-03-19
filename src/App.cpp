@@ -108,20 +108,16 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
     {
         const auto fname = fnames[i];
         const auto str = rs.get(fname);
-        std::vector<Vector3> vertices;
-        std::vector<std::vector<UnsignedInt>> meshElementIndices;
-        std::vector<UnsignedInt> boundaryIndices;
-        UnsignedInt dim;
+        Mesh3D mesh;
 
-        if (parseTtg(str, vertices, meshElementIndices, boundaryIndices, dim) && dim == 3)
+        if (parseTtg(str, mesh))
         {
-            const AABB<Vector3> aabb = computeAABB(vertices);
+            const AABB<Vector3> aabb = computeAABB(mesh.vertices);
             const Vector3 origin = 0.5f*(aabb.max - aabb.min) + aabb.min;
-            MeshTools::transformPointsInPlace(Matrix4::translation(-origin), vertices);
+            MeshTools::transformPointsInPlace(Matrix4::translation(-origin), mesh.vertices);
 
             _objects.push_back(
-                    std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, vertices,
-                                                  boundaryIndices, meshElementIndices, _scene, _drawableGroups[i]));
+                    std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));
         }
         else
         {

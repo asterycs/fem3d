@@ -1,13 +1,12 @@
 #include "Util.h"
 
+#include "Typedefs.h"
+
 #include <array>
 #include <sstream>
 
 bool parseTtg(const std::string& input,
-              std::vector<Vector3>& outVertices,
-              std::vector<std::vector<UnsignedInt>>& outMeshElementIndices,
-              std::vector<UnsignedInt>& outboundaryIndices,
-              UnsignedInt& outDim)
+              Mesh3D& outMesh)
 {
     std::vector<Vector3> vertices;
     std::vector<std::vector<UnsignedInt>> meshElementIndices;
@@ -27,6 +26,10 @@ bool parseTtg(const std::string& input,
         return false;
 
     stream >> dim;
+
+    // Only 3D meshes supported atm.
+    if (dim != 3)
+        return false;
 
     // Second line should have vertex count
     stream >> c;
@@ -48,7 +51,7 @@ bool parseTtg(const std::string& input,
 
     stream >> boundaryCount;
 
-    Debug{} << "Reading ttg with " << vertexCount << " vertices, " << meshElementCount << " elements" << "and "
+    Magnum::Debug{} << "Reading ttg with " << vertexCount << " vertices, " << meshElementCount << " elements" << "and "
             << boundaryCount << " boundary nodes.";
 
     // Read vertex coordinates
@@ -93,10 +96,7 @@ bool parseTtg(const std::string& input,
         boundaryIndices.push_back(ei);
     }
 
-    outVertices = vertices;
-    outMeshElementIndices = meshElementIndices;
-    outDim = dim;
-    outboundaryIndices = boundaryIndices;
+    outMesh = Mesh3D(std::move(vertices), std::move(meshElementIndices), std::move(boundaryIndices));
 
     return true;
 }
@@ -207,7 +207,7 @@ std::vector<Vector2i> bresenhamL(const Vector2i a, const Vector2i b)
     std::vector<Vector2i> output;
 
     Vector2i delta = b - a;
-    Int ys = Math::sign(delta.y());
+    Int ys = Magnum::Math::sign(delta.y());
     delta.y() = abs(delta.y());
 
     Int err = 2 * delta.y() - delta.x();
@@ -234,7 +234,7 @@ std::vector<Vector2i> bresenhamH(const Vector2i a, const Vector2i b)
     std::vector<Vector2i> output;
 
     Vector2i delta = b - a;
-    Int xs = Math::sign(delta.x());
+    Int xs = Magnum::Math::sign(delta.x());
     delta.x() = abs(delta.x());
 
     Int err = 2 * delta.x() - delta.y();

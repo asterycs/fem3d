@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-using namespace Magnum;
-
 template <typename V>
 struct AABB
 {
@@ -19,20 +17,29 @@ struct AABB
   V max;
 };
 
-bool parseTtg(const std::string& input, std::vector<Vector3>& outVertices,
-              std::vector<std::vector<UnsignedInt>>& outMeshElementIndices,
-              std::vector<UnsignedInt>& outboundaryIndices, UnsignedInt& outDim);
-bool createUVIndices(const std::vector<UnsignedInt>& triangleIndices, std::vector<Vector2>& outUv,
-                     std::vector<UnsignedInt>& outUvIndices);
+struct Mesh3D
+{
+  std::vector<Magnum::Vector3> vertices;
+  std::vector<std::vector<Magnum::UnsignedInt>> elementIndices;
+  std::vector<Magnum::UnsignedInt> boundaryIndices;
 
-std::vector<UnsignedInt> extractTriangleIndices(const std::vector<std::vector<UnsignedInt>>& tetrahedronIndices);
+  Mesh3D() = default;
+  Mesh3D(const std::vector<Magnum::Vector3>& vertices, const std::vector<std::vector<Magnum::UnsignedInt>>& elementIndices, const std::vector<Magnum::UnsignedInt>& boundaryIndices) : vertices{vertices}, elementIndices{elementIndices}, boundaryIndices{boundaryIndices} {};
+  Mesh3D(const std::vector<Magnum::Vector3>&& vertices, const std::vector<std::vector<Magnum::UnsignedInt>>&& elementIndices, const std::vector<Magnum::UnsignedInt>&& boundaryIndices) : vertices{vertices}, elementIndices{elementIndices}, boundaryIndices{boundaryIndices} {};
+};
 
-std::vector<Vector2i> bresenham(const Vector2i a, const Vector2i b);
+bool parseTtg(const std::string& input, Mesh3D& outMesh);
+bool createUVIndices(const std::vector<Magnum::UnsignedInt>& triangleIndices, std::vector<Magnum::Vector2>& outUv,
+                     std::vector<Magnum::UnsignedInt>& outUvIndices);
+
+std::vector<Magnum::UnsignedInt> extractTriangleIndices(const std::vector<std::vector<Magnum::UnsignedInt>>& tetrahedronIndices);
+
+std::vector<Magnum::Vector2i> bresenham(const Magnum::Vector2i a, const Magnum::Vector2i b);
 
 
-Vector3 valToColor(const Float val);
-std::vector<Vector3> valuesToHeatGradient(const std::vector<Float>& vals);
-std::vector<Float> computeNorm(const std::vector<Eigen::Vector3f>& input);
+Magnum::Vector3 valToColor(const Magnum::Float val);
+std::vector<Magnum::Vector3> valuesToHeatGradient(const std::vector<Magnum::Float>& vals);
+std::vector<Magnum::Float> computeNorm(const std::vector<Eigen::Vector3f>& input);
 
 template <class V>
 AABB<V> computeAABB(const std::vector<V>& elements)
@@ -42,22 +49,22 @@ AABB<V> computeAABB(const std::vector<V>& elements)
 
     for (auto element : elements)
     {
-        min = Math::min(min, element);
-        max = Math::max(max, element);
+        min = Magnum::Math::min(min, element);
+        max = Magnum::Math::max(max, element);
     }
 
     return AABB<V>{min, max};
 }
 
 template<typename T>
-std::vector<T> repeat(const std::vector<T>& values, const UnsignedInt times)
+std::vector<T> repeat(const std::vector<T>& values, const Magnum::UnsignedInt times)
 {
     std::vector<T> res;
     res.reserve(values.size() * times);
 
     for (const T value : values)
     {
-        for (UnsignedInt j = 0; j < times; ++j)
+        for (Magnum::UnsignedInt j = 0; j < times; ++j)
             res.push_back(value);
     }
 
@@ -65,12 +72,12 @@ std::vector<T> repeat(const std::vector<T>& values, const UnsignedInt times)
 }
 
 template<typename T>
-std::vector<T> expand(const std::vector<T>& values, std::vector<UnsignedInt>& indices)
+std::vector<T> expand(const std::vector<T>& values, std::vector<Magnum::UnsignedInt>& indices)
 {
     std::vector<T> out;
 
     std::transform(indices.begin(), indices.end(), std::back_inserter(out),
-                   [&](const UnsignedInt index)
+                   [&](const Magnum::UnsignedInt index)
                    {
                      return values[index];
                    });
@@ -78,6 +85,6 @@ std::vector<T> expand(const std::vector<T>& values, std::vector<UnsignedInt>& in
     return out;
 }
 
-Eigen::Vector3f toEigen(const Vector3& v);
+Eigen::Vector3f toEigen(const Magnum::Vector3& v);
 
 #endif //FEM3D_UTIL_H

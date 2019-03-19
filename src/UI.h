@@ -55,6 +55,7 @@ private:
     unsigned int _currentScene;
     bool _showGradient;
     bool _showVertexMarkers;
+    bool _showAbout;
 
     bool _inPinnedVertexLassoMode;
     //bool _inLoadVertexEditMode;
