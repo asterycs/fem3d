@@ -119,7 +119,28 @@ Now using the last line we can write
 \left( \left(a\left(\|\nabla u_0 \|_2^2\right)\mathbf{I}+2a'(\|\nabla u_0\|_2^2)\cdot \nabla u_0 \nabla u_0^T\right)\nabla \varepsilon,\nabla v\right) &= L(v)-G(u_0,v) \\
 \end{align*}
 Which can now be solved as a linear FEM problem w.r.t to $\varepsilon$.
+\begin{equation}
+\left( \left(a\left(\|\nabla u_0 \|_2^2\right)\mathbf{I}+2a'(\|\nabla u_0\|_2^2)\cdot \nabla u_0 \nabla u_0^T\right)\nabla \varepsilon,\nabla \varphi_i \right) = L(v)-G(u_0,\varphi_i) \\
+\end{equation}
+For all $i=1\ldots N$
 
+\subsection*{Testing}
+One way to asses our solver is to find a nonlinear problem for which we can find a exact answer. 
+Consider the strong form equivalent of the weak form presented above:
+
+\begin{equation*}
+a\left(\|\nabla u \|_2^2\right)\Delta u = -f 
+\end{equation*}
+letting
+\begin{equation*}
+	f = \sqrt{8}\pi \sin(\pi x)\sin(\pi y)  
+\end{equation*}
+yields the solution
+\begin{equation*}
+	u = \frac{\sqrt{2}}{\pi} \sin(\pi x)\sin(\pi y)
+\end{equation*}
+
+Our solver should be able to reach this solution with a good enough initial guess.
 
 \clearpage
 %\section*{Appendix A}
