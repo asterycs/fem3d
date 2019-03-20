@@ -10,3 +10,4 @@ release
 *.log
 *.pdf
 *.synctex.gz
+*~

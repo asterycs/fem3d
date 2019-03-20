@@ -31,7 +31,7 @@ kk = zeros(9,n_triangles);
 
 mind = 1;
 
-[~,dU,~] = eval2Dtri(mesh,x,X);
+[U,dU,~] = eval2Dtri(mesh,x,X);
 dUNorm2 = sum((dU{1}.^2+dU{2}.^2).^2*W.*abs(detA));
 
 for i=1:3
@@ -40,17 +40,14 @@ for i=1:3
     dLi{1} = Px*dL{i};
     dLi{2} = Py*dL{i};  
     
-    ff(i,:) = linf(Li,dLi,gX)*W.*abs(detA);
+    ff(i,:) = linf(Li,dLi,gX)*W.*abs(detA) - G(U,Li,dU,dLi,gX,dUNorm2)*W.*abs(detA);
     
     for j=1:3
         Lj = repmat(L{j},n_triangles,1);
         
         dLj{1} = Px*dL{j};
-        dLj{2} = Py*dL{j};
-        
-        ff(i,:) = ff(i,:) - (G(Lj,Li,dLj,dLi,gX,dUNorm2)*W.*abs(detA))';
-                       
-        % SIMPLIFIED HERE !!!!
+        dLj{2} = Py*dL{j};                       
+
         kk(mind,:) = bilin(Lj,Li,dLj,dLi,gX,dU,dUNorm2)*W.*abs(detA);
         mind = mind+1;
     end

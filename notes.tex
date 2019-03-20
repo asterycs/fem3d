@@ -86,7 +86,7 @@ We introduce the Fréchet derivative of $DG(u_0,v)$:
 DG(u_0,v)(\varepsilon) &= \lim_{h\rightarrow 0} \frac{ \left(a\left(\|\nabla (u_0+h\varepsilon)\|_2^2\right)\left(\nabla(u_0+h\varepsilon)\right),\nabla v\right) - \left(a\left(\|\nabla u_0\|_2^2\right) \nabla u_0 ,\nabla v\right)}{h} \\
 &= \lim_{h\rightarrow 0} \frac{ \left(a\left(\|\nabla u_0+\nabla h\varepsilon\|_2^2\right)\left(\nabla u_0+h\nabla\varepsilon\right),\nabla v\right) - \left(a\left(\|\nabla u_0\|_2^2\right) \nabla u_0 ,\nabla v\right)}{h}
 \end{align*}
-Here we use $a(\|\nabla u_0+h\nabla \varepsilon\|_2^2)\approx a(\|\nabla u_0\|_2^2+2ha'(\|\nabla u_0\|_2^2)\cdot \nabla u_0^T\nabla \varepsilon$ and get
+Here we use $a(\|\nabla u_0+h\nabla \varepsilon\|_2^2)\approx a(\|\nabla u_0\|_2^2)+2ha'(\|\nabla u_0\|_2^2)\cdot \nabla u_0^T\nabla \varepsilon$ and get
 \begin{align*}
 DG(u_0,v)(\varepsilon) &\approx \lim_{h\rightarrow 0} \frac{\left( (a\left(\|\nabla u_0 \|_2^2\right)+2ha'(\|\nabla u_0\|_2^2)\cdot \nabla u_0^T\nabla \varepsilon) \left(\nabla u_0+h\nabla \varepsilon\right),\nabla v\right) - \left(a\left(\|\nabla u_0\|_2^2\right) \nabla u_0 ,\nabla v\right)}{h} \\
 %
