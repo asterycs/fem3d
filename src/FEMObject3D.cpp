@@ -12,6 +12,7 @@
 #include <Magnum/Trade/MeshData3D.h>
 
 #include "Util.h"
+#include "FEMTaskLinear3D.h"
 
 #include <cassert>
 
@@ -178,7 +179,7 @@ void FEMObject3D::drawVertexMarkers(const bool draw)
 
 std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 {
-    FEMTask3D task(_mesh.getVertices(), _mesh.getElementIndices(), _pinnedVertexIds);
+    FEMTaskLinear3D task(_mesh, _pinnedVertexIds, std::make_unique<BilinLaplace>(), std::make_unique<LinLaplace>());
     task.initialize();
     Eigen::VectorXf solution = task.solve();
 

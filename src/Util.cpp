@@ -1,6 +1,7 @@
 #include "Util.h"
 
 #include "Typedefs.h"
+#include "MeshData.h"
 
 #include <array>
 #include <sstream>

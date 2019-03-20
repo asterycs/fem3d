@@ -1,6 +1,6 @@
 clear all; close all;
 
-mesh = make_rect_mesh(3);
+mesh = make_rect_mesh(5);
 
 % Compute initial guess
 bilin_laplacian = @(U,V,dU,dV,gX)(dU{1}.*dV{1} + dU{2}.*dV{2});
@@ -16,11 +16,12 @@ x = zeros( size(mesh.p,2),1);
 x(iind) = A(iind,iind)\b(iind);
 
 % ignore initial guess (for testing)
-%x(iind) = ones(size(iind));
+x(iind) = rand(size(iind))-0.5;
 
 % Set up
 gamma = 1;
 maxiter = 1000;
+min_epsilon = 1e-10;
 epsnorms = zeros(maxiter,1);
 energies = zeros(maxiter,1);
 [~, ~, ~, ~, detA, ~, ~] = affine_tri(mesh);
@@ -47,15 +48,27 @@ for i=1:maxiter
     J = energy(G_wrapped,L,mesh,x);
     energies(i) = J;
     
+    if E_l2 < min_epsilon
+        close(5);
+        break;
+    end
+    
+    figure(5);
+    clf;
+    [U,dU,gX] = eval2Dtri(mesh,x,[0 1 0 ; 0 0 1]);
+    patch(gX{1}',gX{2}',U',U','FaceColor','None','EdgeColor','r');
+    view(20,20);
+    drawnow;
+    
     x = x + gamma*epsilon;
 end
 
 [U,dU,gX] = eval2Dtri(mesh,x,[0 1 0 ; 0 0 1]);
 figure;
 hold on;
-patch(gX{1}',gX{2}',U',U','FaceColor','None');
+patch(gX{1}',gX{2}',U',U','FaceColor','None','EdgeColor','r');
 [X,Y] = meshgrid(linspace(0,1,100));
-surf(X,Y,sqrt(2)/pi*sin(pi*X).*sin(pi*Y),'FaceColor','None');
+surf(X,Y,sqrt(2)/pi*sin(pi*X).*sin(pi*Y),'FaceColor','None','EdgeColor','b');
 view(20,20);
 movegui('northwest');
 
@@ -67,7 +80,7 @@ ylabel('||\epsilon|| (1)');
 movegui('north');
 
 figure;
-semilogx(energies);
+semilogy(energies);
 grid on;
 xlabel('Iteration (1)');
 ylabel('J (1)');

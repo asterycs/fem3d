@@ -8,42 +8,78 @@
 
 #include "MeshData.h"
 #include "Typedefs.h"
+#include "Util.h"
 
 #include <set>
 #include <vector>
+#include <memory>
 
-struct PointsVectorized3D {
-  Eigen::MatrixXf x;
-  Eigen::MatrixXf y;
-  Eigen::MatrixXf z;
+struct BasisValuesVectorized {
+  ScalarVectorized3D _1;
+  ScalarVectorized3D _2;
+  ScalarVectorized3D _3;
+  ScalarVectorized3D _4;
 
-  explicit PointsVectorized3D(const Eigen::MatrixXf& x, const Eigen::MatrixXf& y, const Eigen::MatrixXf& z)
-          :x{x}, y{y}, z{z}
+  explicit BasisValuesVectorized(const ScalarVectorized3D& _1, const ScalarVectorized3D& _2,
+                                 const ScalarVectorized3D& _3, const ScalarVectorized3D& _4)
+          :_1{ScalarVectorized3D{_1}}, _2{ScalarVectorized3D{_2}}, _3{ScalarVectorized3D{_3}},
+           _4{ScalarVectorized3D{_4}}
+  { };
+
+  explicit BasisValuesVectorized(ScalarVectorized3D&& _1, ScalarVectorized3D&& _2, ScalarVectorized3D&& _3,
+                                 ScalarVectorized3D&& _4)
+          :_1{std::move(_1)}, _2{std::move(_2)}, _3{std::move(_3)}, _4{std::move(_4)}
   { };
 };
 
-// Strong typedef emulation. Not sure if needed.
-struct ValuesVectorized3D : PointsVectorized3D {
-  explicit ValuesVectorized3D(const Eigen::MatrixXf& x, const Eigen::MatrixXf& y, const Eigen::MatrixXf& z)
-          :PointsVectorized3D(x, y, z)
+struct DBasisValuesVectorized {
+  VectorVectorized3D _1;
+  VectorVectorized3D _2;
+  VectorVectorized3D _3;
+  VectorVectorized3D _4;
+
+  explicit DBasisValuesVectorized(const VectorVectorized3D& _1, const VectorVectorized3D& _2, const VectorVectorized3D& _3,
+                                  const VectorVectorized3D& _4)
+          :_1{VectorVectorized3D{_1}}, _2{VectorVectorized3D{_2}}, _3{VectorVectorized3D{_3}}, _4{VectorVectorized3D{_4}}
+  {};
+  explicit DBasisValuesVectorized(VectorVectorized3D&& _1, VectorVectorized3D&& _2, VectorVectorized3D&& _3,
+                                  VectorVectorized3D&& _4)
+          :_1{std::move(_1)}, _2{std::move(_2)}, _3{std::move(_3)}, _4{std::move(_4)}
   { };
 };
 
-class BilinearForm {
-public:
-    virtual Eigen::MatrixXf operator()(const ValuesVectorized3D& U, const ValuesVectorized3D& V, const ValuesVectorized3D& dU,
-                       const ValuesVectorized3D& dV, const PointsVectorized3D& points) = 0;
+struct BilinearForm {
+    virtual ScalarVectorized3D operator()(const ScalarVectorized3D& U, const ScalarVectorized3D& V,
+                                       const VectorVectorized3D& dU,
+                                       const VectorVectorized3D& dV, const PointsVectorized3D& points) = 0;
 };
 
-class LinearForm {
-public:
-    virtual Eigen::MatrixXf operator()(const ValuesVectorized3D& V, const ValuesVectorized3D& dV, const PointsVectorized3D& points) = 0;
+struct BilinLaplace : BilinearForm {
+  ScalarVectorized3D operator()(const ScalarVectorized3D& /*U*/, const ScalarVectorized3D& /*V*/,
+                                     const VectorVectorized3D& dU,
+                                     const VectorVectorized3D& dV, const PointsVectorized3D& /*p*/) override
+  {
+    return dU._x.array() * dV._x.array() + dU._y.array() * dV._y.array() + dU._z.array() * dV._z.array();
+  }
+};
+
+struct LinearForm {
+    virtual ScalarVectorized3D operator()(const ScalarVectorized3D& V, const VectorVectorized3D& dV,
+                                       const PointsVectorized3D& points) = 0;
+};
+
+struct LinLaplace : LinearForm {
+  ScalarVectorized3D operator()(const ScalarVectorized3D& V,
+                             const VectorVectorized3D& /*dV*/, const PointsVectorized3D& /*p*/) override
+  {
+    return V;
+  }
 };
 
 class FEMTaskLinear3D {
 public:
     explicit FEMTaskLinear3D(const MeshData& mesh, const std::set<UnsignedInt>& pinnedVertexIds,
-                             const BilinearForm& bilin, const LinearForm& linf);
+                             std::unique_ptr<BilinearForm> bilin, std::unique_ptr<LinearForm> linf);
 
     void initialize();
     Eigen::VectorXf solve() const;
@@ -52,13 +88,14 @@ public:
     std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> evaluateSolution(const Eigen::VectorXf& solution) const;
 
 private:
-    Eigen::Vector4f evaluateBasis(const Eigen::Vector3f& x) const;
-    Eigen::MatrixXf evaluateDBasis(const Eigen::Vector3f& x) const;
-    std::pair<Eigen::Matrix3f, Eigen::Vector3f> computeAffine(const std::vector<UnsignedInt>& elemVertexIndices) const;
+    BasisValuesVectorized evaluateReferenceBasis(const Eigen::MatrixXf& x) const;
+    DBasisValuesVectorized evaluateReferenceDBasis(const Eigen::MatrixXf& x) const;
 
-    std::vector<Vector3> _vertices;
-    std::vector<std::vector<UnsignedInt>> _tetrahedronIndices;
-    std::set<UnsignedInt> _pinnedVertexIds;
+    const MeshData& _mesh;
+    const std::set<UnsignedInt>& _pinnedVertexIds;
+
+    std::unique_ptr<BilinearForm> _bilin;
+    std::unique_ptr<LinearForm> _linf;
 
     Eigen::SparseMatrix<Float> _A;
     Eigen::SparseVector<Float> _b;

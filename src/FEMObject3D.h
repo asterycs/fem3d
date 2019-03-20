@@ -15,6 +15,7 @@
 #include "Typedefs.h"
 #include "FEMTask3D.h"
 #include "Util.h"
+#include "MeshData.h"
 
 using Object3D = Magnum::SceneGraph::Object<Magnum::SceneGraph::MatrixTransformation3D>;
 using Scene3D = Magnum::SceneGraph::Scene<Magnum::SceneGraph::MatrixTransformation3D>;

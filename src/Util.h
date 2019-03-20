@@ -7,10 +7,10 @@
 
 #include "Eigen/Dense"
 
-#include "MeshData.h"
-
 #include <string>
 #include <vector>
+
+class MeshData;
 
 template<typename V>
 struct AABB {
@@ -76,5 +76,39 @@ std::vector<T> expand(const std::vector<T>& values, std::vector<Magnum::Unsigned
 }
 
 Eigen::Vector3f toEigen(const Magnum::Vector3& v);
+
+using ScalarVectorized3D = Eigen::MatrixXf;
+struct VectorVectorized3D {
+  ScalarVectorized3D _x;
+  ScalarVectorized3D _y;
+  ScalarVectorized3D _z;
+
+  explicit VectorVectorized3D(const ScalarVectorized3D& x, const ScalarVectorized3D& y, const ScalarVectorized3D& z)
+          : VectorVectorized3D(ScalarVectorized3D{x}, ScalarVectorized3D{y}, ScalarVectorized3D{z})
+  { };
+
+  explicit VectorVectorized3D(ScalarVectorized3D&& x, ScalarVectorized3D&& y, ScalarVectorized3D&& z)
+          :_x{std::move(x)}, _y{std::move(y)}, _z{std::move(z)}
+  { };
+
+  VectorVectorized3D(const VectorVectorized3D& other)
+          : VectorVectorized3D{ScalarVectorized3D{other._x}, ScalarVectorized3D{other._y}, ScalarVectorized3D{other._z}}
+  { }
+
+  VectorVectorized3D(VectorVectorized3D&& other)
+          :_x{std::move(other._x)}, _y{std::move(other._y)}, _z{std::move(other._z)}
+  { }
+};
+
+// Strong typedef emulation. Not sure if this is a good idea.
+struct PointsVectorized3D : VectorVectorized3D {
+  explicit PointsVectorized3D(const ScalarVectorized3D& x, const ScalarVectorized3D& y, const ScalarVectorized3D& z)
+          :PointsVectorized3D(ScalarVectorized3D{x}, ScalarVectorized3D{y}, ScalarVectorized3D{z})
+  { };
+
+  explicit PointsVectorized3D(ScalarVectorized3D&& x, ScalarVectorized3D&& y, ScalarVectorized3D&& z)
+          :VectorVectorized3D(std::move(x), std::move(y), std::move(z))
+  { };
+};
 
 #endif //FEM3D_UTIL_H
