@@ -120,12 +120,12 @@ Now using the last line we can write
 \end{align*}
 Which can now be solved as a linear FEM problem w.r.t to $\varepsilon$.
 \begin{equation}
-\left( \left(a\left(\|\nabla u_0 \|_2^2\right)\mathbf{I}+2a'(\|\nabla u_0\|_2^2)\cdot \nabla u_0 \nabla u_0^T\right)\nabla \varepsilon,\nabla \varphi_i \right) = L(v)-G(u_0,\varphi_i) \\
+\left( \left(a\left(\|\nabla u_0 \|_2^2\right)\mathbf{I}+2a'(\|\nabla u_0\|_2^2)\cdot \nabla u_0 \nabla u_0^T\right)\nabla \varepsilon,\nabla \varphi_i \right) = L(\varphi_i)-G(u_0,\varphi_i) \\
 \end{equation}
 For all $i=1\ldots N$
 
 \subsection*{Testing}
-One way to asses our solver is to find a nonlinear problem for which we can find a exact answer. 
+One way to asses our solver is to find a nonlinear problem for which we can find an exact answer. 
 Consider the strong form equivalent of the weak form presented above:
 
 \begin{equation*}
