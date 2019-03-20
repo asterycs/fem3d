@@ -22,7 +22,7 @@ public:
              const std::vector<std::vector<Magnum::UnsignedInt>>&& elementIndices,
              const std::vector<Magnum::UnsignedInt>&& boundaryIndices);
 
-    void center();
+    void centerToOrigin();
 
     const std::vector<Magnum::UnsignedInt>& getBoundaryIndices() const;
     const std::vector<Magnum::Vector3>& getVertices() const;
@@ -32,17 +32,16 @@ public:
     // referencePoints is here a 3xN matrix.
     PointsVectorized3D referencePointsToGlobal(const Eigen::MatrixXf& referencePoints) const;
 
-private:
-    void initAffine();
-
-    std::pair<Eigen::Matrix3f, Eigen::Vector3f> computeAffine(const std::vector<Magnum::UnsignedInt>& elemVertexIndices) const;
-
     // Affine transformations from reference tetrahedron
     // TODO: Wrap these into a struct or something
     Eigen::MatrixXf _Bkx, _Bky, _Bkz; // Bk
     Eigen::MatrixXf _Bkitx, _Bkity, _Bkitz; // Inverse transpose of Bk
     Eigen::VectorXf _bkx, _bky, _bkz; // bk
-    Float _detBk;
+    Eigen::ArrayXf _detBk;
+private:
+    void initAffine();
+
+    std::pair<Eigen::Matrix3f, Eigen::Vector3f> computeAffine(const std::vector<Magnum::UnsignedInt>& elemVertexIndices) const;
 
     Magnum::UnsignedInt _dimensions;
     std::vector<Magnum::Vector3> _vertices;

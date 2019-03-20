@@ -111,7 +111,7 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
 
         if (parseTtg(str, mesh) && mesh.getDimensions() == 3)
         {
-            mesh.center();
+            mesh.centerToOrigin();
 
             _objects.push_back(
                     std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));

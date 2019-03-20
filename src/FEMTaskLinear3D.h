@@ -20,12 +20,12 @@ public:
             :Eigen::Matrix<float, 4, Eigen::Dynamic>(4, points)
     { }
 
-    RowXpr operator()(const std::size_t basisIndex)
+    RowXpr basis(const std::size_t basisIndex)
     {
         return row(basisIndex);
     }
 
-    ConstRowXpr operator()(const std::size_t basisIndex) const
+    ConstRowXpr basis(const std::size_t basisIndex) const
     {
         return row(basisIndex);
     }
@@ -33,24 +33,29 @@ public:
 
 class DBasisValuesVectorized {
 public:
-    explicit DBasisValuesVectorized(const VectorVectorized3D& _1, const VectorVectorized3D& _2,
-                                    const VectorVectorized3D& _3,
-                                    const VectorVectorized3D& _4)
-            :_values{{VectorVectorized3D{_1}, VectorVectorized3D{_2}, VectorVectorized3D{_3}, VectorVectorized3D{_4}}}
+    explicit DBasisValuesVectorized(const Eigen::MatrixXf& _1, const Eigen::MatrixXf& _2,
+                                    const Eigen::MatrixXf& _3,
+                                    const Eigen::MatrixXf& _4)
+            :_values{{Eigen::MatrixXf{_1}, Eigen::MatrixXf{_2}, Eigen::MatrixXf{_3}, Eigen::MatrixXf{_4}}}
     { };
 
-    explicit DBasisValuesVectorized(VectorVectorized3D&& _1, VectorVectorized3D&& _2, VectorVectorized3D&& _3,
-                                    VectorVectorized3D&& _4)
+    explicit DBasisValuesVectorized(Eigen::MatrixXf&& _1, Eigen::MatrixXf&& _2, Eigen::MatrixXf&& _3,
+                                    Eigen::MatrixXf&& _4)
             :_values{{std::move(_1), std::move(_2), std::move(_3), std::move(_4)}}
     { };
 
-    const VectorVectorized3D& operator()(const std::size_t basisIndex) const
+    ScalarVectorized matmulBasis(const Eigen::MatrixXf& mat, const std::size_t basisIndex) const
+    {
+        return mat * _values[basisIndex];
+    }
+
+    const Eigen::MatrixXf& basis(const std::size_t basisIndex) const
     {
         return _values[basisIndex];
     }
 
 private:
-    std::array<VectorVectorized3D, 4> _values;
+    std::array<Eigen::MatrixXf, 4> _values;
 };
 
 struct BilinearForm {

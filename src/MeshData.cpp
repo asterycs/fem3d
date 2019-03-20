@@ -23,17 +23,21 @@ MeshData::MeshData(const Magnum::UnsignedInt dimensions, const std::vector<Magnu
 
 void MeshData::initAffine()
 {
-    _Bkx = Eigen::MatrixXf(_elementIndices.size(), 3);
-    _Bky = Eigen::MatrixXf(_elementIndices.size(), 3);
-    _Bkz = Eigen::MatrixXf(_elementIndices.size(), 3);
+    const std::size_t n_elements = _elementIndices.size();
 
-    _Bkitx = Eigen::MatrixXf(_elementIndices.size(), 3);
-    _Bkity = Eigen::MatrixXf(_elementIndices.size(), 3);
-    _Bkitz = Eigen::MatrixXf(_elementIndices.size(), 3);
+    _Bkx = Eigen::MatrixXf(n_elements, 3);
+    _Bky = Eigen::MatrixXf(n_elements, 3);
+    _Bkz = Eigen::MatrixXf(n_elements, 3);
 
-    _bkx = Eigen::VectorXf(_elementIndices.size());
-    _bky = Eigen::VectorXf(_elementIndices.size());
-    _bkz = Eigen::VectorXf(_elementIndices.size());
+    _Bkitx = Eigen::MatrixXf(n_elements, 3);
+    _Bkity = Eigen::MatrixXf(n_elements, 3);
+    _Bkitz = Eigen::MatrixXf(n_elements, 3);
+
+    _bkx = Eigen::VectorXf(n_elements);
+    _bky = Eigen::VectorXf(n_elements);
+    _bkz = Eigen::VectorXf(n_elements);
+
+    _detBk = Eigen::ArrayXf(n_elements);
 
     UnsignedInt currentRow = 0;
     for (auto elem : _elementIndices)
@@ -52,6 +56,8 @@ void MeshData::initAffine()
         _bkx(currentRow) = bk(0);
         _bky(currentRow) = bk(1);
         _bkz(currentRow) = bk(2);
+
+        _detBk(currentRow) = Bk.determinant();
 
         ++currentRow;
     }
@@ -91,7 +97,7 @@ const std::vector<std::vector<UnsignedInt>>& MeshData::getElementIndices() const
     return _elementIndices;
 }
 
-void MeshData::center()
+void MeshData::centerToOrigin()
 {
     const AABB<Vector3> aabb = computeAABB(_vertices);
     const Vector3 origin = 0.5f*(aabb.max - aabb.min) + aabb.min;
