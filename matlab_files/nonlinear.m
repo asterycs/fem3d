@@ -16,10 +16,10 @@ x = zeros( size(mesh.p,2),1);
 x(iind) = A(iind,iind)\b(iind);
 
 % ignore initial guess (for testing)
-x(iind) = ones(size(iind));
+%x(iind) = ones(size(iind));
 
 % Set up
-gamma = 0.1;
+gamma = 1;
 maxiter = 1000;
 epsnorms = zeros(maxiter,1);
 energies = zeros(maxiter,1);

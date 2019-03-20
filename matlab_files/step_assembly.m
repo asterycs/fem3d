@@ -24,7 +24,6 @@ dL{3} = [ zeros(1,n_quadrature_points);  ones(1,n_quadrature_points) ];
 
 
 % define arrays for matrix entries.
-ffind = [];
 ff = zeros(3,n_triangles);
 
 kk = zeros(9,n_triangles);
@@ -32,7 +31,7 @@ kk = zeros(9,n_triangles);
 mind = 1;
 
 [U,dU,~] = eval2Dtri(mesh,x,X);
-dUNorm2 = sum((dU{1}.^2+dU{2}.^2).^2*W.*abs(detA));
+dUNorm2 = sum((dU{1}.^2+dU{2}.^2)*W.*abs(detA));
 
 for i=1:3
     Li = repmat(L{i},n_triangles,1);
