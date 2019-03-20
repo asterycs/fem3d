@@ -181,13 +181,13 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 {
     FEMTaskLinear3D task(_mesh, _pinnedVertexIds, std::make_unique<BilinLaplace>(), std::make_unique<LinLaplace>());
     task.initialize();
-    Eigen::VectorXf solution = task.solve();
+    /*Eigen::VectorXf solution = task.solve();
 
     if (solution.size() > 0)
     {
         return task.evaluateSolution(solution);
     }
-    else
+    else*/
         return std::make_pair<std::vector<Float>, std::vector<Eigen::Vector3f>>({}, {});
 }
 

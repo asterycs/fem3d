@@ -14,65 +14,70 @@
 #include <vector>
 #include <memory>
 
-struct BasisValuesVectorized {
-  ScalarVectorized3D _1;
-  ScalarVectorized3D _2;
-  ScalarVectorized3D _3;
-  ScalarVectorized3D _4;
+class BasisValuesVectorized : Eigen::Matrix<float, 4, Eigen::Dynamic> {
+public:
+    BasisValuesVectorized(const std::size_t points)
+            :Eigen::Matrix<float, 4, Eigen::Dynamic>(4, points)
+    { }
 
-  explicit BasisValuesVectorized(const ScalarVectorized3D& _1, const ScalarVectorized3D& _2,
-                                 const ScalarVectorized3D& _3, const ScalarVectorized3D& _4)
-          :_1{ScalarVectorized3D{_1}}, _2{ScalarVectorized3D{_2}}, _3{ScalarVectorized3D{_3}},
-           _4{ScalarVectorized3D{_4}}
-  { };
+    RowXpr operator()(const std::size_t basisIndex)
+    {
+        return row(basisIndex);
+    }
 
-  explicit BasisValuesVectorized(ScalarVectorized3D&& _1, ScalarVectorized3D&& _2, ScalarVectorized3D&& _3,
-                                 ScalarVectorized3D&& _4)
-          :_1{std::move(_1)}, _2{std::move(_2)}, _3{std::move(_3)}, _4{std::move(_4)}
-  { };
+    ConstRowXpr operator()(const std::size_t basisIndex) const
+    {
+        return row(basisIndex);
+    }
 };
 
-struct DBasisValuesVectorized {
-  VectorVectorized3D _1;
-  VectorVectorized3D _2;
-  VectorVectorized3D _3;
-  VectorVectorized3D _4;
+class DBasisValuesVectorized {
+public:
+    explicit DBasisValuesVectorized(const VectorVectorized3D& _1, const VectorVectorized3D& _2,
+                                    const VectorVectorized3D& _3,
+                                    const VectorVectorized3D& _4)
+            :_values{{VectorVectorized3D{_1}, VectorVectorized3D{_2}, VectorVectorized3D{_3}, VectorVectorized3D{_4}}}
+    { };
 
-  explicit DBasisValuesVectorized(const VectorVectorized3D& _1, const VectorVectorized3D& _2, const VectorVectorized3D& _3,
-                                  const VectorVectorized3D& _4)
-          :_1{VectorVectorized3D{_1}}, _2{VectorVectorized3D{_2}}, _3{VectorVectorized3D{_3}}, _4{VectorVectorized3D{_4}}
-  {};
-  explicit DBasisValuesVectorized(VectorVectorized3D&& _1, VectorVectorized3D&& _2, VectorVectorized3D&& _3,
-                                  VectorVectorized3D&& _4)
-          :_1{std::move(_1)}, _2{std::move(_2)}, _3{std::move(_3)}, _4{std::move(_4)}
-  { };
+    explicit DBasisValuesVectorized(VectorVectorized3D&& _1, VectorVectorized3D&& _2, VectorVectorized3D&& _3,
+                                    VectorVectorized3D&& _4)
+            :_values{{std::move(_1), std::move(_2), std::move(_3), std::move(_4)}}
+    { };
+
+    const VectorVectorized3D& operator()(const std::size_t basisIndex) const
+    {
+        return _values[basisIndex];
+    }
+
+private:
+    std::array<VectorVectorized3D, 4> _values;
 };
 
 struct BilinearForm {
-    virtual ScalarVectorized3D operator()(const ScalarVectorized3D& U, const ScalarVectorized3D& V,
-                                       const VectorVectorized3D& dU,
-                                       const VectorVectorized3D& dV, const PointsVectorized3D& points) = 0;
+  virtual ScalarVectorized operator()(const ScalarVectorized& U, const ScalarVectorized& V,
+                                        const VectorVectorized3D& dU,
+                                        const VectorVectorized3D& dV, const PointsVectorized3D& points) = 0;
 };
 
 struct BilinLaplace : BilinearForm {
-  ScalarVectorized3D operator()(const ScalarVectorized3D& /*U*/, const ScalarVectorized3D& /*V*/,
-                                     const VectorVectorized3D& dU,
-                                     const VectorVectorized3D& dV, const PointsVectorized3D& /*p*/) override
+  ScalarVectorized operator()(const ScalarVectorized& /*U*/, const ScalarVectorized& /*V*/,
+                                const VectorVectorized3D& dU,
+                                const VectorVectorized3D& dV, const PointsVectorized3D& /*p*/) override
   {
-    return dU._x.array() * dV._x.array() + dU._y.array() * dV._y.array() + dU._z.array() * dV._z.array();
+      return dU._x.array() * dV._x.array() + dU._y.array() * dV._y.array() + dU._z.array() * dV._z.array();
   }
 };
 
 struct LinearForm {
-    virtual ScalarVectorized3D operator()(const ScalarVectorized3D& V, const VectorVectorized3D& dV,
-                                       const PointsVectorized3D& points) = 0;
+  virtual ScalarVectorized operator()(const ScalarVectorized& V, const VectorVectorized3D& dV,
+                                        const PointsVectorized3D& points) = 0;
 };
 
 struct LinLaplace : LinearForm {
-  ScalarVectorized3D operator()(const ScalarVectorized3D& V,
-                             const VectorVectorized3D& /*dV*/, const PointsVectorized3D& /*p*/) override
+  ScalarVectorized operator()(const ScalarVectorized& V,
+                                const VectorVectorized3D& /*dV*/, const PointsVectorized3D& /*p*/) override
   {
-    return V;
+      return V;
   }
 };
 
