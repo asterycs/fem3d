@@ -1,5 +1,7 @@
 #include "FEMTaskLinear3D.h"
 
+#include "Eigen/SparseCholesky"
+
 #include <cassert>
 
 FEMTaskLinear3D::FEMTaskLinear3D(const MeshData& mesh, const std::set<UnsignedInt>& pinnedVertexIds,
@@ -10,40 +12,62 @@ FEMTaskLinear3D::FEMTaskLinear3D(const MeshData& mesh, const std::set<UnsignedIn
 void FEMTaskLinear3D::initialize()
 {
     // Would be nice to have these generated on the fly.
-    const Eigen::MatrixXf xip{(Eigen::MatrixXf(3, 4) <<
+    const ReferenceQuadraturePoints xip{(Eigen::MatrixXf(3, 4) <<
             0.1381966011250105f, 0.5854101966249685f, 0.1381966011250105f, 0.1381966011250105f,
             0.1381966011250105f, 0.1381966011250105f, 0.5854101966249685f, 0.1381966011250105f,
             0.1381966011250105f, 0.1381966011250105f, 0.1381966011250105f, 0.5854101966249685f
             ).finished()};
 
-    const Eigen::Vector4f w(Eigen::Array4f(0.25f, 0.25f, 0.25f, 0.25f) / 6.f);
+    const Eigen::Vector4f w { Eigen::Array4f(0.25f, 0.25f, 0.25f, 0.25f) / 6.f };
 
-    const PointsVectorized3D globalPoints = _mesh.referencePointsToGlobal(xip);
-    const BasisValuesVectorized referenceBasisValues = evaluateReferenceBasis(xip);
-    const DBasisValuesVectorized referenceDBasisValues = evaluateReferenceDBasis(xip);
+    const PointsVectorized3D globalPoints { xip.toGlobal(_mesh) };
+    const ReferenceBasisValuesVectorized referenceBasisValues { evaluateReferenceBasis(xip) };
+    const ReferenceDBasisValuesVectorized referenceDBasisValues { evaluateReferenceDBasis(xip) };
 
-    const std::size_t n_triangles = _mesh.getElementIndices().size();
+    const std::size_t nTriangles { _mesh.getElementIndices().size() };
+    const std::size_t nVertices { _mesh.getVertices().size() };
 
-    std::vector<Eigen::Triplet<float>> A_triplets;
-    std::vector<Eigen::Triplet<float>> b_triplets;
+    // TODO: Use these
+    //std::vector<Eigen::Triplet<Float>> A_triplets;
+    //std::vector<Eigen::Triplet<Float>> b_triplets;
+    _A = Eigen::SparseMatrix<Float>(nVertices, nVertices);
+    _b = Eigen::SparseVector<Float>(nVertices);
 
     for (std::size_t i = 0; i < 4; ++i)
     {
-        const ScalarVectorized iBasisValues{ referenceBasisValues.basis(i).replicate(n_triangles, 1) };
-        const VectorVectorized3D iDBasisValues{ referenceDBasisValues.matmulBasis(_mesh._Bkx, i), referenceDBasisValues.matmulBasis(_mesh._Bky, i), referenceDBasisValues.matmulBasis(_mesh._Bkz, i) };
+        const ScalarVectorized iBasisValues{ referenceBasisValues.basis(i).replicate(nTriangles, 1) };
+        const VectorVectorized3D iDBasisValues{ referenceDBasisValues.toGlobal(_mesh, i) };
 
-        const Eigen::VectorXf ff = ((*_linf)(iBasisValues, iDBasisValues, globalPoints) * w).array() * _mesh._detBk;
+        const Eigen::VectorXf rhs_i { ((*_linf)(iBasisValues, iDBasisValues, globalPoints) * w).array() * _mesh._absDetBk };
 
-        // Memo:
-        // for (i in size(ff))
-        //     triplets.insert(elems(i)(basisIndex), 1, ff(i))
-        //
-        // First element index corresponds to first basis, second index to second basis etc.
+        for (Eigen::Index ri = 0; ri < rhs_i.size(); ++ri)
+        {
+            const std::vector<UnsignedInt>& elementVertexIndices { _mesh.getElementIndices()[ri] };
+            const Eigen::Index rowIndex { elementVertexIndices[i] };
+
+            _b.coeffRef(rowIndex) += rhs_i(ri);
+        }
+
+        for (std::size_t j = 0; j < 4; ++j)
+        {
+            const ScalarVectorized jBasisValues{ referenceBasisValues.basis(j).replicate(nTriangles, 1) };
+            const VectorVectorized3D jDBasisValues{ referenceDBasisValues.toGlobal(_mesh, j) };
+
+            const Eigen::VectorXf lhs_ij { ((*_bilin)(jBasisValues, iBasisValues, jDBasisValues, iDBasisValues, globalPoints) * w).array() * _mesh._absDetBk };
+
+            for (Eigen::Index li = 0; li < lhs_ij.size(); ++li)
+            {
+                const std::vector<UnsignedInt>& elementVertexIndices = _mesh.getElementIndices()[li];
+                const Eigen::Index rowIndex { elementVertexIndices[i] };
+                const Eigen::Index colIndex { elementVertexIndices[j] };
+
+                _A.coeffRef(rowIndex, colIndex) +=  lhs_ij(li);
+            }
+        }
     }
-
 }
 
-BasisValuesVectorized FEMTaskLinear3D::evaluateReferenceBasis(const Eigen::MatrixXf& x) const
+ReferenceBasisValuesVectorized FEMTaskLinear3D::evaluateReferenceBasis(const ReferenceQuadraturePoints& x) const
 {
     assert(x.rows() == 3);
     assert(x.cols() > 0);
@@ -53,7 +77,7 @@ BasisValuesVectorized FEMTaskLinear3D::evaluateReferenceBasis(const Eigen::Matri
     ScalarVectorized _3(1, x.cols());
     ScalarVectorized _4(1, x.cols());
 
-    BasisValuesVectorized out(x.cols());
+    ReferenceBasisValuesVectorized out(x.cols());
     out.basis(0) = 1.0f - x.row(0).array() - x.row(1).array() - x.row(2).array();
     out.basis(1) = x.row(0);
     out.basis(2) = x.row(1);
@@ -62,7 +86,7 @@ BasisValuesVectorized FEMTaskLinear3D::evaluateReferenceBasis(const Eigen::Matri
     return out;
 }
 
-DBasisValuesVectorized FEMTaskLinear3D::evaluateReferenceDBasis(const Eigen::MatrixXf& x) const
+ReferenceDBasisValuesVectorized FEMTaskLinear3D::evaluateReferenceDBasis(const ReferenceQuadraturePoints& x) const
 {
     assert(x.rows() == 3);
     assert(x.cols() > 0);
@@ -92,7 +116,39 @@ DBasisValuesVectorized FEMTaskLinear3D::evaluateReferenceDBasis(const Eigen::Mat
           zeros,
           ones;
 
-    DBasisValuesVectorized out{std::move(_1), std::move(_2), std::move(_3), std::move(_4)};
+    ReferenceDBasisValuesVectorized out{std::move(_1), std::move(_2), std::move(_3), std::move(_4)};
 
     return out;
+}
+
+const Eigen::SparseMatrix<Float>& FEMTaskLinear3D::getA() const
+{
+    return _A;
+}
+
+const Eigen::SparseVector<Float>& FEMTaskLinear3D::getb() const
+{
+    return _b;
+}
+
+FEMTaskLinear3DSolution FEMTaskLinear3D::solve() const
+{
+    Eigen::SimplicialLLT<Eigen::SparseMatrix<Float>> solver;
+    solver.compute(_A);
+
+    if (solver.info() != Eigen::Success)
+    {
+        Magnum::Warning{} << "Could not solve linear system";
+        return FEMTaskLinear3DSolution();
+    }
+
+    FEMTaskLinear3DSolution x { solver.solve(_b) };
+
+    if (solver.info() != Eigen::Success)
+    {
+        Magnum::Warning{} << "Could not solve linear system";
+        return FEMTaskLinear3DSolution();
+    }
+
+    return x;
 }

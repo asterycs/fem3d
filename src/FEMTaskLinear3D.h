@@ -14,9 +14,19 @@
 #include <vector>
 #include <memory>
 
-class BasisValuesVectorized : Eigen::Matrix<float, 4, Eigen::Dynamic> {
+class ReferenceQuadraturePoints : public Eigen::MatrixXf {
 public:
-    BasisValuesVectorized(const std::size_t points)
+    PointsVectorized3D toGlobal(const MeshData& mesh) const
+    {
+        const PointsVectorized3D globalPoints { mesh._Bkx * *this, mesh._Bky * *this, mesh._Bkz * *this };
+
+        return globalPoints;
+    }
+};
+
+class ReferenceBasisValuesVectorized : Eigen::Matrix<float, 4, Eigen::Dynamic> {
+public:
+    ReferenceBasisValuesVectorized(const std::size_t points)
             :Eigen::Matrix<float, 4, Eigen::Dynamic>(4, points)
     { }
 
@@ -31,22 +41,24 @@ public:
     }
 };
 
-class DBasisValuesVectorized {
+class ReferenceDBasisValuesVectorized {
 public:
-    explicit DBasisValuesVectorized(const Eigen::MatrixXf& _1, const Eigen::MatrixXf& _2,
+    explicit ReferenceDBasisValuesVectorized(const Eigen::MatrixXf& _1, const Eigen::MatrixXf& _2,
                                     const Eigen::MatrixXf& _3,
                                     const Eigen::MatrixXf& _4)
             :_values{{Eigen::MatrixXf{_1}, Eigen::MatrixXf{_2}, Eigen::MatrixXf{_3}, Eigen::MatrixXf{_4}}}
     { };
 
-    explicit DBasisValuesVectorized(Eigen::MatrixXf&& _1, Eigen::MatrixXf&& _2, Eigen::MatrixXf&& _3,
+    explicit ReferenceDBasisValuesVectorized(Eigen::MatrixXf&& _1, Eigen::MatrixXf&& _2, Eigen::MatrixXf&& _3,
                                     Eigen::MatrixXf&& _4)
             :_values{{std::move(_1), std::move(_2), std::move(_3), std::move(_4)}}
     { };
 
-    ScalarVectorized matmulBasis(const Eigen::MatrixXf& mat, const std::size_t basisIndex) const
+    VectorVectorized3D toGlobal(const MeshData& mesh, const std::size_t basisIndex) const
     {
-        return mat * _values[basisIndex];
+        const VectorVectorized3D globalVectors { mesh._Bkitx * _values[basisIndex], mesh._Bkity * _values[basisIndex], mesh._Bkitz * _values[basisIndex] };
+
+        return globalVectors;
     }
 
     const Eigen::MatrixXf& basis(const std::size_t basisIndex) const
@@ -86,20 +98,37 @@ struct LinLaplace : LinearForm {
   }
 };
 
+class FEMTaskLinear3DSolution : public Eigen::VectorXf {
+public:
+    std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> evaluate(const MeshData& /*mesh*/) const
+    {
+        const std::vector<Float> U { this->data(), this->data() + this->size() };
+        std::vector<Eigen::Vector3f> dU(size(), Eigen::Vector3f::Zero());
+
+        Eigen::MatrixXf localCorners(3, 4);
+        localCorners << 0.f, 1.f, 0.f, 0.f,
+                0.f, 0.f, 1.f, 0.f,
+                0.f, 0.f, 0.f, 1.f;
+
+        return std::make_pair(U, dU);
+    }
+};
+
 class FEMTaskLinear3D {
 public:
     explicit FEMTaskLinear3D(const MeshData& mesh, const std::set<UnsignedInt>& pinnedVertexIds,
                              std::unique_ptr<BilinearForm> bilin, std::unique_ptr<LinearForm> linf);
 
     void initialize();
-    Eigen::VectorXf solve() const;
-
-    // Return function value and gradients at mesh vertices
+    FEMTaskLinear3DSolution solve() const;
     std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> evaluateSolution(const Eigen::VectorXf& solution) const;
 
+    const Eigen::SparseMatrix<Float>& getA() const;
+    const Eigen::SparseVector<Float>& getb() const;
+
 private:
-    BasisValuesVectorized evaluateReferenceBasis(const Eigen::MatrixXf& x) const;
-    DBasisValuesVectorized evaluateReferenceDBasis(const Eigen::MatrixXf& x) const;
+    ReferenceBasisValuesVectorized evaluateReferenceBasis(const ReferenceQuadraturePoints& x) const;
+    ReferenceDBasisValuesVectorized evaluateReferenceDBasis(const ReferenceQuadraturePoints& x) const;
 
     const MeshData& _mesh;
     const std::set<UnsignedInt>& _pinnedVertexIds;

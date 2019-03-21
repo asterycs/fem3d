@@ -12,7 +12,7 @@
 #include <vector>
 
 // This class handles matrix assembling and solving of the resulting system
-class [[deprecated]] FEMTask3D
+class FEMTask3D
 {
 public:
     explicit FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<std::vector<UnsignedInt>>& tetrahedronIds,const std::set<UnsignedInt>& pinnedVertexIds);
@@ -22,6 +22,9 @@ public:
 
     // Return function value and gradients at mesh vertices
     std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> evaluateSolution(const Eigen::VectorXf& solution) const;
+
+    const Eigen::SparseMatrix<Float>& getA() const;
+    const Eigen::SparseVector<Float>& getb() const;
 
 private:
     Eigen::Vector4f evaluateBasis(const Eigen::Vector3f &x) const;

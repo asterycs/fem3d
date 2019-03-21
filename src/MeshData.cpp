@@ -37,7 +37,7 @@ void MeshData::initAffine()
     _bky = Eigen::VectorXf(n_elements);
     _bkz = Eigen::VectorXf(n_elements);
 
-    _detBk = Eigen::ArrayXf(n_elements);
+    _absDetBk = Eigen::ArrayXf(n_elements);
 
     UnsignedInt currentRow = 0;
     for (auto elem : _elementIndices)
@@ -57,7 +57,7 @@ void MeshData::initAffine()
         _bky(currentRow) = bk(1);
         _bkz(currentRow) = bk(2);
 
-        _detBk(currentRow) = Bk.determinant();
+        _absDetBk(currentRow) = std::abs(Bk.determinant());
 
         ++currentRow;
     }
@@ -104,10 +104,3 @@ void MeshData::centerToOrigin()
     Magnum::MeshTools::transformPointsInPlace(Matrix4::translation(-origin), _vertices);
 }
 
-PointsVectorized3D MeshData::referencePointsToGlobal(const Eigen::MatrixXf& referencePoints) const
-{
-
-    const PointsVectorized3D globalPoints { _Bkx * referencePoints, _Bky * referencePoints, _Bkz * referencePoints };
-
-    return globalPoints;
-}

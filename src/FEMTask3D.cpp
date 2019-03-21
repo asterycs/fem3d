@@ -177,4 +177,14 @@ Eigen::VectorXf FEMTask3D::solve() const
     return x;
 }
 
+const Eigen::SparseMatrix<Float>& FEMTask3D::getA() const
+{
+    return _A;
+}
+
+const Eigen::SparseVector<Float>& FEMTask3D::getb() const
+{
+    return _b;
+}
+
 

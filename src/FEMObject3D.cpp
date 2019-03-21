@@ -179,15 +179,22 @@ void FEMObject3D::drawVertexMarkers(const bool draw)
 
 std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 {
+    FEMTask3D oldTask(_mesh.getVertices(), _mesh.getElementIndices(), _pinnedVertexIds);
+    TIME_FUN(&FEMTask3D::initialize, oldTask)
+
     FEMTaskLinear3D task(_mesh, _pinnedVertexIds, std::make_unique<BilinLaplace>(), std::make_unique<LinLaplace>());
-    task.initialize();
-    /*Eigen::VectorXf solution = task.solve();
+    TIME_FUN(&FEMTaskLinear3D::initialize, task);
+
+    //Magnum::Debug{} << oldTask.getA();
+    //Magnum::Debug{} << task.getA();
+
+    FEMTaskLinear3DSolution solution = task.solve();
 
     if (solution.size() > 0)
     {
-        return task.evaluateSolution(solution);
+        return solution.evaluate(_mesh);
     }
-    else*/
+    else
         return std::make_pair<std::vector<Float>, std::vector<Eigen::Vector3f>>({}, {});
 }
 
