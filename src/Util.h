@@ -129,7 +129,7 @@ std::vector<T> repeat(const std::vector<T>& values, const Magnum::UnsignedInt ti
 }
 
 template<typename T>
-std::vector<T> expand(const std::vector<T>& values, std::vector<Magnum::UnsignedInt>& indices)
+std::vector<T> expand(const std::vector<T>& values, const std::vector<Magnum::UnsignedInt>& indices)
 {
     std::vector<T> out;
 

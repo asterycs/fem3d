@@ -65,6 +65,15 @@ void FEMTaskLinear3D::initialize()
             }
         }
     }
+
+    for (auto pinnedVertexId : _pinnedVertexIds)
+    {
+        _A.prune([=](UnsignedInt i, UnsignedInt j, Float)
+                { return i != pinnedVertexId && j != pinnedVertexId; });
+        _A.coeffRef(pinnedVertexId, pinnedVertexId) = 1.f;
+
+        _b.coeffRef(pinnedVertexId) = 0.0f;
+    }
 }
 
 ReferenceBasisValuesVectorized FEMTaskLinear3D::evaluateReferenceBasis(const ReferenceQuadraturePoints& x) const

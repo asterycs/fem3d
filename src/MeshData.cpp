@@ -50,8 +50,8 @@ void MeshData::initAffine()
         _Bkz.row(currentRow) = Bk.row(2);
 
         _Bkitx.row(currentRow) = Bkit.row(0);
-        _Bkity.row(currentRow) = Bkit.row(0);
-        _Bkitz.row(currentRow) = Bkit.row(0);
+        _Bkity.row(currentRow) = Bkit.row(1);
+        _Bkitz.row(currentRow) = Bkit.row(2);
 
         _bkx(currentRow) = bk(0);
         _bky(currentRow) = bk(1);

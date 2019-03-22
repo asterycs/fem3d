@@ -12,7 +12,7 @@
 #include <vector>
 
 // This class handles matrix assembling and solving of the resulting system
-class FEMTask3D
+class [[deprecated]] FEMTask3D
 {
 public:
     explicit FEMTask3D(const std::vector<Vector3>& vertices, const std::vector<std::vector<UnsignedInt>>& tetrahedronIds,const std::set<UnsignedInt>& pinnedVertexIds);

@@ -47,14 +47,14 @@ void FEMObject3D::initMeshTriangles(std::vector<Vector3> vertices, std::vector<U
 {
     _triangleIndices = triangleIndices;
 
-    auto [normalIndices, normals] = Magnum::MeshTools::generateFlatNormals(triangleIndices, vertices);
+    const auto[normalIndices, normals] = Magnum::MeshTools::generateFlatNormals(triangleIndices, vertices);
 
-    vertices = expand(vertices, triangleIndices);
-    normals = expand(normals, normalIndices);
+    const auto expandedVertices = expand(vertices, triangleIndices);
+    const auto expandedNormals = expand(normals, normalIndices);
 
     std::vector<Vector3> colors(triangleIndices.size(), Vector3{0.f, 0.f, 1.f});
 
-    _triangleBuffer.setData(Magnum::MeshTools::interleave(vertices, normals), Magnum::GL::BufferUsage::StaticDraw);
+    _triangleBuffer.setData(Magnum::MeshTools::interleave(expandedVertices, expandedNormals), Magnum::GL::BufferUsage::StaticDraw);
     _colorBuffer.setData(colors, Magnum::GL::BufferUsage::StaticDraw);
 
     // Using a vertex buffer would be beneficial but that makes updating colors later much more difficult
@@ -141,7 +141,8 @@ void FEMObject3D::drawMesh(const Matrix4& transformationMatrix, const Magnum::Sc
 {
     Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::DepthTest);
     Magnum::GL::Renderer::enable(Magnum::GL::Renderer::Feature::Blending);
-    Magnum::GL::Renderer::setBlendEquation(Magnum::GL::Renderer::BlendEquation::Add, Magnum::GL::Renderer::BlendEquation::Add);
+    Magnum::GL::Renderer::setBlendEquation(Magnum::GL::Renderer::BlendEquation::Add,
+                                           Magnum::GL::Renderer::BlendEquation::Add);
     Magnum::GL::Renderer::setBlendFunction(Magnum::GL::Renderer::BlendFunction::SourceAlpha,
                                            Magnum::GL::Renderer::BlendFunction::OneMinusSourceAlpha);
     Magnum::GL::Renderer::disable(Magnum::GL::Renderer::Feature::FaceCulling);
@@ -179,14 +180,8 @@ void FEMObject3D::drawVertexMarkers(const bool draw)
 
 std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 {
-    FEMTask3D oldTask(_mesh.getVertices(), _mesh.getElementIndices(), _pinnedVertexIds);
-    TIME_FUN(&FEMTask3D::initialize, oldTask)
-
     FEMTaskLinear3D task(_mesh, _pinnedVertexIds, std::make_unique<BilinLaplace>(), std::make_unique<LinLaplace>());
     TIME_FUN(&FEMTaskLinear3D::initialize, task);
-
-    //Magnum::Debug{} << oldTask.getA();
-    //Magnum::Debug{} << task.getA();
 
     FEMTaskLinear3DSolution solution = task.solve();
 
