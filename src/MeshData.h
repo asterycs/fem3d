@@ -15,18 +15,18 @@ public:
     MeshData() = default;
 
     MeshData(const Magnum::UnsignedInt dimensions, const std::vector<Magnum::Vector3>& vertices,
-             const std::vector<std::vector<Magnum::UnsignedInt>>& elementIndices,
+             const std::vector<std::vector<Magnum::UnsignedInt>>& elements,
              const std::vector<Magnum::UnsignedInt>& boundaryIndices);
 
-    MeshData(const Magnum::UnsignedInt dimensions, const std::vector<Magnum::Vector3>&& vertices,
-             const std::vector<std::vector<Magnum::UnsignedInt>>&& elementIndices,
-             const std::vector<Magnum::UnsignedInt>&& boundaryIndices);
+    MeshData(const Magnum::UnsignedInt dimensions, std::vector<Magnum::Vector3>&& vertices,
+             std::vector<std::vector<Magnum::UnsignedInt>>&& elements,
+             std::vector<Magnum::UnsignedInt>&& boundaryIndices);
 
     void centerToOrigin();
 
     const std::vector<Magnum::UnsignedInt>& getBoundaryIndices() const;
     const std::vector<Magnum::Vector3>& getVertices() const;
-    const std::vector<std::vector<Magnum::UnsignedInt>>& getElementIndices() const;
+    const std::vector<std::vector<Magnum::UnsignedInt>>& getElements() const;
     Magnum::UnsignedInt getDimensions() const;
 
     // Affine transformations from reference tetrahedron
@@ -42,7 +42,7 @@ private:
 
     Magnum::UnsignedInt _dimensions;
     std::vector<Magnum::Vector3> _vertices;
-    std::vector<std::vector<Magnum::UnsignedInt>> _elementIndices;
+    std::vector<std::vector<Magnum::UnsignedInt>> _elements;
     std::vector<Magnum::UnsignedInt> _boundaryIndices;
 };
 

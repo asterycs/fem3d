@@ -62,7 +62,7 @@ private:
     Lasso _currentLasso;
     Vector2i _lassoPreviousPosition;
 
-    App* _app;
+    App& _app;
 };
 
 #endif //FEM3D_UI_H

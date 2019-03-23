@@ -37,7 +37,7 @@ FEMObject3D::FEMObject3D(PhongIdShader& phongShader,
     assert(mesh.getDimensions() == 3);
 
     // Expand tetrahedrons to triangles for visualization
-    const auto triangleIndices = extractTriangleIndices(mesh.getElementIndices());
+    const auto triangleIndices = extractTriangleIndices(mesh.getElements());
 
     initVertexMarkers(mesh.getVertices());
     initMeshTriangles(mesh.getVertices(), triangleIndices);
@@ -182,12 +182,12 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 {
     FEMTaskLinear3D task(_mesh, _pinnedVertexIds, std::make_unique<BilinLaplace>(), std::make_unique<LinLaplace>());
     TIME_FUN(&FEMTaskLinear3D::initialize, task);
-
+    
     FEMTaskLinear3DSolution solution = task.solve();
 
     if (solution.size() > 0)
     {
-        return solution.evaluate(_mesh);
+        return solution.evaluate(_mesh, task);
     }
     else
         return std::make_pair<std::vector<Float>, std::vector<Eigen::Vector3f>>({}, {});

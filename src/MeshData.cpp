@@ -5,17 +5,17 @@
 #include "Util.h"
 
 MeshData::MeshData(const Magnum::UnsignedInt dimensions, const std::vector<Magnum::Vector3>& vertices,
-         const std::vector<std::vector<Magnum::UnsignedInt>>& elementIndices,
+         const std::vector<std::vector<Magnum::UnsignedInt>>& elements,
          const std::vector<Magnum::UnsignedInt>& boundaryIndices)
-        : _dimensions{dimensions}, _vertices{vertices}, _elementIndices{elementIndices}, _boundaryIndices{boundaryIndices}
+        : _dimensions{dimensions}, _vertices{vertices}, _elements{elements}, _boundaryIndices{boundaryIndices}
 {
     initAffine();
 }
 
-MeshData::MeshData(const Magnum::UnsignedInt dimensions, const std::vector<Magnum::Vector3>&& vertices,
-         const std::vector<std::vector<Magnum::UnsignedInt>>&& elementIndices,
-         const std::vector<Magnum::UnsignedInt>&& boundaryIndices)
-        : _dimensions{dimensions}, _vertices{vertices}, _elementIndices{elementIndices}, _boundaryIndices{boundaryIndices}
+MeshData::MeshData(const Magnum::UnsignedInt dimensions, std::vector<Magnum::Vector3>&& vertices,
+         std::vector<std::vector<Magnum::UnsignedInt>>&& elements,
+         std::vector<Magnum::UnsignedInt>&& boundaryIndices)
+        : _dimensions{dimensions}, _vertices{std::move(vertices)}, _elements{std::move(elements)}, _boundaryIndices{std::move(boundaryIndices)}
 {
     initAffine();
 }
@@ -23,7 +23,7 @@ MeshData::MeshData(const Magnum::UnsignedInt dimensions, const std::vector<Magnu
 
 void MeshData::initAffine()
 {
-    const std::size_t n_elements = _elementIndices.size();
+    const std::size_t n_elements = _elements.size();
 
     _Bkx = Eigen::MatrixXf(n_elements, 3);
     _Bky = Eigen::MatrixXf(n_elements, 3);
@@ -40,7 +40,7 @@ void MeshData::initAffine()
     _absDetBk = Eigen::ArrayXf(n_elements);
 
     UnsignedInt currentRow = 0;
-    for (auto elem : _elementIndices)
+    for (auto elem : _elements)
     {
         const auto[Bk, bk] = computeAffine(elem);
         const Eigen::Matrix3f Bkit = Bk.transpose().inverse();
@@ -92,9 +92,9 @@ const std::vector<Vector3>& MeshData::getVertices() const
     return _vertices;
 }
 
-const std::vector<std::vector<UnsignedInt>>& MeshData::getElementIndices() const
+const std::vector<std::vector<UnsignedInt>>& MeshData::getElements() const
 {
-    return _elementIndices;
+    return _elements;
 }
 
 void MeshData::centerToOrigin()

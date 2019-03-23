@@ -24,47 +24,49 @@ void FEMTaskLinear3D::initialize()
     const ReferenceBasisValuesVectorized referenceBasisValues { evaluateReferenceBasis(xip) };
     const ReferenceDBasisValuesVectorized referenceDBasisValues { evaluateReferenceDBasis(xip) };
 
-    const std::size_t nTriangles { _mesh.getElementIndices().size() };
+    const std::size_t nElements { _mesh.getElements().size() };
     const std::size_t nVertices { _mesh.getVertices().size() };
 
-    // TODO: Use these
-    //std::vector<Eigen::Triplet<Float>> A_triplets;
+    std::vector<Eigen::Triplet<Float>> A_triplets;
+    A_triplets.reserve(nElements*4);
     //std::vector<Eigen::Triplet<Float>> b_triplets;
     _A = Eigen::SparseMatrix<Float>(nVertices, nVertices);
     _b = Eigen::SparseVector<Float>(nVertices);
 
     for (std::size_t i = 0; i < 4; ++i)
     {
-        const ScalarVectorized iBasisValues{ referenceBasisValues.basis(i).replicate(nTriangles, 1) };
+        const ScalarVectorized iBasisValues{ referenceBasisValues.basis(i).replicate(nElements, 1) };
         const VectorVectorized3D iDBasisValues{ referenceDBasisValues.toGlobal(_mesh, i) };
 
         const Eigen::VectorXf rhs_i { ((*_linf)(iBasisValues, iDBasisValues, globalPoints) * w).array() * _mesh._absDetBk };
 
         for (Eigen::Index ri = 0; ri < rhs_i.size(); ++ri)
         {
-            const std::vector<UnsignedInt>& elementVertexIndices { _mesh.getElementIndices()[ri] };
-            const Eigen::Index rowIndex { elementVertexIndices[i] };
+            const std::vector<UnsignedInt>& elementVertexIndices { _mesh.getElements()[ri] };
+            const Eigen::Index rowIndex = elementVertexIndices[i];
 
             _b.coeffRef(rowIndex) += rhs_i(ri);
         }
 
         for (std::size_t j = 0; j < 4; ++j)
         {
-            const ScalarVectorized jBasisValues{ referenceBasisValues.basis(j).replicate(nTriangles, 1) };
+            const ScalarVectorized jBasisValues{ referenceBasisValues.basis(j).replicate(nElements, 1) };
             const VectorVectorized3D jDBasisValues{ referenceDBasisValues.toGlobal(_mesh, j) };
 
             const Eigen::VectorXf lhs_ij { ((*_bilin)(jBasisValues, iBasisValues, jDBasisValues, iDBasisValues, globalPoints) * w).array() * _mesh._absDetBk };
 
             for (Eigen::Index li = 0; li < lhs_ij.size(); ++li)
             {
-                const std::vector<UnsignedInt>& elementVertexIndices = _mesh.getElementIndices()[li];
-                const Eigen::Index rowIndex { elementVertexIndices[i] };
-                const Eigen::Index colIndex { elementVertexIndices[j] };
+                const std::vector<UnsignedInt>& elementVertexIndices = _mesh.getElements()[li];
+                const Eigen::Index rowIndex = elementVertexIndices[i];
+                const Eigen::Index colIndex = elementVertexIndices[j];
 
-                _A.coeffRef(rowIndex, colIndex) +=  lhs_ij(li);
+                A_triplets.push_back(Eigen::Triplet<Float>(rowIndex, colIndex, lhs_ij(li)));
             }
         }
     }
+
+    _A.setFromTriplets(A_triplets.begin(), A_triplets.end());
 
     for (auto pinnedVertexId : _pinnedVertexIds)
     {

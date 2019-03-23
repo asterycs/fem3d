@@ -13,7 +13,7 @@ using namespace Magnum;
 
 UI::UI(App& app, const Vector2i& size, const UnsignedInt nScenes)
         :_imgui{NoCreate}, _currentSize{size}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
-         _showVertexMarkers{true}, _showAbout{false}, _inPinnedVertexLassoMode{false}, _app{&app}
+         _showVertexMarkers{true}, _showAbout{false}, _inPinnedVertexLassoMode{false}, _app{app}
 {
     GL::Context::current().resetState(GL::Context::State::EnterExternal);
 
@@ -71,17 +71,17 @@ void UI::drawOptions()
 
     ImGui::SameLine();
     if (ImGui::Button("Solve", ImVec2(110, 20)))
-        _app->solveCurrent(_showGradient);
+        _app.solveCurrent(_showGradient);
 
     if (ImGui::Button(_showVertexMarkers ? "Markers on" : "Markers off", ImVec2(110, 20)))
     {
         _showVertexMarkers = !_showVertexMarkers;
-        _app->setVertexMarkersVisibility(_showVertexMarkers);
+        _app.setVertexMarkersVisibility(_showVertexMarkers);
     }
 
     if (ImGui::Button("Clear pinned", ImVec2(110, 20)))
     {
-        _app->clearPinnedVertices();
+        _app.clearPinnedVertices();
     }
 
     ImGui::SameLine();
@@ -94,8 +94,8 @@ void UI::drawOptions()
     if (ImGui::Button(sceneButtonLabel.c_str(), ImVec2(110, 20)))
     {
         ++_currentScene %= _nScenes;
-        _app->setCurrentGeometry(_currentScene);
-        _app->setVertexMarkersVisibility(_showVertexMarkers);
+        _app.setCurrentGeometry(_currentScene);
+        _app.setVertexMarkersVisibility(_showVertexMarkers);
     }
 
     if (ImGui::Button("About", ImVec2(110, 20)))
@@ -103,7 +103,7 @@ void UI::drawOptions()
 
     if (_showAbout)
     {
-        ImGui::SetNextWindowPos(ImVec2(_currentSize.x()/2,_currentSize.y()/2), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(_currentSize.x()*0.5f,_currentSize.y()*0.5f), ImGuiCond_FirstUseEver);
         ImGui::Begin("Licenses", &_showAbout, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
         std::string buffer;
@@ -182,7 +182,7 @@ bool UI::handleMousePressEvent(Platform::Application::MouseEvent& event)
         }
         else if (event.button() == Platform::Application::MouseEvent::Button::Left)
         {
-            _app->handleViewportClick(event.position());
+            _app.handleViewportClick(event.position());
             event.setAccepted();
             return true;
         }
@@ -202,7 +202,7 @@ bool UI::handleMouseReleaseEvent(Platform::Application::MouseEvent& event)
     {
         _inPinnedVertexLassoMode = false;
         
-        _app->setVertices(_currentLasso, true);
+        _app.setVertices(_currentLasso, true);
         _currentLasso.clear();
         event.setAccepted();
 
@@ -249,7 +249,7 @@ bool UI::handleMouseMoveEvent(Platform::Application::MouseMoveEvent& event)
         accept = true;
     }else if (event.buttons() & Platform::Application::MouseMoveEvent::Button::Left)
     {
-        _app->rotateCamera(event.relativePosition());
+        _app.rotateCamera(event.relativePosition());
         accept = true;
     }
 
@@ -263,7 +263,7 @@ bool UI::handleMouseScrollEvent(Platform::Application::MouseScrollEvent& event)
     {
         if (event.offset().y() != 0)
         {
-            _app->zoomCamera(event.offset().y());
+            _app.zoomCamera(event.offset().y());
             event.setAccepted();
             return true;
         }

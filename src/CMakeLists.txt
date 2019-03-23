@@ -21,8 +21,7 @@ add_executable(fem3d ${fem3d_SRC} ${fem3d_RESOURCES})
 set_property(TARGET fem3d
         PROPERTY CXX_STANDARD_REQUIRED 17
         PROPERTY CXX_STANDARD 17
-        PROPERTY INTERPROCEDURAL_OPTIMIZATION ON
-        PROPERTY WITH_FORTIFY_SOURCE ON)
+        PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
 target_compile_features(fem3d PRIVATE cxx_std_17)
 
 target_include_directories(fem3d SYSTEM PRIVATE ${MAGNUM_INCLUDE_DIR})
@@ -35,12 +34,19 @@ target_compile_options(fem3d PRIVATE
     -Wextra
     -Werror
     -Wconversion
+    -Wshadow
+    #-Wnon-virtual-dtor
+    -Wpedantic
+    #-Woverloaded-virtual
+    -Wnull-dereference
+    -Wdouble-promotion
+    #-Weffc++
     -Wno-error=conversion
     -fasynchronous-unwind-tables
     -fstack-protector-all
     -Werror=format-security
     -Wdisabled-optimization
-    -Wformat
+    -Wformat=2
     -Wcast-align
     -Wformat-security
     -Wmissing-braces
@@ -57,8 +63,15 @@ target_compile_options(fem3d PRIVATE
     -Wunused-variable
     -Wsign-conversion
     -Wno-error=sign-conversion
-    -Wno-error=missing-declarations
-    -fasynchronous-unwind-tables)
+    -Wno-error=missing-declarations)
+
+if (NOT CORRADE_TARGET_EMSCRIPTEN)
+    target_compile_options(fem3d PRIVATE
+            -Wuseless-cast
+            -Wduplicated-cond
+            -Wduplicated-branches
+            -Wlogical-op)
+endif()
 
 find_package(OpenMP)
 if (OPENMP_FOUND)

@@ -11,6 +11,8 @@
 #include <vector>
 #include <chrono>
 
+#include <cassert>
+
 class MeshData;
 
 template<typename V>
@@ -24,7 +26,7 @@ struct AABB {
 
 class Timer {
 public:
-    Timer(const std::string name) : _pre { std::chrono::high_resolution_clock::now() }, _name {name}
+    Timer(std::string&& name) : _pre { std::chrono::high_resolution_clock::now() }, _name {std::move(name)}
     {
 
     }
@@ -53,37 +55,6 @@ private:
     const std::chrono::high_resolution_clock::time_point _pre;
     const std::string _name;
 };
-
-// Not very nice in the end
-template<typename F, typename ... Args>
-auto timeFunction(F&& f, Args&& ...args) -> typename std::enable_if<std::is_same<std::result_of_t<F && (Args&&...)>,
-                                                                                 void>::value>::type
-{
-    const std::chrono::high_resolution_clock::time_point pre = std::chrono::high_resolution_clock::now();
-
-    std::forward<F>(f)(std::forward<Args>(args)...);
-
-    const std::chrono::high_resolution_clock::time_point post = std::chrono::high_resolution_clock::now();
-
-    Magnum::Debug{} << std::chrono::duration_cast<std::chrono::microseconds>(post - pre).count();
-
-    return;
-}
-
-template<typename F, typename ... Args>
-auto timeFunction(F&& f, Args&& ...args) -> typename std::enable_if<!std::is_same<std::result_of_t<F && (Args&&...)>,
-                                                                                  void>::value>::type
-{
-    const std::chrono::high_resolution_clock::time_point pre = std::chrono::high_resolution_clock::now();
-
-    const std::result_of_t<F&&(Args&& ...)> funres = std::forward<F>(f)(std::forward<Args>(args)...);
-
-    const std::chrono::high_resolution_clock::time_point post = std::chrono::high_resolution_clock::now();
-
-    Magnum::Debug{} << std::chrono::duration_cast<std::chrono::microseconds>(post - pre).count();
-
-    return funres;
-}
 
 bool parseTtg(const std::string& input, MeshData& outMesh);
 bool createUVIndices(const std::vector<Magnum::UnsignedInt>& triangleIndices, std::vector<Magnum::Vector2>& outUv,
@@ -159,6 +130,8 @@ struct VectorVectorized3D {
           :_x{std::move(x)}, _y{std::move(y)}, _z{std::move(z)}
   { };
 
+  VectorVectorized3D(const Eigen::Index rows, const Eigen::Index cols) : _x{Eigen::MatrixXf::Zero(rows, cols)}, _y{Eigen::MatrixXf::Zero(rows, cols)}, _z{Eigen::MatrixXf::Zero(rows, cols)} {}
+
   VectorVectorized3D(const VectorVectorized3D& other)
           :VectorVectorized3D{ScalarVectorized{other._x}, ScalarVectorized{other._y}, ScalarVectorized{other._z}}
   { }
@@ -166,6 +139,27 @@ struct VectorVectorized3D {
   VectorVectorized3D(VectorVectorized3D&& other)
           :_x{std::move(other._x)}, _y{std::move(other._y)}, _z{std::move(other._z)}
   { }
+
+  VectorVectorized3D operator+(const VectorVectorized3D& other) const
+  {
+      return VectorVectorized3D{_x.array() + other._x.array(), _y.array() + other._y.array(), _z.array() + other._z.array() };
+  }
+
+  void operator+=(const VectorVectorized3D& other)
+  {
+      assert(other._x.rows() == _x.rows() && other._x.cols() == _x.cols());
+
+      _x.array() += other._x.array();
+      _y.array() += other._y.array();
+      _z.array() += other._z.array();
+  }
+
+  VectorVectorized3D operator*(const ScalarVectorized& scalar) const
+  {
+      assert(scalar.rows() == _x.rows() && scalar.cols() == _x.cols());
+
+      return VectorVectorized3D{ _x.array() * scalar.array(), _y.array() * scalar.array(), _z.array() * scalar.array() };
+  }
 };
 
 // Strong typedef emulation. Not sure if this is a good idea.

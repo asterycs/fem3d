@@ -20,7 +20,6 @@ App::App(const Arguments& arguments)
         Platform::Application{arguments, Configuration{}
                 .setTitle("Finite element")
                 .setWindowFlags(Configuration::WindowFlag::Resizable)},
-        _currentGeom{0},
         _framebuffer{GL::defaultFramebuffer.viewport()},
         _ui{*this, windowSize(), 3}
 {

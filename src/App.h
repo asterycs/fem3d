@@ -26,6 +26,7 @@
 class App : public Magnum::Platform::Application {
 public:
     explicit App(const Arguments& arguments);
+    virtual ~App() {};
 
     void setVertexMarkersVisibility(bool show);
     void solveCurrent(bool showGradient);
@@ -57,23 +58,23 @@ private:
     void readMeshFiles(const std::vector<std::string>& fnames);
     void initUi();
 
-    UnsignedInt _currentGeom;
-    Scene3D _scene;
-    std::unique_ptr<Object3D> _cameraObject;
-    std::unique_ptr<Magnum::SceneGraph::Camera3D> _camera;
-    std::vector<Magnum::SceneGraph::DrawableGroup3D> _drawableGroups;
+    UnsignedInt _currentGeom{0};
+    Scene3D _scene{};
+    std::unique_ptr<Object3D> _cameraObject{};
+    std::unique_ptr<Magnum::SceneGraph::Camera3D> _camera{};
+    std::vector<Magnum::SceneGraph::DrawableGroup3D> _drawableGroups{};
 
-    PhongIdShader _phongShader;
-    VertexShader _vertexSelectionShader;
-    CompositionShader _compositionShader;
+    PhongIdShader _phongShader{};
+    VertexShader _vertexSelectionShader{};
+    CompositionShader _compositionShader{};
 
-    std::vector<std::unique_ptr<FEMObject3D>> _objects;
+    std::vector<std::unique_ptr<FEMObject3D>> _objects{};
 
     Magnum::GL::Framebuffer _framebuffer;
-    Magnum::GL::Renderbuffer _vertexId, _depth;
-    Magnum::GL::Texture2D _color, _transparencyAccumulation, _transparencyRevealage;
+    Magnum::GL::Renderbuffer _vertexId{}, _depth{};
+    Magnum::GL::Texture2D _color{}, _transparencyAccumulation{}, _transparencyRevealage{};
 
-    Vector2 _cameraTrackballAngles;
+    Vector2 _cameraTrackballAngles{0.f};
 
     UI _ui;
 };
