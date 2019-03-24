@@ -26,16 +26,10 @@ struct AABB {
 
 class Timer {
 public:
-    Timer(std::string&& name) : _pre { std::chrono::high_resolution_clock::now() }, _name {std::move(name)}
+    explicit Timer(std::string&& name) : _pre { std::chrono::high_resolution_clock::now() }, _name {std::move(name)}
     {
 
     }
-
-    /*template<typename F, typename ... Args>
-    std::result_of_t<F&& (Args&&...)> time(F&& f, Args&& ...args)
-    {
-      return std::forward<F>(f)(std::forward<Args>(args)...);
-    }*/
 
     // Should work for functions and member functions with any arguments and return types
     template<typename F, typename ... Args>
@@ -46,8 +40,9 @@ public:
 
     ~Timer()
     {
-        const std::chrono::high_resolution_clock::time_point post = std::chrono::high_resolution_clock::now();
-        const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(post - _pre).count();
+        using namespace std::chrono;
+        const high_resolution_clock::time_point post = high_resolution_clock::now();
+        const auto elapsed = duration_cast<microseconds>(post - _pre).count();
         Magnum::Debug{} << _name << elapsed << "ms";
     }
 
@@ -171,6 +166,14 @@ struct PointsVectorized3D : VectorVectorized3D {
   explicit PointsVectorized3D(ScalarVectorized&& x, ScalarVectorized&& y, ScalarVectorized&& z)
           :VectorVectorized3D(std::move(x), std::move(y), std::move(z))
   { };
+};
+
+struct AffineTransformVectorized3D {
+  // Affine transformations from reference tetrahedron
+  Eigen::MatrixXf _Bkx, _Bky, _Bkz; // Bk
+  Eigen::MatrixXf _Bkitx, _Bkity, _Bkitz; // Inverse transpose of Bk
+  Eigen::VectorXf _bkx, _bky, _bkz; // bk
+  Eigen::ArrayXf _absDetBk;
 };
 
 #endif //FEM3D_UTIL_H

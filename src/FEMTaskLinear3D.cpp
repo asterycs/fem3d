@@ -20,7 +20,7 @@ void FEMTaskLinear3D::initialize()
 
     const Eigen::Vector4f w { Eigen::Array4f(0.25f, 0.25f, 0.25f, 0.25f) / 6.f };
 
-    const PointsVectorized3D globalPoints { xip.toGlobal(_mesh) };
+    const PointsVectorized3D globalPoints { xip.transform(_mesh.getAffineTransform()) };
     const ReferenceBasisValuesVectorized referenceBasisValues { evaluateReferenceBasis(xip) };
     const ReferenceDBasisValuesVectorized referenceDBasisValues { evaluateReferenceDBasis(xip) };
 
@@ -36,9 +36,9 @@ void FEMTaskLinear3D::initialize()
     for (std::size_t i = 0; i < 4; ++i)
     {
         const ScalarVectorized iBasisValues{ referenceBasisValues.basis(i).replicate(nElements, 1) };
-        const VectorVectorized3D iDBasisValues{ referenceDBasisValues.toGlobal(_mesh, i) };
+        const VectorVectorized3D iDBasisValues{ referenceDBasisValues.transform(_mesh.getAffineTransform(), i) };
 
-        const Eigen::VectorXf rhs_i { ((*_linf)(iBasisValues, iDBasisValues, globalPoints) * w).array() * _mesh._absDetBk };
+        const Eigen::VectorXf rhs_i { ((*_linf)(iBasisValues, iDBasisValues, globalPoints) * w).array() * _mesh.getAffineTransform()._absDetBk };
 
         for (Eigen::Index ri = 0; ri < rhs_i.size(); ++ri)
         {
@@ -51,9 +51,9 @@ void FEMTaskLinear3D::initialize()
         for (std::size_t j = 0; j < 4; ++j)
         {
             const ScalarVectorized jBasisValues{ referenceBasisValues.basis(j).replicate(nElements, 1) };
-            const VectorVectorized3D jDBasisValues{ referenceDBasisValues.toGlobal(_mesh, j) };
+            const VectorVectorized3D jDBasisValues{ referenceDBasisValues.transform(_mesh.getAffineTransform(), j) };
 
-            const Eigen::VectorXf lhs_ij { ((*_bilin)(jBasisValues, iBasisValues, jDBasisValues, iDBasisValues, globalPoints) * w).array() * _mesh._absDetBk };
+            const Eigen::VectorXf lhs_ij { ((*_bilin)(jBasisValues, iBasisValues, jDBasisValues, iDBasisValues, globalPoints) * w).array() * _mesh.getAffineTransform()._absDetBk };
 
             for (Eigen::Index li = 0; li < lhs_ij.size(); ++li)
             {

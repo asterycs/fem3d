@@ -15,8 +15,8 @@ PhongIdShader::PhongIdShader()
     Magnum::GL::Shader vert{Magnum::GL::Version::GL330, Magnum::GL::Shader::Type::Vertex},
             frag{Magnum::GL::Version::GL330, Magnum::GL::Shader::Type::Fragment};
 #else
-    GL::Shader vert{GL::Version::GLES300, GL::Shader::Type::Vertex},
-frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
+    Magnum::GL::Shader vert{Magnum::GL::Version::GLES300, Magnum::GL::Shader::Type::Vertex},
+frag{Magnum::GL::Version::GLES300, Magnum::GL::Shader::Type::Fragment};
 #endif
     vert.addSource(rs.get("PhongTransparentId.vert"));
     frag.addSource(rs.get("PhongTransparentId.frag"));
@@ -33,8 +33,8 @@ VertexShader::VertexShader()
     Magnum::GL::Shader vert{Magnum::GL::Version::GL330, Magnum::GL::Shader::Type::Vertex},
             frag{Magnum::GL::Version::GL330, Magnum::GL::Shader::Type::Fragment};
 #else
-    GL::Shader vert{GL::Version::GLES300, GL::Shader::Type::Vertex},
-frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
+    Magnum::GL::Shader vert{Magnum::GL::Version::GLES300, Magnum::GL::Shader::Type::Vertex},
+frag{Magnum::GL::Version::GLES300, Magnum::GL::Shader::Type::Fragment};
 #endif
     vert.addSource(rs.get("Vertex.vert"));
     frag.addSource(rs.get("Vertex.frag"));
@@ -56,8 +56,8 @@ CompositionShader::CompositionShader()
     Magnum::GL::Shader vert{Magnum::GL::Version::GL330, Magnum::GL::Shader::Type::Vertex},
             frag{Magnum::GL::Version::GL330, Magnum::GL::Shader::Type::Fragment};
 #else
-    GL::Shader vert{GL::Version::GLES300, GL::Shader::Type::Vertex},
-frag{GL::Version::GLES300, GL::Shader::Type::Fragment};
+    Magnum::GL::Shader vert{Magnum::GL::Version::GLES300, Magnum::GL::Shader::Type::Vertex},
+frag{Magnum::GL::Version::GLES300, Magnum::GL::Shader::Type::Fragment};
 #endif
     vert.addSource(rs.get("Composition.vert"));
     frag.addSource(rs.get("Composition.frag"));

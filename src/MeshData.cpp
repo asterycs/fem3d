@@ -25,19 +25,19 @@ void MeshData::initAffine()
 {
     const std::size_t n_elements = _elements.size();
 
-    _Bkx = Eigen::MatrixXf(n_elements, 3);
-    _Bky = Eigen::MatrixXf(n_elements, 3);
-    _Bkz = Eigen::MatrixXf(n_elements, 3);
+    affineTransform._Bkx = Eigen::MatrixXf(n_elements, 3);
+    affineTransform._Bky = Eigen::MatrixXf(n_elements, 3);
+    affineTransform._Bkz = Eigen::MatrixXf(n_elements, 3);
 
-    _Bkitx = Eigen::MatrixXf(n_elements, 3);
-    _Bkity = Eigen::MatrixXf(n_elements, 3);
-    _Bkitz = Eigen::MatrixXf(n_elements, 3);
+    affineTransform._Bkitx = Eigen::MatrixXf(n_elements, 3);
+    affineTransform._Bkity = Eigen::MatrixXf(n_elements, 3);
+    affineTransform._Bkitz = Eigen::MatrixXf(n_elements, 3);
 
-    _bkx = Eigen::VectorXf(n_elements);
-    _bky = Eigen::VectorXf(n_elements);
-    _bkz = Eigen::VectorXf(n_elements);
+    affineTransform._bkx = Eigen::VectorXf(n_elements);
+    affineTransform._bky = Eigen::VectorXf(n_elements);
+    affineTransform._bkz = Eigen::VectorXf(n_elements);
 
-    _absDetBk = Eigen::ArrayXf(n_elements);
+    affineTransform._absDetBk = Eigen::ArrayXf(n_elements);
 
     UnsignedInt currentRow = 0;
     for (auto elem : _elements)
@@ -45,19 +45,19 @@ void MeshData::initAffine()
         const auto[Bk, bk] = computeAffine(elem);
         const Eigen::Matrix3f Bkit = Bk.transpose().inverse();
 
-        _Bkx.row(currentRow) = Bk.row(0);
-        _Bky.row(currentRow) = Bk.row(1);
-        _Bkz.row(currentRow) = Bk.row(2);
+        affineTransform._Bkx.row(currentRow) = Bk.row(0);
+        affineTransform._Bky.row(currentRow) = Bk.row(1);
+        affineTransform._Bkz.row(currentRow) = Bk.row(2);
 
-        _Bkitx.row(currentRow) = Bkit.row(0);
-        _Bkity.row(currentRow) = Bkit.row(1);
-        _Bkitz.row(currentRow) = Bkit.row(2);
+        affineTransform._Bkitx.row(currentRow) = Bkit.row(0);
+        affineTransform._Bkity.row(currentRow) = Bkit.row(1);
+        affineTransform._Bkitz.row(currentRow) = Bkit.row(2);
 
-        _bkx(currentRow) = bk(0);
-        _bky(currentRow) = bk(1);
-        _bkz(currentRow) = bk(2);
+        affineTransform._bkx(currentRow) = bk(0);
+        affineTransform._bky(currentRow) = bk(1);
+        affineTransform._bkz(currentRow) = bk(2);
 
-        _absDetBk(currentRow) = std::abs(Bk.determinant());
+        affineTransform._absDetBk(currentRow) = std::abs(Bk.determinant());
 
         ++currentRow;
     }
@@ -104,3 +104,7 @@ void MeshData::centerToOrigin()
     Magnum::MeshTools::transformPointsInPlace(Matrix4::translation(-origin), _vertices);
 }
 
+const AffineTransformVectorized3D& MeshData::getAffineTransform() const
+{
+    return affineTransform;
+}

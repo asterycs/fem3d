@@ -17,9 +17,9 @@
 
 class ReferenceQuadraturePoints : public Eigen::MatrixXf {
 public:
-    PointsVectorized3D toGlobal(const MeshData& mesh) const
+    PointsVectorized3D transform(const AffineTransformVectorized3D& tform) const
     {
-        const PointsVectorized3D globalPoints { mesh._Bkx * *this, mesh._Bky * *this, mesh._Bkz * *this };
+        const PointsVectorized3D globalPoints { tform._Bkx * *this, tform._Bky * *this, tform._Bkz * *this };
 
         return globalPoints;
     }
@@ -55,9 +55,9 @@ public:
             :_values{{std::move(_1), std::move(_2), std::move(_3), std::move(_4)}}
     { };
 
-    VectorVectorized3D toGlobal(const MeshData& mesh, const std::size_t basisIndex) const
+    VectorVectorized3D transform(const AffineTransformVectorized3D& tform, const std::size_t basisIndex) const
     {
-        const VectorVectorized3D globalVectors { mesh._Bkitx * _values[basisIndex], mesh._Bkity * _values[basisIndex], mesh._Bkitz * _values[basisIndex] };
+        const VectorVectorized3D globalVectors { tform._Bkitx * _values[basisIndex], tform._Bkity * _values[basisIndex], tform._Bkitz * _values[basisIndex] };
 
         return globalVectors;
     }
@@ -150,7 +150,7 @@ public:
         {
             // Should be possible to skip since we know the bases are linear
             const ReferenceDBasisValuesVectorized cornerDBasisValues { task.evaluateReferenceDBasis( localCorners ) };
-            const VectorVectorized3D dBasisValues{cornerDBasisValues.toGlobal(mesh, basisIndex)};
+            const VectorVectorized3D dBasisValues{cornerDBasisValues.transform(mesh.getAffineTransform(), basisIndex)};
 
             ScalarVectorized expandedU(mesh.getElements().size(), 1);
 
