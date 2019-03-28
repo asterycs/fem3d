@@ -4,7 +4,7 @@ function create2DMesh(elem_size)
 	
 	model = createpde;
     geometryFromEdges(model, @lshapeg);
-	mesh = generateMesh(model,'Hmax',elem_size);
+	mesh = generateMesh(model,'Hmax',elem_size,'GeometricOrder','linear');
 	[p,e,t] = meshToPet(mesh); 
 
 	t = t(1:3,:);
