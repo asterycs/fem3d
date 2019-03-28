@@ -23,10 +23,14 @@
 #include "Typedefs.h"
 #include "UI.h"
 
+using Scene3D = Magnum::SceneGraph::Scene<Magnum::SceneGraph::MatrixTransformation3D>;
+
 class App : public Magnum::Platform::Application {
 public:
     explicit App(const Arguments& arguments);
-    virtual ~App() {};
+
+    virtual ~App()
+    { };
 
     void setVertexMarkersVisibility(bool show);
     void solveCurrent(bool showGradient);

@@ -8,7 +8,7 @@
 % No return value, writes two output files:
 % .data containing the node idices for the boundary edges (N_boundary_edges x 2)
 % .ttg containing p and t matrix for the mesh
-function createMesh(varargin)
+function create3DMesh(varargin)
 	% Set default values
 	Defaults ={"cube.stl",0.5};
 	Defaults(1:nargin) = varargin;
@@ -56,12 +56,12 @@ function createMesh(varargin)
 %		pz2 = p2(3) ;
 %		plot3([px1,px2],[py1,py2],[pz1,pz2])
 %	end
-%	tetramesh(t',p');
+	tetramesh(t',p');
 %	scatter3(p(1,boundary_nodes),p(2,boundary_nodes),p(3,boundary_nodes))
 
     [~, name, ~] = fileparts(filename)
 
 	% Write the output file
-	writettg(p,t,boundary_nodes',name+".ttg");
+	writettg(p,t,boundary_nodes',name+".t3g");
 	return
 end

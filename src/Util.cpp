@@ -37,7 +37,7 @@ bool parseTtg(const std::string& input,
 
     // Then the elements
     stream >> c;
-    if (c != std::string{'t'})
+    if (c != std::string{'e'})
         return false;
 
     stream >> meshElementCount;
@@ -48,7 +48,7 @@ bool parseTtg(const std::string& input,
 
     stream >> boundaryCount;
 
-    Magnum::Debug{} << "Reading ttg with " << vertexCount << " vertices, " << meshElementCount << " elements" << "and "
+    Magnum::Debug{} << "Reading mesh with " << vertexCount << " vertices, " << meshElementCount << " elements" << "and "
             << boundaryCount << " boundary nodes.";
 
     // Read vertex coordinates

@@ -86,7 +86,7 @@ App::App(const Arguments& arguments)
                                                                 0.001f, 100.0f))
             .setViewport(GL::defaultFramebuffer.viewport().size());
 
-    const std::vector<std::string> fnames{"geom1.ttg", "geom2.ttg", "geom3.ttg"};
+    const std::vector<std::string> fnames{"geom1.t3g", "geom2.t3g", "geom3.t3g", "geom4.t2g"};
     _drawableGroups.resize(fnames.size());
     readMeshFiles(fnames);
 
@@ -108,16 +108,23 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
         const auto str = rs.get(fname);
         MeshData mesh;
 
-        if (parseTtg(str, mesh) && mesh.getDimensions() == 3)
+        if (!parseTtg(str, mesh))
         {
-            mesh.centerToOrigin();
+            Error{} << "Could not parse mesh file " << fname;
+            continue;
+        }
 
+        mesh.centerToOrigin();
+
+        if (mesh.getDimensions() == 3)
+        {
             _objects.push_back(
                     std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));
         }
         else
         {
-            Error{} << "Could not parse mesh file " << fname;
+          //  _objects.push_back(
+          //          std::make_unique<FEMObject2D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));
         }
     }
 }

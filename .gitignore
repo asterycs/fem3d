@@ -5,6 +5,8 @@ cmake-build-*
 release
 .*
 *.ttg
+*.t3g
+*.t2g
 *.data
 *.aux
 *.log

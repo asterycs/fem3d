@@ -7,7 +7,9 @@
 FEMTaskLinear3D::FEMTaskLinear3D(const MeshData& mesh, const std::set<UnsignedInt>& pinnedVertexIds,
                                  std::unique_ptr<BilinearForm> bilin, std::unique_ptr<LinearForm> linf)
         :_mesh{mesh}, _pinnedVertexIds{pinnedVertexIds}, _bilin{std::move(bilin)}, _linf{std::move(linf)}
-{ }
+{
+
+}
 
 void FEMTaskLinear3D::initialize()
 {
@@ -68,7 +70,7 @@ void FEMTaskLinear3D::initialize()
 
     _A.setFromTriplets(A_triplets.begin(), A_triplets.end());
 
-    for (auto pinnedVertexId : _pinnedVertexIds)
+    for (UnsignedInt pinnedVertexId : _pinnedVertexIds)
     {
         _A.prune([=](UnsignedInt i, UnsignedInt j, Float)
                 { return i != pinnedVertexId && j != pinnedVertexId; });
