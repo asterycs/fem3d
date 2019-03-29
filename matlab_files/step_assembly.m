@@ -31,7 +31,7 @@ kk = zeros(9,n_triangles);
 mind = 1;
 
 [U,dU,~] = eval2Dtri(mesh,x,X);
-dUNorm2 = sum((dU{1}.^2+dU{2}.^2)*W.*abs(detA));
+dUNorm2 = (dU{1}.^2+dU{2}.^2)*W.*abs(detA);
 
 for i=1:3
     Li = repmat(L{i},n_triangles,1);

@@ -19,13 +19,17 @@ iind = ~tmp;
 
 x = zeros( size(mesh.p,2),1);
 
-% Some funky boundary condition
-x(~iind) = sin(4*mesh.p(1,~iind));
+bilin_laplacian = @(U,V,dU,dV,gX)(dU{1}.*dV{1} + dU{2}.*dV{2});
+L = @(V,dV,gX)(V);
 
+% Some funky boundary condition
+% x(~iind) = sin(4*mesh.p(1,~iind));
+
+x(iind) = rand(sum(iind),1)-0.5;
 
 % Set up
-gamma = 0.001;
-maxiter = 10000;
+gamma = 0.1;
+maxiter = 1000;
 min_epsilon = 1e-10;
 epsnorms = zeros(maxiter,1);
 energies = zeros(maxiter,1);
@@ -33,9 +37,8 @@ energies = zeros(maxiter,1);
 
 a = @(x) 1./sqrt(1+x);
 da = @(x) -1/2*(1+x).^(-3/2);
-bilin_eps_wrapped = @(E,V,dE,dV,gX,dU,dUNorm2) bilin_eps_soap(E,V,dE,dV,gX,dU,dUNorm2,a,da);
+bilin_eps_wrapped = @(E,V,dE,dV,gX,dU,dUNorm2) bilin_eps(E,V,dE,dV,gX,dU,dUNorm2,a,da);
 G_wrapped = @(U,V,dU,dV,gX,dUNorm2) G(U,V,dU,dV,gX,dUNorm2,a,da);
-L = @(V,dV,gX)(0.*V);
     
 for i=1:maxiter
     
@@ -53,7 +56,6 @@ for i=1:maxiter
     energies(i) = J;
     
     if E_l2 < min_epsilon
-        figure(5);
         close(5);
         break;
     end
@@ -72,6 +74,8 @@ end
 figure;
 hold on;
 patch(gX{1}',gX{2}',U',U','FaceColor','None','EdgeColor','r');
+[X,Y] = meshgrid(linspace(0,1,100));
+surf(X,Y,sqrt(2)/pi*sin(pi*X).*sin(pi*Y),'FaceColor','None','EdgeColor','b');
 view(20,20);
 movegui('northwest');
 
