@@ -21,7 +21,7 @@ x(iind) = rand(size(iind))-0.5;
 % Set up
 gamma = 1;
 maxiter = 1000;
-min_epsilon = 1e-10;
+min_epsilon = 1e-6;
 epsnorms = zeros(maxiter,1);
 energies = zeros(maxiter,1);
 [~, ~, ~, ~, detA, ~, ~] = affine_tri(mesh);
@@ -59,6 +59,10 @@ for i=1:maxiter
     patch(gX{1}',gX{2}',U',U','FaceColor','None','EdgeColor','r');
     view(20,20);
     drawnow;
+    
+    W = ones(3,1)*1/6;
+    dUNorm2 = (dU{1}.^2+dU{2}.^2)*W.*abs(detA);
+    gamma = fminbnd(@(g) err(G_wrapped,L,mesh,x+g*epsilon),0,10);
     
     x = x + gamma*epsilon;
 end
