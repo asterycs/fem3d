@@ -26,8 +26,6 @@ FEMObject::FEMObject(PhongIdShader& phongShader,
          _colorBuffer{Magnum::GL::Buffer::TargetHint::Array},
          _mesh{mesh}
 {
-    assert(mesh.getDimensions() == 3);
-
     // Expand tetrahedrons to triangles for visualization
     const auto triangleIndices = extractTriangleIndices(mesh.getElements());
 

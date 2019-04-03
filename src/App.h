@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "FEMObject3D.h"
+#include "FEMObject.h"
 #include "Typedefs.h"
 #include "UI.h"
 
@@ -72,7 +72,7 @@ private:
     VertexShader _vertexSelectionShader{};
     CompositionShader _compositionShader{};
 
-    std::vector<std::unique_ptr<FEMObject3D>> _objects{};
+    std::vector<std::unique_ptr<FEMObject>> _objects{};
 
     Magnum::GL::Framebuffer _framebuffer;
     Magnum::GL::Renderbuffer _vertexId{}, _depth{};

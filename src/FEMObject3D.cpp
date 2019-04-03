@@ -24,6 +24,11 @@ std::pair<std::vector<Float>, std::vector<Eigen::Vector3f>> FEMObject3D::solve()
 
     FEMTaskLinear3DSolution solution = task.solve();
 
+    const auto asd = solution.evaluate(getMeshData(), task).second;
+
+    for (auto i : asd)
+        Magnum::Debug{} << i.transpose();
+
     if (solution.size() > 0)
     {
         return solution.evaluate(getMeshData(), task);

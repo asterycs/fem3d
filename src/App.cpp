@@ -10,6 +10,8 @@
 
 #include <random>
 
+#include "FEMObject3D.h"
+#include "FEMObject2D.h"
 #include "Util.h"
 
 using namespace Magnum::Math::Literals;
@@ -86,7 +88,7 @@ App::App(const Arguments& arguments)
                                                                 0.001f, 100.0f))
             .setViewport(GL::defaultFramebuffer.viewport().size());
 
-    const std::vector<std::string> fnames{"geom1.t3g", "geom2.t3g", "geom3.t3g", "geom4.t2g"};
+    const std::vector<std::string> fnames{"geom1.t3g", "geom2.t3g", "geom3.t3g"};
     _drawableGroups.resize(fnames.size());
     readMeshFiles(fnames);
 
@@ -121,10 +123,10 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
             _objects.push_back(
                     std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));
         }
-        else
+        else if (mesh.getDimensions() == 2)
         {
-          //  _objects.push_back(
-          //          std::make_unique<FEMObject2D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));
+            _objects.push_back(
+                    std::make_unique<FEMObject2D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));
         }
     }
 }
