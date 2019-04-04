@@ -11,7 +11,6 @@
 #include <random>
 
 #include "FEMObject3D.h"
-#include "FEMObject2D.h"
 #include "Util.h"
 
 using namespace Magnum::Math::Literals;
@@ -122,11 +121,6 @@ void App::readMeshFiles(const std::vector<std::string>& fnames)
         {
             _objects.push_back(
                     std::make_unique<FEMObject3D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));
-        }
-        else if (mesh.getDimensions() == 2)
-        {
-            _objects.push_back(
-                    std::make_unique<FEMObject2D>(_phongShader, _vertexSelectionShader, mesh, _scene, _drawableGroups[i]));
         }
     }
 }

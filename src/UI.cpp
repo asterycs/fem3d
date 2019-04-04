@@ -15,6 +15,10 @@ UI::UI(App& app, const Vector2i& size, const UnsignedInt nScenes)
         :_imgui{NoCreate}, _currentSize{size}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
          _showVertexMarkers{true}, _showAbout{false}, _inPinnedVertexLassoMode{false}, _app{app}
 {
+
+    Utility::Resource rs("fem3d-data");
+    licenceNotice = rs.get("LICENSE_NOTICE.txt");
+
     GL::Context::current().resetState(GL::Context::State::EnterExternal);
 
     ImGui::CreateContext();
@@ -106,33 +110,8 @@ void UI::drawOptions()
         ImGui::SetNextWindowPos(ImVec2(_currentSize.x()*0.5f,_currentSize.y()*0.5f), ImGuiCond_FirstUseEver);
         ImGui::Begin("Licenses", &_showAbout, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-        std::string buffer;
-
-        for (UnsignedInt i = 0; i < 10; ++i)
-        {
-            buffer.append("The quick brown fox jumps over the lazy dog\n");
-        }
-
-        ImGui::TextUnformatted(&(*buffer.begin()), &(*buffer.end()));
+        ImGui::TextUnformatted(&(*licenceNotice.begin()), &(*licenceNotice.end()));
         ImGui::End();
-
-        /*ImGui::BeginPopup();
-        ImGui::Text("Made using:");
-        ImGui::Text("Magnum: https://magnum.graphics/");
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::BeginTooltip();
-            ImGui::Text("magnum license");
-            ImGui::EndTooltip();
-        }
-
-
-        ImGui::Text("SDL2: https://www.libsdl.org/");
-        ImGui::Text("ImGui: https://github.com/ocornut/imgui/");
-        ImGui::Text("Eigen: http://eigen.tuxfamily.org/");
-        ImGui::Text("Source: https://github.com/asterycs/fem3d/");
-
-        ImGui::EndPopup();*/
     }
 
     ImGui::End();

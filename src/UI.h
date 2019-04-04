@@ -62,6 +62,7 @@ private:
     Lasso _currentLasso;
     Vector2i _lassoPreviousPosition;
 
+    std::string licenceNotice;
     App& _app;
 };
 

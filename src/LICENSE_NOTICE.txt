@@ -1,0 +1,44 @@
+This program is distributed under the LGPL 2.1 licence.
+The source of this program can be found at
+https://github.com/asterycs/fem3d
+
+This program uses both MPL 2.0 and LGPLv2.1 components of the Eigen
+library. The source of the eigen library can be found here:
+https://bitbucket.org/eigen/eigen/src/default/
+http://eigen.tuxfamily.org/
+
+The MPL 2.0 licence can be found here:
+https://www.mozilla.org/en-US/MPL/2.0/
+
+The LGPLv2.1 licence can be found here:
+https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+
+This program uses the Magnum library available at
+https://magnum.graphics/
+https://github.com/mosra/magnum
+and that is distributed under the following licence:
+
+Copyright © 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019
+          Vladimír Vondruš <mosra@centrum.cz> and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+This program uses SDL2 available at
+https://www.libsdl.org/
+distributed under the zlib licence.
