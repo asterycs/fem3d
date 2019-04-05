@@ -1,4 +1,4 @@
-## The Finite Element Experience
+## Fem3D - A solver for Laplacian in 3D
 
 This project is an effort to demonstrate the capabilities of the finite element method in 3D. The project is written mainly in C++ and OpenGL trough Magnum.  
 Try it online here: http://envall.xyz/fem3d/  
@@ -29,21 +29,9 @@ make -j
 ```
 
 #### Mesh generation
-Mesh generation is out of the scope for this project. Two MATLAB scripts are included for generating and saving tetrahedron meshes in a simple ASCII format. In order to have this project also WASM ready, the files are built into the final binary. This is specified in "src/resources.conf". You can generate a 3D mesh out of "cube.stl" and move the resulting file to src/.
+Mesh generation is out of the scope for this project. Two MATLAB scripts are included for generating and saving tetrahedron meshes in a simple ASCII format. In order to have this project also WASM ready, the files are built into the final binary.
 
 The MATLAB script can be run in batchmode with
 ```
-matlab -nodesktop -nosplash -nodisplay -r "createMesh();exit"
+matlab -nodesktop -nosplash -nodisplay -r "createMesh('cube.stl',0.5);exit"
 ```
-
-
-Programming remarks:
-- Use Magnums numeric types (Int, Float, UnsignedInt) instead of pods (float, int) to preserve GL compability
-- GLSL shaders are written in separate "\*.vert" and "\*.frag" files and are bundled in the executable. There are also a number of html files in src that can be used for the WASM build.
-- Magnum examples [here](https://github.com/mosra/magnum-examples)
-- Magnum doc [here](https://doc.magnum.graphics/magnum/getting-started.html).
-
-TODO:
-* Instructions for building the WASM version
-* Send all events App -> Ui and create callbacks for actions in App and clean upp the mess
-* Lasso: check if vertex is INSIDE the loop
