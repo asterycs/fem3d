@@ -1,4 +1,4 @@
-This program is distributed under the LGPL 2.1 licence.
+This program is distributed under the MIT license.
 The source of this program can be found at
 https://github.com/asterycs/fem3d
 
