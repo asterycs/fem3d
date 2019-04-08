@@ -7,16 +7,16 @@ library. The source of the eigen library can be found here:
 https://bitbucket.org/eigen/eigen/src/default/
 http://eigen.tuxfamily.org/
 
-The MPL 2.0 licence can be found here:
+The MPL 2.0 license can be found here:
 https://www.mozilla.org/en-US/MPL/2.0/
 
-The LGPLv2.1 licence can be found here:
+The LGPLv2.1 license can be found here:
 https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
 
 This program uses the Magnum library available at
 https://magnum.graphics/
 https://github.com/mosra/magnum
-and that is distributed under the following licence:
+and that is distributed under the following license:
 
 Copyright © 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019
           Vladimír Vondruš <mosra@centrum.cz> and contributors
@@ -41,4 +41,4 @@ DEALINGS IN THE SOFTWARE.
 
 This program uses SDL2 available at
 https://www.libsdl.org/
-distributed under the zlib licence.
+distributed under the zlib license.
