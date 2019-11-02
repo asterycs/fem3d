@@ -6,6 +6,7 @@ in highp vec3 lightDirection;
 in highp vec3 cameraDirection;
 in highp vec3 vFragColor;
 
+layout(location = 0) out highp vec4 outColor;
 layout(location = 1) out highp int outObjectId;
 layout(location = 2) out highp vec4 outSumColor;
 layout(location = 3) out highp vec4 outSumWeight;
@@ -37,4 +38,5 @@ void main() {
 
     outSumColor = vec4(color.rgb * color.a, color.a) * weight;
     outSumWeight = vec4(color.a);
+    outColor = vec4(0.0f, 0.0f, 0.0f, 0.0f); // Dummy output, some browsers need it
 }

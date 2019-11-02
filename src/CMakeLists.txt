@@ -80,7 +80,16 @@ if (OPENMP_FOUND)
 endif ()
 
 if (CORRADE_TARGET_EMSCRIPTEN)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1")
+    target_compile_options(fem3d PRIVATE
+        "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+        "SHELL:-s BINARYEN_TRAP_MODE=clamp"
+        "SHELL:-s DEMANGLE_SUPPORT=1"
+        "SHELL:-s ASSERTIONS=1")
+    target_link_options(fem3d PRIVATE
+        "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+        "SHELL:-s BINARYEN_TRAP_MODE=clamp"
+        "SHELL:-s DEMANGLE_SUPPORT=1"
+        "SHELL:-s ASSERTIONS=1")
 endif ()
 
 add_dependencies(fem3d eigen)
