@@ -22,7 +22,7 @@ App::App(const Arguments& arguments)
                 .setTitle("Finite element")
                 .setWindowFlags(Configuration::WindowFlag::Resizable)},
         _framebuffer{GL::defaultFramebuffer.viewport()},
-        _ui{*this, windowSize(), 3}
+        _ui{*this, windowSize(), dpiScaling(), 3}
 {
 #ifndef MAGNUM_TARGET_GLES
     MAGNUM_ASSERT_GL_VERSION_SUPPORTED(GL::Version::GL330);
@@ -49,7 +49,7 @@ App::App(const Arguments& arguments)
             .setMaxLevel(0)
             .setMagnificationFilter(GL::SamplerFilter::Nearest)
             .setMinificationFilter(GL::SamplerFilter::Nearest)
-            .setImage(0, GL::TextureFormat::RGBA16F,
+            .setImage(0, GL::TextureFormat::RGBA32F,
                       ImageView2D{GL::PixelFormat::RGBA, GL::PixelType::Float, GL::defaultFramebuffer.viewport().size(),
                                   nullptr});
 
@@ -239,7 +239,7 @@ void App::handleViewportClick(const Vector2i position)
 {
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput});
     Image2D data = _framebuffer.read(Range2Di::fromSize({position.x(), _framebuffer.viewport().sizeY() - position.y() - 1},
-                              {1, 1}), {PixelFormat::R32I});
+                              {1, 1}), {GL::PixelFormat::Red, GL::PixelType::Int});
 
     Int selectedVertexId = data.data<Int>()[0];
 
@@ -260,7 +260,7 @@ void App::setVertices(const UI::Lasso& lasso, const bool pinned)
     _framebuffer.mapForRead(GL::Framebuffer::ColorAttachment{_phongShader.ObjectIdOutput});
     const Image2D data = _framebuffer.read(
             Range2Di({min.x(), _framebuffer.viewport().sizeY() - max.y() - 1},
-                               {max.x(), _framebuffer.viewport().sizeY() - min.y() - 1}), {GL::PixelFormat::RedInteger, GL::PixelType::Int});
+                               {max.x(), _framebuffer.viewport().sizeY() - min.y() - 1}), {GL::PixelFormat::Red, GL::PixelType::Int});
 
     std::set<UnsignedInt> seenIndices;
 

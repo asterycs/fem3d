@@ -27,9 +27,9 @@ public:
       }
     };
 
-    explicit UI(App& app, const Vector2i& size, const UnsignedInt nScenes);
+    explicit UI(App& app, const Vector2i size, const Vector2 scaling, const UnsignedInt nScenes);
 
-    void resize(const Vector2i& size);
+    void resize(const Vector2i size);
     void draw();
 
     bool wantsTextInput();

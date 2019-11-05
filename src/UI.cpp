@@ -11,7 +11,7 @@
 using namespace Magnum::Math::Literals;
 using namespace Magnum;
 
-UI::UI(App& app, const Vector2i& size, const UnsignedInt nScenes)
+UI::UI(App& app, const Vector2i size, const Vector2 scaling, const UnsignedInt nScenes)
         :_imgui{NoCreate}, _currentSize{size}, _nScenes{nScenes}, _currentScene{0}, _showGradient{false},
          _showVertexMarkers{true}, _showAbout{false}, _inPinnedVertexLassoMode{false}, _app{app}
 {
@@ -22,14 +22,14 @@ UI::UI(App& app, const Vector2i& size, const UnsignedInt nScenes)
     GL::Context::current().resetState(GL::Context::State::EnterExternal);
 
     ImGui::CreateContext();
-    _imgui = ImGuiIntegration::Context{*ImGui::GetCurrentContext(), Vector2{size}, size, size};
+    _imgui = ImGuiIntegration::Context{*ImGui::GetCurrentContext(), Vector2{size}/scaling, size, size};
 
     GL::Context::current().resetState(GL::Context::State::ExitExternal);
 
     draw();
 }
 
-void UI::resize(const Vector2i& size)
+void UI::resize(const Vector2i size)
 {
     _imgui.relayout(Vector2{size}, size, size);
     _currentSize = size;
@@ -107,7 +107,8 @@ void UI::drawOptions()
 
     if (_showAbout)
     {
-        ImGui::SetNextWindowPos(ImVec2(_currentSize.x()*0.5f,_currentSize.y()*0.5f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(_currentSize.x()*0.3f,_currentSize.y()*0.3f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(550, 400), ImGuiCond_FirstUseEver);
         ImGui::Begin("Licenses", &_showAbout, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
         ImGui::TextUnformatted(&(*licenceNotice.begin()), &(*licenceNotice.end()));
